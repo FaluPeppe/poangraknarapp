@@ -43,6 +43,7 @@ function rendera(spelare, on401) {
   laggTill.innerHTML = `
     <input type="text" id="nytt-spelare-namn" placeholder="Namn">
     <input type="text" id="nytt-spelare-positioner" placeholder="Positioner (valfritt)">
+    <input type="text" id="nytt-spelare-kategori" placeholder="Kategori (valfritt)">
     <button id="lagg-till-spelare-knapp">+ Lägg till</button>
   `;
   container.appendChild(laggTill);
@@ -65,10 +66,10 @@ function rendera(spelare, on401) {
       namn.className = "spelar-namn";
       namn.textContent = s.namn;
       info.appendChild(namn);
-      if (s.positioner) {
+      if (s.positioner || s.kategori) {
         const pos = document.createElement("div");
         pos.className = "spelar-positioner";
-        pos.textContent = s.positioner;
+        pos.textContent = [s.positioner, s.kategori ? `Kategori: ${s.kategori}` : null].filter(Boolean).join(" · ");
         info.appendChild(pos);
       }
       info.onclick = () => {
@@ -95,6 +96,7 @@ function byggRedigeringsformular(s, on401) {
   wrapper.innerHTML = `
     <input type="text" class="redigera-namn" value="${escapeHtml(s.namn)}">
     <input type="text" class="redigera-positioner" value="${escapeHtml(s.positioner || "")}" placeholder="Positioner">
+    <input type="text" class="redigera-kategori" value="${escapeHtml(s.kategori || "")}" placeholder="Kategori">
     <div class="spelare-redigera-knappar">
       <button class="spara-knapp">Spara</button>
       <button class="avbryt-knapp">Avbryt</button>
@@ -117,6 +119,7 @@ function escapeHtml(text) {
 async function laggTillSpelare(on401) {
   const namnFalt = document.getElementById("nytt-spelare-namn");
   const positionerFalt = document.getElementById("nytt-spelare-positioner");
+  const kategoriFalt = document.getElementById("nytt-spelare-kategori");
   const namn = namnFalt.value.trim();
   if (!namn) {
     visaToast("Ange ett namn.");
@@ -126,7 +129,7 @@ async function laggTillSpelare(on401) {
     const res = await anropaMedToken("/spelare", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ namn, positioner: positionerFalt.value.trim() }),
+      body: JSON.stringify({ namn, positioner: positionerFalt.value.trim(), kategori: kategoriFalt.value.trim() }),
     }, on401);
     if (!res.ok) throw new Error("Servern svarade med fel");
     await initSpelare(on401);
@@ -138,6 +141,7 @@ async function laggTillSpelare(on401) {
 async function sparaRedigering(id, wrapper, on401) {
   const namn = wrapper.querySelector(".redigera-namn").value.trim();
   const positioner = wrapper.querySelector(".redigera-positioner").value.trim();
+  const kategori = wrapper.querySelector(".redigera-kategori").value.trim();
   if (!namn) {
     visaToast("Namnet får inte vara tomt.");
     return;
@@ -146,7 +150,7 @@ async function sparaRedigering(id, wrapper, on401) {
     const res = await anropaMedToken("/spelare/andra", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, namn, positioner }),
+      body: JSON.stringify({ id, namn, positioner, kategori }),
     }, on401);
     if (!res.ok) throw new Error("Servern svarade med fel");
     redigerar_id = null;

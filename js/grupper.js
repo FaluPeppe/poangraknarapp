@@ -75,6 +75,36 @@ function rendera(spelare, grupper, on401) {
   });
   container.appendChild(sammanfattning);
 
+  // ---- Fördela automatiskt (slump/position/kategori) ----
+  // Alla tre jobbar bara mot NÄRVARANDE spelare, och skriver bara till den
+  // lokala gruppindelningen (samma som manuell tilldelning) - inget sparas
+  // förrän man ev. avslutar matchen (Fas 4).
+  const narvarande = spelare.filter(s => !s.franvarande);
+  if (narvarande.length > 0 && grupper.length > 0) {
+    const fordelaRad = document.createElement("div");
+    fordelaRad.className = "fordela-rad";
+
+    const slumpKnapp = document.createElement("button");
+    slumpKnapp.className = "narvaro-knapp";
+    slumpKnapp.textContent = "🎲 Slumpa";
+    slumpKnapp.onclick = () => { fordelaSlumpmassigt(narvarande, grupper); rendera(spelare, grupper, on401); };
+    fordelaRad.appendChild(slumpKnapp);
+
+    const positionKnapp = document.createElement("button");
+    positionKnapp.className = "narvaro-knapp";
+    positionKnapp.textContent = "⚽ Efter position";
+    positionKnapp.onclick = () => { fordelaEfterFalt(narvarande, grupper, s => forstaVarde(s.positioner)); rendera(spelare, grupper, on401); };
+    fordelaRad.appendChild(positionKnapp);
+
+    const kategoriKnapp = document.createElement("button");
+    kategoriKnapp.className = "narvaro-knapp";
+    kategoriKnapp.textContent = "🏷️ Efter kategori";
+    kategoriKnapp.onclick = () => { fordelaEfterFalt(narvarande, grupper, s => forstaVarde(s.kategori)); rendera(spelare, grupper, on401); };
+    fordelaRad.appendChild(kategoriKnapp);
+
+    container.appendChild(fordelaRad);
+  }
+
   // ---- Spelarlista ----
   const lista = document.createElement("div");
   lista.className = "spelar-lista";
@@ -172,6 +202,58 @@ export function hamtaGruppindelningForSparning() {
     resultat[grupp_namn].push(spelar_id);
   }
   return resultat;
+}
+
+// ---- Automatisk fördelning ----
+// "positioner" är ett kommaseparerat textfält (t.ex. "Målvakt, Back") -
+// använder bara det FÖRSTA värdet som fördelningsnyckel. Samma hjälpare
+// funkar för kategori (redan ett enda värde, men skadar inte att köra den
+// genom samma funktion).
+function forstaVarde(text) {
+  if (!text) return "Okänd";
+  const del = text.split(",")[0].trim();
+  return del || "Okänd";
+}
+
+function blandaLista(lista) {
+  const kopia = [...lista];
+  for (let i = kopia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [kopia[i], kopia[j]] = [kopia[j], kopia[i]];
+  }
+  return kopia;
+}
+
+// Enkel, ren slumpmässig fördelning - blanda alla närvarande, dela ut
+// jämnt (round-robin) över grupperna.
+function fordelaSlumpmassigt(narvarande, grupper) {
+  const blandade = blandaLista(narvarande);
+  blandade.forEach((s, i) => gruppindelning.set(s.id, grupper[i % grupper.length].grupp_namn));
+}
+
+// Generisk fördelning efter ETT fält (position eller kategori) - hela
+// poängen är att ANVÄNDA fältet för att sprida ut samma värde jämnt över
+// grupperna, inte att kräva att alla har ett värde ifyllt (spelare utan
+// värde hamnar bara i en gemensam "Okänd"-hink och fördelas som vanligt).
+// Metoden är ett enkelt, begripligt närmevärde - inte en perfekt
+// balanserare - men räcker gott för att undvika att t.ex. alla målvakter
+// hamnar i samma grupp.
+function fordelaEfterFalt(narvarande, grupper, vardeFn) {
+  const hinkar = new Map();
+  narvarande.forEach(s => {
+    const varde = vardeFn(s);
+    if (!hinkar.has(varde)) hinkar.set(varde, []);
+    hinkar.get(varde).push(s);
+  });
+
+  let grupp_index = 0;
+  for (const hink of hinkar.values()) {
+    const blandad_hink = blandaLista(hink);
+    blandad_hink.forEach(s => {
+      gruppindelning.set(s.id, grupper[grupp_index % grupper.length].grupp_namn);
+      grupp_index++;
+    });
+  }
 }
 
 // ---- Gruppadministration (lägg till/ändra/ta bort grupperna själva) ----

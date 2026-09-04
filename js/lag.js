@@ -12,6 +12,14 @@ export async function initLag(on401) {
   try {
     migRes = await anropaMedToken("/mig", {}, on401);
   } catch (fel) {
+    // Natverksfel/CORS-fel etc hamnar har (401 hanteras separat via on401
+    // inne i anropaMedToken, som da redan loggat ut - detta ar for ALLA
+    // ANDRA fel, sa att skarmen aldrig bara fastnar pa "Laddar..." utan
+    // nagon förklaring).
+    if (fel.message !== "Utloggad") {
+      visaToast("Kunde inte ansluta till servern. Kolla webblasarens konsol (F12) for detaljer.");
+      console.error(fel);
+    }
     return;
   }
   if (!migRes.ok) {

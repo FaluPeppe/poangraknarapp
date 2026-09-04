@@ -18,7 +18,15 @@ export async function initAvsluta(on401) {
       anropaMedToken("/historik", {}, on401),
     ]);
   } catch (fel) {
-    return; // 401 redan hanterat
+    // Natverksfel/CORS-fel etc hamnar har (401 hanteras separat via on401
+    // inne i anropaMedToken, som da redan loggat ut - detta ar for ALLA
+    // ANDRA fel, sa att skarmen aldrig bara fastnar pa "Laddar..." utan
+    // nagon förklaring).
+    if (fel.message !== "Utloggad") {
+      visaToast("Kunde inte ansluta till servern. Kolla webblasarens konsol (F12) for detaljer.");
+      console.error(fel);
+    }
+    return;
   }
   if (!poangRes.ok || !historikRes.ok) {
     visaToast("Kunde inte hämta match- eller historikdata.");

@@ -17,7 +17,15 @@ export async function initMedlemmar(on401) {
       anropaMedToken("/medlemmar", {}, on401),
     ]);
   } catch (fel) {
-    return; // 401 redan hanterat
+    // Natverksfel/CORS-fel etc hamnar har (401 hanteras separat via on401
+    // inne i anropaMedToken, som da redan loggat ut - detta ar for ALLA
+    // ANDRA fel, sa att skarmen aldrig bara fastnar pa "Laddar..." utan
+    // nagon förklaring).
+    if (fel.message !== "Utloggad") {
+      visaToast("Kunde inte ansluta till servern. Kolla webblasarens konsol (F12) for detaljer.");
+      console.error(fel);
+    }
+    return;
   }
   if (!migRes.ok || !medlemmarRes.ok) {
     visaToast("Kunde inte hämta medlemmar.");

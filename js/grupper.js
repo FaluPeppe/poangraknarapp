@@ -124,6 +124,10 @@ function rendera(spelare, grupper, on401) {
     lista.appendChild(rad);
   });
   container.appendChild(lista);
+
+  // Gruppinställning (lägg till/ändra/ta bort) - EFTER spelarlistan.
+  container.appendChild(renderaGruppadmin(grupper, on401));
+  kopplaGruppadminKnappar(on401);
 }
 
 // Cyklar spelarens gruppval: ingen grupp -> grupp 1 -> grupp 2 -> ... ->
@@ -168,4 +172,143 @@ export function hamtaGruppindelningForSparning() {
     resultat[grupp_namn].push(spelar_id);
   }
   return resultat;
+}
+
+// ---- Gruppadministration (lägg till/ändra/ta bort grupperna själva) ----
+// Visas UNDER spelarlistan - Peter ville se närvarande spelare först och
+// gruppinställningen därefter.
+let redigerar_grupp = null;
+
+function renderaGruppadmin(grupper, on401) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "avsluta-form";
+
+  const rubrik = document.createElement("h3");
+  rubrik.className = "historik-rubrik";
+  rubrik.textContent = "Grupper";
+  wrapper.appendChild(rubrik);
+
+  grupper.forEach(g => {
+    const rad = document.createElement("div");
+    rad.className = "spelar-rad";
+
+    if (redigerar_grupp === g.grupp_namn) {
+      const redigering = document.createElement("div");
+      redigering.className = "spelare-redigera";
+      const namnInput = document.createElement("input");
+      namnInput.type = "text";
+      namnInput.value = g.grupp_namn;
+      const fargInput = document.createElement("input");
+      fargInput.type = "color";
+      fargInput.value = g.grupp_farg;
+      const knappar = document.createElement("div");
+      knappar.className = "spelare-redigera-knappar";
+      const sparaKnapp = document.createElement("button");
+      sparaKnapp.className = "spara-knapp";
+      sparaKnapp.textContent = "Spara";
+      sparaKnapp.onclick = () => sparaGruppRedigering(g.grupp_namn, namnInput.value, fargInput.value, on401);
+      const avbrytKnapp = document.createElement("button");
+      avbrytKnapp.className = "avbryt-knapp";
+      avbrytKnapp.textContent = "Avbryt";
+      avbrytKnapp.onclick = () => { redigerar_grupp = null; initGrupper(on401); };
+      knappar.appendChild(sparaKnapp);
+      knappar.appendChild(avbrytKnapp);
+      redigering.appendChild(namnInput);
+      redigering.appendChild(fargInput);
+      redigering.appendChild(knappar);
+      rad.appendChild(redigering);
+    } else {
+      const swatch = document.createElement("span");
+      swatch.style.cssText = "display:inline-block;width:20px;height:20px;border-radius:50%;margin-right:10px;flex-shrink:0;";
+      swatch.style.background = g.grupp_farg;
+      const info = document.createElement("div");
+      info.className = "spelar-info";
+      info.style.cssText = "cursor:pointer;display:flex;align-items:center;";
+      info.appendChild(swatch);
+      info.appendChild(document.createTextNode(g.grupp_namn));
+      info.onclick = () => { redigerar_grupp = g.grupp_namn; initGrupper(on401); };
+      rad.appendChild(info);
+
+      const taBortKnapp = document.createElement("button");
+      taBortKnapp.className = "narvaro-knapp";
+      taBortKnapp.textContent = "Ta bort";
+      taBortKnapp.onclick = () => taBortGrupp(g.grupp_namn, on401);
+      rad.appendChild(taBortKnapp);
+    }
+    wrapper.appendChild(rad);
+  });
+
+  const laggTill = document.createElement("div");
+  laggTill.className = "spelare-lagg-till";
+  laggTill.innerHTML = `
+    <input type="text" id="ny-grupp-namn" placeholder="Ny grupp, t.ex. Gul">
+    <input type="color" id="ny-grupp-farg" value="#3388ff">
+    <button id="lagg-till-grupp-knapp">+ Lägg till</button>
+  `;
+  wrapper.appendChild(laggTill);
+
+  return wrapper;
+}
+
+function kopplaGruppadminKnappar(on401) {
+  const laggTillKnapp = document.getElementById("lagg-till-grupp-knapp");
+  if (laggTillKnapp) laggTillKnapp.onclick = () => laggTillGrupp(on401);
+}
+
+async function laggTillGrupp(on401) {
+  const namnFalt = document.getElementById("ny-grupp-namn");
+  const fargFalt = document.getElementById("ny-grupp-farg");
+  const grupp_namn = namnFalt.value.trim();
+  if (!grupp_namn) {
+    visaToast("Ange ett gruppnamn.");
+    return;
+  }
+  try {
+    const res = await anropaMedToken("/poang/grupp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ grupp_namn, grupp_farg: fargFalt.value }),
+    }, on401);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    await initGrupper(on401);
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte lägga till.");
+  }
+}
+
+async function sparaGruppRedigering(gammalt_namn, nytt_namn, grupp_farg, on401) {
+  nytt_namn = nytt_namn.trim();
+  if (!nytt_namn) {
+    visaToast("Namnet får inte vara tomt.");
+    return;
+  }
+  try {
+    const res = await anropaMedToken("/poang/grupp/andra", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gammalt_namn, nytt_namn, grupp_farg }),
+    }, on401);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    redigerar_grupp = null;
+    await initGrupper(on401);
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara.");
+  }
+}
+
+async function taBortGrupp(grupp_namn, on401) {
+  try {
+    const res = await anropaMedToken("/poang/grupp/ta-bort", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ grupp_namn }),
+    }, on401);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    await initGrupper(on401);
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte ta bort.");
+  }
 }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KIF Träningspoäng - webb</title>
+<title>Poängräknarapp</title>
 <link rel="stylesheet" href="css/stil.css">
 </head>
 <body>
@@ -45,15 +45,26 @@
     </div>
 
     <div class="skarm-nav">
-      <button class="skarm-nav-knapp aktiv" id="nav-poang-knapp">Poäng</button>
-      <button class="skarm-nav-knapp" id="nav-grupper-knapp">Dela in grupper</button>
-      <button class="skarm-nav-knapp" id="nav-spelare-knapp">Hantera spelare</button>
-      <button class="skarm-nav-knapp" id="nav-avsluta-knapp">Avsluta match</button>
-      <button class="skarm-nav-knapp" id="nav-medlemmar-knapp">Tränare</button>
-      <button class="skarm-nav-knapp" id="nav-lag-knapp">Lag</button>
-      <button class="skarm-nav-knapp" id="nav-positioner-knapp">Positioner</button>
-      <button class="skarm-nav-knapp" id="nav-farger-knapp">Färger</button>
+      <button class="skarm-nav-knapp aktiv" id="nav-grupper-knapp">Dela in grupper</button>
+      <button class="skarm-nav-knapp" id="nav-poang-knapp">Poäng</button>
       <button class="skarm-nav-knapp" id="nav-intervaller-knapp">Intervaller</button>
+      <button class="skarm-nav-knapp" id="nav-installningar-knapp">Inställningar</button>
+    </div>
+
+    <!-- Inställningar-hubb: meny med "Hantera"-knappar (js/main.js). Egen
+         container, alltid EN nivå bakom en Hantera-skärm - "← Tillbaka"
+         leder hit, inte till Poäng/Grupper/Intervaller. -->
+    <div id="installningar-hubb" class="dold">
+      <div class="hantera-grid">
+        <button class="hantera-knapp" id="hantera-spelare-knapp">Hantera spelare</button>
+        <button class="hantera-knapp" id="hantera-avsluta-knapp">Avsluta match</button>
+        <button class="hantera-knapp" id="hantera-medlemmar-knapp">Tränare</button>
+        <button class="hantera-knapp" id="hantera-lag-knapp">Hantera lag</button>
+        <button class="hantera-knapp" id="hantera-positioner-knapp">Hantera positioner</button>
+        <button class="hantera-knapp" id="hantera-farger-knapp">Hantera färger</button>
+      </div>
+    </div>
+    <button class="tillbaka-knapp dold" id="installningar-tillbaka-knapp">← Tillbaka till Inställningar</button>
     </div>
 
     <!-- Poäng-skärmen (js/poang.js). -->

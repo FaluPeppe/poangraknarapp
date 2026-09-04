@@ -1,6 +1,12 @@
 // Entry point - laddas som <script type="module"> från index.html.
-// Håller ihop appens skal: vilken vy som visas (login/app), vilken SKÄRM
-// som visas inuti appen, och startar rätt skärms-modul.
+// Håller ihop appens skal: vilken vy som visas (login/app), och navigering
+// inuti appen i TVÅ nivåer:
+//   1. Fyra huvudflikar (snabbåtkomst under en pågående träning): Dela in
+//      grupper, Poäng, Intervaller, Inställningar.
+//   2. "Inställningar" är i sig en hubb med "Hantera"-knappar (sällan
+//      använda saker: spelare, lag, positioner, färger, tränare, avsluta
+//      match) - en "← Tillbaka"-knapp leder tillbaka till hubben, inte till
+//      någon av de tre andra huvudflikarna.
 
 import { hamtaToken, initLogin } from "./auth.js";
 import { initPoang } from "./poang.js";
@@ -23,41 +29,70 @@ function visaAppVy() {
   document.getElementById("app-vy").classList.remove("dold");
 }
 
-// ---- Navigering mellan skärmar inuti appen ----
-const skarmar = {
-  poang: { container: "lag-container", nav: "nav-poang-knapp", init: () => initPoang(visaLoginVy) },
+// ---- Huvudflikarna (alltid synliga, en är alltid aktiv) ----
+const huvudflikar = {
   grupper: { container: "grupper-container", nav: "nav-grupper-knapp", init: () => initGrupper(visaLoginVy) },
-  spelare: { container: "spelare-container", nav: "nav-spelare-knapp", init: () => initSpelare(visaLoginVy) },
-  avsluta: { container: "avsluta-container", nav: "nav-avsluta-knapp", init: () => initAvsluta(visaLoginVy) },
-  medlemmar: { container: "medlemmar-container", nav: "nav-medlemmar-knapp", init: () => initMedlemmar(visaLoginVy) },
-  lag: { container: "lag-installningar-container", nav: "nav-lag-knapp", init: () => initLag(visaLoginVy) },
-  positioner: { container: "positioner-container", nav: "nav-positioner-knapp", init: () => initPositioner(visaLoginVy) },
-  farger: { container: "farger-container", nav: "nav-farger-knapp", init: () => initFarger(visaLoginVy) },
+  poang: { container: "lag-container", nav: "nav-poang-knapp", init: () => initPoang(visaLoginVy) },
   intervaller: { container: "intervaller-container", nav: "nav-intervaller-knapp", init: () => initIntervaller(visaLoginVy) },
 };
 
-function visaSkarm(namn) {
-  Object.entries(skarmar).forEach(([n, s]) => {
-    const arAktiv = n === namn;
-    document.getElementById(s.container).classList.toggle("dold", !arAktiv);
-    document.getElementById(s.nav).classList.toggle("aktiv", arAktiv);
-  });
-  skarmar[namn].init();
+// ---- Hantera-skärmarna (nås via Inställningar-hubben, inte egna flikar) ----
+const hanteraSkarmar = {
+  spelare: { container: "spelare-container", knapp: "hantera-spelare-knapp", init: () => initSpelare(visaLoginVy) },
+  avsluta: { container: "avsluta-container", knapp: "hantera-avsluta-knapp", init: () => initAvsluta(visaLoginVy) },
+  medlemmar: { container: "medlemmar-container", knapp: "hantera-medlemmar-knapp", init: () => initMedlemmar(visaLoginVy) },
+  lag: { container: "lag-installningar-container", knapp: "hantera-lag-knapp", init: () => initLag(visaLoginVy) },
+  positioner: { container: "positioner-container", knapp: "hantera-positioner-knapp", init: () => initPositioner(visaLoginVy) },
+  farger: { container: "farger-container", knapp: "hantera-farger-knapp", init: () => initFarger(visaLoginVy) },
+};
+
+const alla_containers = [
+  ...Object.values(huvudflikar).map(s => s.container),
+  ...Object.values(hanteraSkarmar).map(s => s.container),
+  "installningar-hubb",
+];
+
+function doljAllt() {
+  alla_containers.forEach(id => document.getElementById(id).classList.add("dold"));
+  document.getElementById("installningar-tillbaka-knapp").classList.add("dold");
+  Object.values(huvudflikar).forEach(s => document.getElementById(s.nav).classList.remove("aktiv"));
+  document.getElementById("nav-installningar-knapp").classList.remove("aktiv");
 }
 
-document.getElementById("nav-poang-knapp").addEventListener("click", () => visaSkarm("poang"));
-document.getElementById("nav-grupper-knapp").addEventListener("click", () => visaSkarm("grupper"));
-document.getElementById("nav-spelare-knapp").addEventListener("click", () => visaSkarm("spelare"));
-document.getElementById("nav-avsluta-knapp").addEventListener("click", () => visaSkarm("avsluta"));
-document.getElementById("nav-medlemmar-knapp").addEventListener("click", () => visaSkarm("medlemmar"));
-document.getElementById("nav-lag-knapp").addEventListener("click", () => visaSkarm("lag"));
-document.getElementById("nav-positioner-knapp").addEventListener("click", () => visaSkarm("positioner"));
-document.getElementById("nav-farger-knapp").addEventListener("click", () => visaSkarm("farger"));
-document.getElementById("nav-intervaller-knapp").addEventListener("click", () => visaSkarm("intervaller"));
+function visaHuvudflik(namn) {
+  doljAllt();
+  document.getElementById(huvudflikar[namn].container).classList.remove("dold");
+  document.getElementById(huvudflikar[namn].nav).classList.add("aktiv");
+  huvudflikar[namn].init();
+}
+
+function visaInstallningarHubb() {
+  doljAllt();
+  document.getElementById("installningar-hubb").classList.remove("dold");
+  document.getElementById("nav-installningar-knapp").classList.add("aktiv");
+}
+
+function visaHanteraSkarm(namn) {
+  doljAllt();
+  document.getElementById(hanteraSkarmar[namn].container).classList.remove("dold");
+  document.getElementById("installningar-tillbaka-knapp").classList.remove("dold");
+  document.getElementById("nav-installningar-knapp").classList.add("aktiv"); // fortfarande "inom" Inställningar
+  hanteraSkarmar[namn].init();
+}
+
+document.getElementById("nav-grupper-knapp").addEventListener("click", () => visaHuvudflik("grupper"));
+document.getElementById("nav-poang-knapp").addEventListener("click", () => visaHuvudflik("poang"));
+document.getElementById("nav-intervaller-knapp").addEventListener("click", () => visaHuvudflik("intervaller"));
+document.getElementById("nav-installningar-knapp").addEventListener("click", visaInstallningarHubb);
+document.getElementById("installningar-tillbaka-knapp").addEventListener("click", visaInstallningarHubb);
+
+Object.entries(hanteraSkarmar).forEach(([namn, s]) => {
+  document.getElementById(s.knapp).addEventListener("click", () => visaHanteraSkarm(namn));
+});
 
 async function startaAppen() {
   visaAppVy();
-  visaSkarm("poang"); // startskärm, samma som Shiny-appens Poängräkning
+  visaHuvudflik("grupper"); // startskärm - Peter vill se närvaro/gruppindelning först
 }
 
 initLogin({

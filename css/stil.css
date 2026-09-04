@@ -291,6 +291,36 @@ body {
   border-radius: 8px;
 }
 
+/* ---- Inställningar-hubb (Hantera-knappar) ---- */
+.hantera-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.hantera-knapp {
+  padding: 18px 10px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.tillbaka-knapp {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 0;
+  margin-bottom: 12px;
+  border: none;
+  background: none;
+  color: #555;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* ---- Delat: mätning + toast ---- */
 .matning {
   position: fixed;

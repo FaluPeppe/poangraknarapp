@@ -1,20 +1,34 @@
-// Dela in grupper-skärmen (Fas 2). Två olika sorters tillstånd, medvetet
-// hanterade olika - precis som i Shiny-appen:
-//   - NÄRVARO är delad mellan alla tränares enheter -> sparas i databasen
-//     via /narvaro (se worker.js).
-//   - GRUPPINDELNING (vem hamnar i vilken grupp) är bara lokal för den här
-//     sessionen/enheten -> hålls i minnet här, skickas ALDRIG till servern.
-//     Det gör att flera tränare kan experimentera med olika indelningar
-//     samtidigt utan att krocka med varandra.
+// Dela in grupper-skärmen. Ombyggd för att matcha Shiny-appens design:
+//
+//   - EN EGEN, LOKAL/PERSONLIG närvaromarkering här (skiljer sig från den
+//     DELADE listan i Inställningar → Hantera närvaro, se narvaro.js).
+//     Det gör att du och en tränarkollega kan jobba med OLIKA urval samtidigt
+//     utan att krocka - t.ex. du med U13-gruppen, hen med U15-gruppen,
+//     samtidigt, på samma delade spelartrupp.
+//   - Ett "Förslag" som visar den aktuella (lokala) gruppindelningen, med
+//     en liten cirkelknapp per ANNAN grupp på varje spelarrad - tryck för
+//     att flytta henne dit direkt.
+//   - En "Ej tilldelade"-ruta för lokalt närvarande spelare som ännu inte
+//     har en grupp - gör det snabbt att lägga till t.ex. någon som kom
+//     sent, eller är tillbaka från särskild träning.
+//
+// INGET av detta - varken den lokala närvaromarkeringen eller
+// gruppindelningen - sparas till servern. Allt lever bara i minnet här,
+// så länge sidan är öppen.
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast, textFargForBg } from "./ui.js";
 
-// spelar_id -> grupp_namn (eller inget = ej tilldelad). Modulnivå med
-// avsikt - ska leva kvar så länge sidan är öppen, även om man byter skärm
-// och kommer tillbaka, men ALDRIG skickas till servern eller sparas i
-// localStorage (då skulle den sluta vara "bara för den här sessionen").
+// spelar_id -> true/false. Modulnivå (överlever navigering mellan flikar,
+// men ALDRIG skickas till servern). Sås första gången från den DELADE
+// listan (så den lokala starten är rimlig), men är sedan helt fristående.
+const lokaltNarvarande = new Map();
+let lokalt_narvaro_sadd = false;
+
+// spelar_id -> grupp_namn. Samma modulnivå-princip som ovan.
 const gruppindelning = new Map();
+
+let slumpmetod = "slump"; // "slump" | "position" | "kategori"
 
 export async function initGrupper(on401) {
   const container = document.getElementById("grupper-container");
@@ -27,12 +41,8 @@ export async function initGrupper(on401) {
       anropaMedToken("/poang", {}, on401), // återanvänder gruppnamn+färg härifrån
     ]);
   } catch (fel) {
-    // Natverksfel/CORS-fel etc hamnar har (401 hanteras separat via on401
-    // inne i anropaMedToken, som da redan loggat ut - detta ar for ALLA
-    // ANDRA fel, sa att skarmen aldrig bara fastnar pa "Laddar..." utan
-    // nagon förklaring).
     if (fel.message !== "Utloggad") {
-      visaToast("Kunde inte ansluta till servern. Kolla webblasarens konsol (F12) for detaljer.");
+      visaToast("Kunde inte ansluta till servern. Kolla webbläsarens konsol (F12) för detaljer.");
       console.error(fel);
     }
     return;
@@ -46,11 +56,20 @@ export async function initGrupper(on401) {
   const spelare = await spelareRes.json();
   const grupper = await grupperRes.json();
 
-  // Städa bort ev. gamla tilldelningar för spelare som inte längre finns
-  // eller inte längre är närvarande - annars visas "spökräkningar".
-  const narvarande_ids = new Set(spelare.filter(s => !s.franvarande).map(s => s.id));
+  // Så den lokala närvaron EN gång, från den delade listan - efter det är
+  // den helt fristående och rörs aldrig av den delade listans ändringar.
+  if (!lokalt_narvaro_sadd) {
+    spelare.forEach(s => lokaltNarvarande.set(s.id, !s.franvarande));
+    lokalt_narvaro_sadd = true;
+  }
+  // Nytillkomna spelare (t.ex. nyss aktiverade) får ett rimligt default.
+  spelare.forEach(s => {
+    if (!lokaltNarvarande.has(s.id)) lokaltNarvarande.set(s.id, !s.franvarande);
+  });
+
+  // Städa bort gruppval för spelare som inte längre är lokalt närvarande.
   for (const id of gruppindelning.keys()) {
-    if (!narvarande_ids.has(id)) gruppindelning.delete(id);
+    if (!lokaltNarvarande.get(id)) gruppindelning.delete(id);
   }
 
   rendera(spelare, grupper, on401);
@@ -60,135 +79,213 @@ function rendera(spelare, grupper, on401) {
   const container = document.getElementById("grupper-container");
   container.innerHTML = "";
 
-  // ---- Sammanfattning: antal spelare per grupp ----
-  const sammanfattning = document.createElement("div");
-  sammanfattning.className = "grupp-sammanfattning";
-  grupper.forEach(g => {
-    const antal = [...gruppindelning.values()].filter(v => v === g.grupp_namn).length;
-    const txt = textFargForBg(g.grupp_farg);
-    const chip = document.createElement("span");
-    chip.className = "grupp-chip";
-    chip.style.background = g.grupp_farg;
-    chip.style.color = txt;
-    chip.textContent = `${g.grupp_namn}: ${antal}`;
-    sammanfattning.appendChild(chip);
+  const narvarande_spelare = spelare.filter(s => lokaltNarvarande.get(s.id));
+
+  // ---- Instruktion + räknare ----
+  const info = document.createElement("p");
+  info.className = "grupper-info";
+  info.innerHTML = `Bocka i/ur för att lägga till eller ta bort spelare, och slumpa (om) baserat på urvalet.<br>
+    <span class="grupper-info-liten">Det här påverkar bara din egen indelning här och nu - inte den delade närvarolistan i Inställningar.</span>`;
+  container.appendChild(info);
+
+  const raknare = document.createElement("p");
+  raknare.className = "grupper-raknare";
+  raknare.textContent = `${narvarande_spelare.length} av ${spelare.length} spelare markerade som närvarande.`;
+  container.appendChild(raknare);
+
+  // ---- Pill-rad: lokal närvaromarkering ----
+  const pillRad = document.createElement("div");
+  pillRad.className = "spelar-pillar";
+  spelare.forEach(s => {
+    const pill = document.createElement("button");
+    pill.className = "spelar-pill" + (lokaltNarvarande.get(s.id) ? " vald" : "");
+    pill.textContent = s.namn;
+    pill.onclick = () => {
+      const nu = !lokaltNarvarande.get(s.id);
+      lokaltNarvarande.set(s.id, nu);
+      if (!nu) gruppindelning.delete(s.id); // inte längre med -> ingen grupp
+      rendera(spelare, grupper, on401);
+    };
+    pillRad.appendChild(pill);
   });
-  container.appendChild(sammanfattning);
+  container.appendChild(pillRad);
 
-  // ---- Fördela automatiskt (slump/position/kategori) ----
-  // Alla tre jobbar bara mot NÄRVARANDE spelare, och skriver bara till den
-  // lokala gruppindelningen (samma som manuell tilldelning) - inget sparas
-  // förrän man ev. avslutar matchen (Fas 4).
-  const narvarande = spelare.filter(s => !s.franvarande);
-  if (narvarande.length > 0 && grupper.length > 0) {
-    const fordelaRad = document.createElement("div");
-    fordelaRad.className = "fordela-rad";
+  // ---- Antal grupper + slumpmetod ----
+  const delasIRubrik = document.createElement("p");
+  delasIRubrik.className = "grupper-delas-i";
+  delasIRubrik.textContent = `Delas in i ${grupper.length} grupp${grupper.length === 1 ? "" : "er"}.`;
+  container.appendChild(delasIRubrik);
 
-    const slumpKnapp = document.createElement("button");
-    slumpKnapp.className = "narvaro-knapp";
-    slumpKnapp.textContent = "🎲 Slumpa";
-    slumpKnapp.onclick = () => { fordelaSlumpmassigt(narvarande, grupper); rendera(spelare, grupper, on401); };
-    fordelaRad.appendChild(slumpKnapp);
-
-    const positionKnapp = document.createElement("button");
-    positionKnapp.className = "narvaro-knapp";
-    positionKnapp.textContent = "⚽ Efter position";
-    positionKnapp.onclick = () => { fordelaEfterFalt(narvarande, grupper, s => forstaVarde(s.positioner)); rendera(spelare, grupper, on401); };
-    fordelaRad.appendChild(positionKnapp);
-
-    const kategoriKnapp = document.createElement("button");
-    kategoriKnapp.className = "narvaro-knapp";
-    kategoriKnapp.textContent = "🏷️ Efter kategori";
-    kategoriKnapp.onclick = () => { fordelaEfterFalt(narvarande, grupper, s => forstaVarde(s.kategori)); rendera(spelare, grupper, on401); };
-    fordelaRad.appendChild(kategoriKnapp);
-
-    container.appendChild(fordelaRad);
+  if (narvarande_spelare.length > 0 && grupper.length > 0) {
+    container.appendChild(byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401));
   }
 
-  // ---- Spelarlista ----
-  const lista = document.createElement("div");
-  lista.className = "spelar-lista";
-  spelare.forEach(s => {
-    const rad = document.createElement("div");
-    rad.className = "spelar-rad" + (s.franvarande ? " franvarande" : "");
+  // ---- Förslag: en färgad ruta per grupp med spelarnas namn + flytta-knappar ----
+  const forslagRubrik = document.createElement("h3");
+  forslagRubrik.className = "historik-rubrik";
+  forslagRubrik.textContent = "Förslag";
+  container.appendChild(forslagRubrik);
+  const forslagUnderrubrik = document.createElement("p");
+  forslagUnderrubrik.className = "grupper-info-liten";
+  forslagUnderrubrik.textContent = "Tryck på en cirkel bredvid en spelare för att flytta henne dit.";
+  container.appendChild(forslagUnderrubrik);
 
-    const info = document.createElement("div");
-    info.className = "spelar-info";
-    const namn = document.createElement("div");
-    namn.className = "spelar-namn";
-    namn.textContent = s.namn;
-    info.appendChild(namn);
-    if (s.positioner) {
-      const pos = document.createElement("div");
-      pos.className = "spelar-positioner";
-      pos.textContent = s.positioner;
-      info.appendChild(pos);
-    }
-    rad.appendChild(info);
-
-    const narvaroKnapp = document.createElement("button");
-    narvaroKnapp.className = "narvaro-knapp";
-    narvaroKnapp.textContent = s.franvarande ? "Frånvarande" : "Närvarande";
-    narvaroKnapp.onclick = () => toggleNarvaro(s.id, !s.franvarande, on401);
-    rad.appendChild(narvaroKnapp);
-
-    if (!s.franvarande) {
-      const gruppKnapp = document.createElement("button");
-      gruppKnapp.className = "grupp-knapp";
-      const nuvarandeGrupp = gruppindelning.get(s.id);
-      const nuvarandeFarg = grupper.find(g => g.grupp_namn === nuvarandeGrupp);
-      if (nuvarandeFarg) {
-        gruppKnapp.style.background = nuvarandeFarg.grupp_farg;
-        gruppKnapp.style.color = textFargForBg(nuvarandeFarg.grupp_farg);
-        gruppKnapp.textContent = nuvarandeGrupp;
-      } else {
-        gruppKnapp.textContent = "Ingen grupp";
-      }
-      gruppKnapp.onclick = () => {
-        vaxlaGrupp(s.id, grupper);
-        rendera(spelare, grupper, on401);
-      };
-      rad.appendChild(gruppKnapp);
-    }
-
-    lista.appendChild(rad);
+  grupper.forEach(g => {
+    container.appendChild(byggGruppBlock(g, grupper, narvarande_spelare, spelare, on401));
   });
-  container.appendChild(lista);
 
-  // Gruppinställning (lägg till/ändra/ta bort) - EFTER spelarlistan.
+  // ---- Ej tilldelade ----
+  const ejTilldelade = narvarande_spelare.filter(s => !gruppindelning.has(s.id));
+  if (ejTilldelade.length > 0) {
+    container.appendChild(byggEjTilldelade(ejTilldelade, grupper, spelare, on401));
+  }
+
+  // ---- Godkänn-knapp ----
+  // OBS: varje tilldelning ovan gäller redan direkt (inget "utkast"-läge
+  // att skilja på i vår modell) - den här knappen är en tydlig
+  // avslutningspunkt som matchar Shiny-appens flöde, men gör inget
+  // funktionellt utöver att bekräfta att du är klar.
+  const godkannKnapp = document.createElement("button");
+  godkannKnapp.className = "knapp-godkann";
+  godkannKnapp.textContent = "✓ Godkänn och kör igång";
+  godkannKnapp.onclick = () => visaToast("Klart! Gruppindelningen gäller redan.");
+  container.appendChild(godkannKnapp);
+
+  // ---- Gruppadministration (lägg till/ändra/ta bort grupperna själva) ----
   container.appendChild(renderaGruppadmin(grupper, on401));
   kopplaGruppadminKnappar(on401);
 }
 
-// Cyklar spelarens gruppval: ingen grupp -> grupp 1 -> grupp 2 -> ... ->
-// ingen grupp igen. Rent lokalt, ingen serverkontakt.
-function vaxlaGrupp(spelar_id, grupper) {
-  const namn_i_ordning = grupper.map(g => g.grupp_namn);
-  const nuvarande = gruppindelning.get(spelar_id);
-  const index = namn_i_ordning.indexOf(nuvarande);
-  const nasta_index = index + 1;
-  if (nasta_index >= namn_i_ordning.length) {
-    gruppindelning.delete(spelar_id);
-  } else {
-    gruppindelning.set(spelar_id, namn_i_ordning[nasta_index]);
-  }
+function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "avsluta-form";
+
+  const rubrik = document.createElement("p");
+  rubrik.style.cssText = "font-weight:600;margin-bottom:8px;";
+  rubrik.textContent = "Hur ska grupperna slumpas?";
+  wrapper.appendChild(rubrik);
+
+  const alternativ = [
+    { varde: "slump", etikett: "Helt slumpmässigt" },
+    { varde: "position", etikett: "Jämn fördelning av positioner" },
+    { varde: "kategori", etikett: "Jämn fördelning av kategori" },
+  ];
+  alternativ.forEach(a => {
+    const radRad = document.createElement("label");
+    radRad.className = "radio-rad";
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "slumpmetod";
+    radio.value = a.varde;
+    radio.checked = slumpmetod === a.varde;
+    radio.onchange = () => { slumpmetod = a.varde; };
+    radRad.appendChild(radio);
+    radRad.appendChild(document.createTextNode(" " + a.etikett));
+    wrapper.appendChild(radRad);
+  });
+
+  const slumpaKnapp = document.createElement("button");
+  slumpaKnapp.className = "knapp-slumpa";
+  slumpaKnapp.textContent = "🎲 Slumpa om";
+  slumpaKnapp.onclick = () => {
+    if (slumpmetod === "slump") fordelaSlumpmassigt(narvarande_spelare, grupper);
+    else if (slumpmetod === "position") fordelaEfterFalt(narvarande_spelare, grupper, s => forstaVarde(s.positioner));
+    else fordelaEfterFalt(narvarande_spelare, grupper, s => forstaVarde(s.kategori));
+    rendera(spelare, grupper, on401);
+  };
+  wrapper.appendChild(slumpaKnapp);
+
+  return wrapper;
 }
 
-async function toggleNarvaro(spelar_id, franvarande, on401) {
-  try {
-    const res = await anropaMedToken("/narvaro", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ spelar_id, franvarande }),
-    }, on401);
-    if (!res.ok) throw new Error("Servern svarade med fel");
-    if (franvarande) gruppindelning.delete(spelar_id); // frånvarande hör inte till någon grupp
-    await initGrupper(on401); // enklast: hämta om hela listan, samma mönster som poäng-skärmen
-  } catch (fel) {
-    if (fel.message !== "Utloggad") {
-      visaToast("Kunde inte spara närvaron, försök igen.");
-    }
-  }
+function byggGruppBlock(grupp, alla_grupper, narvarande_spelare, spelare, on401) {
+  const txt = textFargForBg(grupp.grupp_farg);
+  const block = document.createElement("div");
+  block.className = "grupp-block";
+  block.style.background = grupp.grupp_farg;
+  block.style.color = txt;
+
+  const rubrik = document.createElement("div");
+  rubrik.className = "grupp-block-rubrik";
+  const medlemmar = narvarande_spelare.filter(s => gruppindelning.get(s.id) === grupp.grupp_namn);
+  rubrik.textContent = `${grupp.grupp_namn} (${medlemmar.length})`;
+  block.appendChild(rubrik);
+
+  const andra_grupper = alla_grupper.filter(g => g.grupp_namn !== grupp.grupp_namn);
+
+  medlemmar.forEach(s => {
+    const rad = document.createElement("div");
+    rad.className = "grupp-block-rad";
+
+    const namn = document.createElement("span");
+    namn.textContent = s.namn;
+    rad.appendChild(namn);
+
+    const knappGrupp = document.createElement("span");
+    knappGrupp.className = "flytta-knapp-grupp";
+    andra_grupper.forEach(mal => {
+      const flyttaKnapp = document.createElement("button");
+      flyttaKnapp.className = "flytta-knapp";
+      flyttaKnapp.style.background = mal.grupp_farg;
+      flyttaKnapp.style.color = textFargForBg(mal.grupp_farg);
+      flyttaKnapp.title = `Flytta till ${mal.grupp_namn}`;
+      flyttaKnapp.textContent = "→";
+      flyttaKnapp.onclick = () => {
+        gruppindelning.set(s.id, mal.grupp_namn);
+        rendera(spelare, alla_grupper, on401);
+      };
+      knappGrupp.appendChild(flyttaKnapp);
+    });
+    rad.appendChild(knappGrupp);
+
+    block.appendChild(rad);
+  });
+
+  return block;
+}
+
+function byggEjTilldelade(ejTilldelade, grupper, spelare, on401) {
+  const box = document.createElement("div");
+  box.className = "ej-tilldelade-box";
+
+  const rubrik = document.createElement("div");
+  rubrik.style.fontWeight = "700";
+  rubrik.textContent = "Ej tilldelade";
+  box.appendChild(rubrik);
+
+  const beskrivning = document.createElement("p");
+  beskrivning.className = "grupper-info-liten";
+  beskrivning.textContent = "Bockade som närvarande men inte i något lag än - t.ex. någon som kom sent.";
+  box.appendChild(beskrivning);
+
+  ejTilldelade.forEach(s => {
+    const rad = document.createElement("div");
+    rad.className = "grupp-block-rad ej-tilldelad-rad";
+    const namn = document.createElement("span");
+    namn.textContent = s.namn;
+    rad.appendChild(namn);
+
+    const knappGrupp = document.createElement("span");
+    knappGrupp.className = "flytta-knapp-grupp";
+    grupper.forEach(g => {
+      const knapp = document.createElement("button");
+      knapp.className = "flytta-knapp";
+      knapp.style.background = g.grupp_farg;
+      knapp.style.color = textFargForBg(g.grupp_farg);
+      knapp.title = `Lägg till i ${g.grupp_namn}`;
+      knapp.textContent = "→";
+      knapp.onclick = () => {
+        gruppindelning.set(s.id, g.grupp_namn);
+        rendera(spelare, grupper, on401);
+      };
+      knappGrupp.appendChild(knapp);
+    });
+    rad.appendChild(knappGrupp);
+
+    box.appendChild(rad);
+  });
+
+  return box;
 }
 
 // Läses av avsluta.js (Fas 4) när en match sparas, för att koppla spelare
@@ -205,10 +302,6 @@ export function hamtaGruppindelningForSparning() {
 }
 
 // ---- Automatisk fördelning ----
-// "positioner" är ett kommaseparerat textfält (t.ex. "Målvakt, Back") -
-// använder bara det FÖRSTA värdet som fördelningsnyckel. Samma hjälpare
-// funkar för kategori (redan ett enda värde, men skadar inte att köra den
-// genom samma funktion).
 function forstaVarde(text) {
   if (!text) return "Okänd";
   const del = text.split(",")[0].trim();
@@ -224,20 +317,11 @@ function blandaLista(lista) {
   return kopia;
 }
 
-// Enkel, ren slumpmässig fördelning - blanda alla närvarande, dela ut
-// jämnt (round-robin) över grupperna.
 function fordelaSlumpmassigt(narvarande, grupper) {
   const blandade = blandaLista(narvarande);
   blandade.forEach((s, i) => gruppindelning.set(s.id, grupper[i % grupper.length].grupp_namn));
 }
 
-// Generisk fördelning efter ETT fält (position eller kategori) - hela
-// poängen är att ANVÄNDA fältet för att sprida ut samma värde jämnt över
-// grupperna, inte att kräva att alla har ett värde ifyllt (spelare utan
-// värde hamnar bara i en gemensam "Okänd"-hink och fördelas som vanligt).
-// Metoden är ett enkelt, begripligt närmevärde - inte en perfekt
-// balanserare - men räcker gott för att undvika att t.ex. alla målvakter
-// hamnar i samma grupp.
 function fordelaEfterFalt(narvarande, grupper, vardeFn) {
   const hinkar = new Map();
   narvarande.forEach(s => {
@@ -257,8 +341,6 @@ function fordelaEfterFalt(narvarande, grupper, vardeFn) {
 }
 
 // ---- Gruppadministration (lägg till/ändra/ta bort grupperna själva) ----
-// Visas UNDER spelarlistan - Peter ville se närvarande spelare först och
-// gruppinställningen därefter.
 let redigerar_grupp = null;
 
 function renderaGruppadmin(grupper, on401) {

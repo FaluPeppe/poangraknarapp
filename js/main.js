@@ -12,12 +12,14 @@ import { hamtaToken, initLogin } from "./auth.js";
 import { initPoang } from "./poang.js";
 import { initGrupper } from "./grupper.js";
 import { initSpelare } from "./spelare.js";
+import { initNarvaro } from "./narvaro.js";
 import { initAvsluta } from "./avsluta.js";
 import { initMedlemmar } from "./medlemmar.js";
 import { initLag } from "./lag.js";
 import { initPositioner } from "./positioner.js";
 import { initFarger } from "./farger.js";
 import { initIntervaller } from "./intervaller.js";
+import { nav } from "./nav.js";
 
 function visaLoginVy() {
   document.getElementById("login-vy").classList.remove("dold");
@@ -39,6 +41,7 @@ const huvudflikar = {
 // ---- Hantera-skärmarna (nås via Inställningar-hubben, inte egna flikar) ----
 const hanteraSkarmar = {
   spelare: { container: "spelare-container", knapp: "hantera-spelare-knapp", init: () => initSpelare(visaLoginVy) },
+  narvaro: { container: "narvaro-container", knapp: "hantera-narvaro-knapp", init: () => initNarvaro(visaLoginVy) },
   avsluta: { container: "avsluta-container", knapp: "hantera-avsluta-knapp", init: () => initAvsluta(visaLoginVy) },
   medlemmar: { container: "medlemmar-container", knapp: "hantera-medlemmar-knapp", init: () => initMedlemmar(visaLoginVy) },
   lag: { container: "lag-installningar-container", knapp: "hantera-lag-knapp", init: () => initLag(visaLoginVy) },
@@ -85,6 +88,10 @@ document.getElementById("nav-poang-knapp").addEventListener("click", () => visaH
 document.getElementById("nav-intervaller-knapp").addEventListener("click", () => visaHuvudflik("intervaller"));
 document.getElementById("nav-installningar-knapp").addEventListener("click", visaInstallningarHubb);
 document.getElementById("installningar-tillbaka-knapp").addEventListener("click", visaInstallningarHubb);
+
+// Koppla in nav-bryggan - se nav.js för varför detta görs indirekt.
+nav.gaTillGrupper = () => visaHuvudflik("grupper");
+nav.gaTillAvsluta = () => visaHanteraSkarm("avsluta");
 
 Object.entries(hanteraSkarmar).forEach(([namn, s]) => {
   document.getElementById(s.knapp).addEventListener("click", () => visaHanteraSkarm(namn));

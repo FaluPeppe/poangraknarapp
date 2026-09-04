@@ -3,242 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Poängräkning - snabbhetsprototyp</title>
-<style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #f2f2f2;
-    color: #1A1A1A;
-    padding: 16px;
-    padding-bottom: 90px;
-  }
-  .app-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .app-header h1 {
-    font-size: 20px;
-    margin: 0;
-  }
-  .badge {
-    font-size: 11px;
-    background: #1A1A1A;
-    color: white;
-    padding: 3px 8px;
-    border-radius: 10px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-  }
-  .lag-valjare {
-    margin-bottom: 14px;
-  }
-  select {
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    background: white;
-    font-size: 15px;
-    color: #1A1A1A;
-  }
-  .kort {
-    background: white;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 14px;
-  }
-  .kort h2 {
-    font-size: 15px;
-    margin: 0 0 10px 0;
-  }
-  .pillar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .pill {
-    padding: 8px 14px;
-    border-radius: 20px;
-    border: 2px solid #ddd;
-    background: white;
-    color: #555;
-    font-size: 14px;
-    cursor: pointer;
-    transition: transform 0.05s ease;
-    user-select: none;
-  }
-  .pill:active { transform: scale(0.96); }
-  .pill.vald {
-    background: #1A1A1A;
-    color: white;
-    border-color: #1A1A1A;
-    font-weight: 700;
-  }
-  .knapprad {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 14px;
-  }
-  .knapp {
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    background: white;
-    color: #1A1A1A;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  .knapp:active { background: #eee; }
-  .matning {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #1A1A1A;
-    color: white;
-    padding: 10px 16px;
-    font-size: 13px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .matning b { color: #7CFC9C; }
-  .toast {
-    position: fixed;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #1A1A1A;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    opacity: 0;
-    transition: opacity 0.2s;
-    pointer-events: none;
-  }
-  .toast.visas { opacity: 1; }
-</style>
+<title>KIF Träningspoäng - webb</title>
+<link rel="stylesheet" href="css/stil.css">
 </head>
 <body>
 
-  <div class="app-header">
-    <h1>Inställningar</h1>
-    <span class="badge">Supabase-prototyp</span>
-  </div>
+  <!-- ============ INLOGGNING ============ -->
+  <div id="login-vy">
+    <div class="login-kort">
+      <div id="login-steg-epost">
+        <h2>Logga in</h2>
+        <p>Ange din lagkod och den e-postadress du är registrerad med. Du får en engångskod skickad till e-posten.</p>
+        <p class="login-fel" id="login-fel-1"></p>
+        <label for="in-lagkod">Lagkod</label>
+        <input type="text" id="in-lagkod" autocomplete="off" autocapitalize="off">
+        <label for="in-epost">E-postadress</label>
+        <input type="email" id="in-epost" autocomplete="email">
+        <button class="login-knapp" id="skicka-kod-knapp">Skicka kod</button>
+      </div>
 
-  <div class="lag-valjare">
-    <select id="lag-select"></select>
-  </div>
-
-  <div class="kort">
-    <h2>Vem är på plats idag?</h2>
-    <div class="pillar" id="spelar-pillar">
-      <span style="color:#888;">Laddar...</span>
+      <div id="login-steg-kod" class="dold">
+        <h2>Ange koden</h2>
+        <p>Vi har skickat en 6-siffrig kod till din e-post. Den är giltig i 10 minuter.</p>
+        <p class="login-fel" id="login-fel-2"></p>
+        <label for="in-kod">Kod</label>
+        <input type="text" id="in-kod" class="kod-falt" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+        <button class="login-knapp" id="verifiera-kod-knapp">Logga in</button>
+        <button class="login-tillbaka" id="tillbaka-knapp">← Fel e-postadress? Gå tillbaka</button>
+      </div>
     </div>
   </div>
 
-  <div class="knapprad">
-    <button class="knapp" onclick="visaToast('Bara en design-attrapp i den här prototypen')">👥 Hantera spelare</button>
-    <button class="knapp" onclick="visaToast('Bara en design-attrapp i den här prototypen')">🎲 Dela in grupper</button>
-    <button class="knapp" onclick="visaToast('Bara en design-attrapp i den här prototypen')">📊 Statistik</button>
-  </div>
+  <!-- ============ APP (bara synlig när inloggad) ============ -->
+  <div id="app-vy" class="dold">
+    <div class="app-header">
+      <div class="app-header-left">
+        <h1 id="lagnamn-rubrik">Poängräkning</h1>
+        <span class="badge">Webb</span>
+      </div>
+      <button class="logga-ut-lank" id="logga-ut-knapp">Logga ut</button>
+    </div>
 
-  <div class="matning">
-    <span>Senaste databassvar:</span>
-    <b id="matning-tid">–</b>
+    <div class="skarm-nav">
+      <button class="skarm-nav-knapp aktiv" id="nav-poang-knapp">Poäng</button>
+      <button class="skarm-nav-knapp" id="nav-grupper-knapp">Dela in grupper</button>
+      <button class="skarm-nav-knapp" id="nav-spelare-knapp">Hantera spelare</button>
+      <button class="skarm-nav-knapp" id="nav-avsluta-knapp">Avsluta match</button>
+      <button class="skarm-nav-knapp" id="nav-medlemmar-knapp">Tränare</button>
+      <button class="skarm-nav-knapp" id="nav-lag-knapp">Lag</button>
+      <button class="skarm-nav-knapp" id="nav-positioner-knapp">Positioner</button>
+      <button class="skarm-nav-knapp" id="nav-farger-knapp">Färger</button>
+      <button class="skarm-nav-knapp" id="nav-intervaller-knapp">Intervaller</button>
+    </div>
+
+    <!-- Poäng-skärmen (js/poang.js). -->
+    <div class="lag-container" id="lag-container">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Dela in grupper-skärmen (js/grupper.js). -->
+    <div id="grupper-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Hantera spelare-skärmen (js/spelare.js). -->
+    <div id="spelare-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Avsluta match-skärmen (js/avsluta.js). -->
+    <div id="avsluta-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Tränare/medlemshantering-skärmen (js/medlemmar.js). -->
+    <div id="medlemmar-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Hantera lag-skärmen (js/lag.js). -->
+    <div id="lag-installningar-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Positioner-skärmen (js/positioner.js). -->
+    <div id="positioner-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Färger-skärmen (js/farger.js). -->
+    <div id="farger-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Intervaller-skärmen (js/intervaller.js). -->
+    <div id="intervaller-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <div class="matning">
+      <span>Senaste svarstid:</span>
+      <b id="matning-tid">–</b>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
-  // ---- Fyll i dina egna Supabase-uppgifter här (Project Settings -> API) ----
-  const SUPABASE_URL = "https://bjyhkfetnhxcctghuuld.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqeWhrZmV0bmh4Y2N0Z2h1dWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyODQxMjgsImV4cCI6MjEwMzg2MDEyOH0.WSSXRKUEFJtZ_HFmGOUVkXUsTFrRPyXZGCInCORCu-w";
-  // -----------------------------------------------------------------------
-
-  const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  function visaTid(ms) {
-    document.getElementById("matning-tid").textContent = ms.toFixed(0) + " ms";
-  }
-
-  function visaToast(text) {
-    const el = document.getElementById("toast");
-    el.textContent = text;
-    el.classList.add("visas");
-    setTimeout(() => el.classList.remove("visas"), 1800);
-  }
-
-  async function laddaLag() {
-    const t0 = performance.now();
-    const { data, error } = await db.from("lag").select("id, lagnamn").order("skapad");
-    visaTid(performance.now() - t0);
-    if (error) {
-      visaToast("Kunde inte hämta lag: " + error.message);
-      return;
-    }
-    const select = document.getElementById("lag-select");
-    select.innerHTML = "";
-    data.forEach(l => {
-      const opt = document.createElement("option");
-      opt.value = l.id;
-      opt.textContent = l.lagnamn;
-      select.appendChild(opt);
-    });
-    if (data.length > 0) laddaSpelare(data[0].id);
-  }
-
-  async function laddaSpelare(lagId) {
-    document.getElementById("spelar-pillar").innerHTML = '<span style="color:#888;">Laddar...</span>';
-    const t0 = performance.now();
-    const { data, error } = await db.from("spelare").select("id, namn, narvarande").eq("lag_id", lagId).order("namn");
-    visaTid(performance.now() - t0);
-    if (error) {
-      visaToast("Kunde inte hämta spelare: " + error.message);
-      return;
-    }
-    rendraSpelare(data);
-  }
-
-  function rendraSpelare(spelare) {
-    const container = document.getElementById("spelar-pillar");
-    container.innerHTML = "";
-    spelare.forEach(s => {
-      const pill = document.createElement("span");
-      pill.className = "pill" + (s.narvarande ? " vald" : "");
-      pill.textContent = s.namn;
-      pill.onclick = () => togglaNarvaro(s.id, pill, !s.narvarande);
-      container.appendChild(pill);
-    });
-  }
-
-  async function togglaNarvaro(spelarId, pillElement, nyttVarde) {
-    // Uppdaterar utseendet direkt (samma princip som i den riktiga appen) -
-    // väntar inte in svaret innan knappen ser klar ut.
-    pillElement.classList.toggle("vald");
-    const t0 = performance.now();
-    const { error } = await db.from("spelare").update({ narvarande: nyttVarde }).eq("id", spelarId);
-    visaTid(performance.now() - t0);
-    if (error) {
-      // Något gick fel - vrid tillbaka det visuella läget igen.
-      pillElement.classList.toggle("vald");
-      visaToast("Kunde inte spara: " + error.message);
-    }
-  }
-
-  document.getElementById("lag-select").addEventListener("change", (e) => {
-    laddaSpelare(e.target.value);
-  });
-
-  laddaLag();
-</script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

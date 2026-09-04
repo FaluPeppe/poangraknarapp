@@ -1,0 +1,326 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f2f2f2;
+  color: #1A1A1A;
+  padding: 16px;
+  padding-bottom: 90px;
+}
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.app-header h1 { font-size: 20px; margin: 0; }
+.app-header-left { display: flex; align-items: center; gap: 10px; }
+.badge {
+  font-size: 11px;
+  background: #1A1A1A;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.logga-ut-lank {
+  font-size: 13px;
+  color: #666;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* ---- Inloggningsformulär ---- */
+.login-kort {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  max-width: 360px;
+  margin: 40px auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.login-kort h2 { font-size: 17px; margin: 0 0 4px 0; }
+.login-kort p { font-size: 13px; color: #666; margin: 0 0 16px 0; }
+.login-kort label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+.login-kort input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  margin-bottom: 14px;
+}
+.login-kort input.kod-falt {
+  font-size: 22px;
+  letter-spacing: 4px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.login-knapp, .knapp-primar {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #1A1A1A;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.login-knapp:disabled, .knapp-primar:disabled { opacity: 0.5; cursor: default; }
+.login-fel { color: #c00; font-size: 13px; margin: 0 0 10px 0; min-height: 18px; }
+.login-tillbaka {
+  display: block;
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #666;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ---- Poäng-skärmen (och liknande kortlayouter) ---- */
+.lag-container {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.lag-kort {
+  border-radius: 14px;
+  padding: 16px 10px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+.lag-namn { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+.lag-poang { font-size: 40px; font-weight: 800; margin: 4px 0 10px 0; font-variant-numeric: tabular-nums; }
+.knapp-rad { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.poang-knapp {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  min-width: 44px;
+}
+.poang-knapp:active { transform: scale(0.95); }
+
+/* ---- Skärm-navigering ---- */
+.skarm-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.skarm-nav-knapp {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #555;
+}
+.skarm-nav-knapp.aktiv {
+  background: #1A1A1A;
+  color: white;
+  border-color: #1A1A1A;
+}
+
+/* ---- Dela in grupper-skärmen ---- */
+.grupp-sammanfattning {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.grupp-chip {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.spelar-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spelar-rad {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: white;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.spelar-rad.franvarande { opacity: 0.55; }
+.spelar-info { flex: 1; min-width: 0; }
+.spelar-namn { font-size: 15px; font-weight: 700; }
+.spelar-positioner { font-size: 12px; color: #888; }
+.narvaro-knapp, .grupp-knapp {
+  border: 1px solid #ddd;
+  background: #f2f2f2;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ---- Hantera spelare ---- */
+.spelare-lagg-till {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.spelare-lagg-till input {
+  flex: 1;
+  min-width: 100px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+.spelare-lagg-till button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #1A1A1A;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+.spelare-redigera {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: 100%;
+  align-items: center;
+}
+.spelare-redigera input {
+  flex: 1;
+  min-width: 100px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+.spelare-redigera-knappar { display: flex; gap: 6px; }
+.spelare-redigera-knappar button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.spara-knapp { background: #1A1A1A !important; color: white; border-color: #1A1A1A !important; }
+
+/* ---- Avsluta match + historik ---- */
+.avsluta-form {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.avsluta-form label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+.avsluta-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+.historik-rubrik { font-size: 15px; margin: 0 0 10px 0; }
+.historik-lista { display: flex; flex-direction: column; gap: 10px; }
+.historik-kort {
+  background: white;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.historik-kort-rubrik { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+
+/* ---- Intervaller ---- */
+.intervall-klocka {
+  border-radius: 16px;
+  padding: 30px 20px;
+  text-align: center;
+  margin-bottom: 14px;
+  transition: background 0.3s;
+}
+.intervall-klocka.intervall-lop { background: #2e7d32; color: white; }
+.intervall-klocka.intervall-vila { background: #444; color: white; }
+.intervall-etikett { font-size: 16px; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+.intervall-tid { font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.intervall-varv { font-size: 14px; opacity: 0.85; margin-top: 6px; }
+.intervall-knapprad { display: flex; gap: 8px; margin-bottom: 20px; }
+.intervall-knapprad button { flex: 1; }
+.intervall-block-rad {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.intervall-block-rad select {
+  margin-bottom: 0;
+  flex: 1;
+}
+.intervall-block-rad input[type="number"] {
+  width: 70px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  margin-bottom: 0;
+}
+.intervall-block-rad button {
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+/* ---- Delat: mätning + toast ---- */
+.matning {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1A1A1A;
+  color: white;
+  padding: 10px 16px;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.matning b { color: #7CFC9C; }
+.toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1A1A1A;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  text-align: center;
+  max-width: 90%;
+}
+.toast.visas { opacity: 1; }
+.dold { display: none !important; }

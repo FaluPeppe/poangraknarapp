@@ -159,12 +159,21 @@ body {
 }
 .poang-knapp-liten:active { transform: scale(0.96); }
 
-/* ---- Genvägsrad (Dela in grupper / Avsluta match / Nollställ poäng) ---- */
-.poang-genvagar {
+/* ---- Poäng: grupp-kontroller ovanför korten, avslut under dem ---- */
+.poang-gruppinstallning {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.poang-gruppinstallning .narvaro-knapp { width: 100%; text-align: center; }
+.poang-gruppinstallning .antal-grupper-stegare { margin-bottom: 0; }
+.poang-avslutning {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-top: 18px;
 }
 .knapp-avsluta-genvag {
   padding: 12px;
@@ -179,7 +188,7 @@ body {
   padding: 10px;
   border-radius: 10px;
   border: none;
-  background: #E8720C;
+  background: #707070;
   color: white;
   font-weight: 700;
   cursor: pointer;

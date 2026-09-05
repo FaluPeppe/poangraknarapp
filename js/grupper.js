@@ -18,6 +18,7 @@
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast, textFargForBg } from "./ui.js";
+import { byggAntalGrupperStegare } from "./antalgrupper.js";
 
 // spelar_id -> true/false. Modulnivå (överlever navigering fram och
 // tillbaka i samma sittning), men skickas ALDRIG till servern. Synkas från
@@ -153,7 +154,20 @@ function rendera(spelare, grupper, on401) {
   container.appendChild(markeraRad);
 
   // ---- Antal grupper + slumpval ----
-  container.appendChild(byggAntalGrupperStegare(spelare, grupper, on401));
+  // Stegaren är delad med Poäng-skärmen (antalgrupper.js). Efter en ändring
+  // hämtar vi de nya grupperna och ritar om - men rör INTE den lokala
+  // närvaron (till skillnad från initGrupper), bara städar bort lokala
+  // gruppval som pekar på en grupp som inte finns längre.
+  container.appendChild(byggAntalGrupperStegare(grupper.length, on401, async () => {
+    const grupperRes = await anropaMedToken("/poang", {}, on401);
+    if (!grupperRes.ok) { visaToast("Kunde inte hämta de nya grupperna."); return; }
+    const nyaGrupper = await grupperRes.json();
+    const gruppNamn = new Set(nyaGrupper.map(g => g.grupp_namn));
+    for (const [id, namn] of gruppindelning.entries()) {
+      if (!gruppNamn.has(namn)) gruppindelning.delete(id);
+    }
+    rendera(spelare, nyaGrupper, on401);
+  }));
 
   if (narvarande_spelare.length > 0 && grupper.length > 0) {
     container.appendChild(byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401));
@@ -192,69 +206,8 @@ function rendera(spelare, grupper, on401) {
 
   // OBS: gruppadministration (lägg till/ändra/ta bort grupper/färger) finns
   // INTE längre här - det görs i Inställningar → Hantera färger. Antalet
-  // grupper styrs med en stegare på Poäng-skärmen. Den här skärmen bara
-  // ANVÄNDER de grupper som redan finns.
-}
-
-// "Antal grupper"-stegaren (flyttad hit från Poäng-skärmen). Kan aldrig
-// bli färre än 2, max = antal färger i paletten. Grupperna byggs FRÅN
-// färgpaletten (Hantera färger), i dess ordning.
-function byggAntalGrupperStegare(spelare, grupper, on401) {
-  const antal = grupper.length;
-  const wrapper = document.createElement("div");
-  wrapper.className = "antal-grupper-stegare";
-
-  const etikett = document.createElement("span");
-  etikett.textContent = "Antal grupper:";
-  wrapper.appendChild(etikett);
-
-  const nerKnapp = document.createElement("button");
-  nerKnapp.className = "farg-ikonknapp";
-  nerKnapp.textContent = "▼";
-  nerKnapp.disabled = antal <= 2;
-  nerKnapp.onclick = () => andraAntalGrupper(antal - 1, spelare, on401);
-  wrapper.appendChild(nerKnapp);
-
-  const varde = document.createElement("span");
-  varde.className = "antal-grupper-varde";
-  varde.textContent = antal;
-  wrapper.appendChild(varde);
-
-  const uppKnapp = document.createElement("button");
-  uppKnapp.className = "farg-ikonknapp";
-  uppKnapp.textContent = "▲";
-  uppKnapp.onclick = () => andraAntalGrupper(antal + 1, spelare, on401);
-  wrapper.appendChild(uppKnapp);
-
-  return wrapper;
-}
-
-async function andraAntalGrupper(nytt_antal, spelare, on401) {
-  if (nytt_antal < 2) return;
-  try {
-    const res = await anropaMedToken("/poang/antal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ antal: nytt_antal }),
-    }, on401);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
-
-    // Hämta de nya grupperna och rita om - men rör INTE den lokala
-    // närvaron (till skillnad från initGrupper, som synkar om den från den
-    // delade listan). Städa bara bort lokala gruppval som pekar på en
-    // grupp som inte finns längre.
-    const grupperRes = await anropaMedToken("/poang", {}, on401);
-    if (!grupperRes.ok) throw new Error("Kunde inte hämta de nya grupperna.");
-    const grupper = await grupperRes.json();
-    const gruppNamn = new Set(grupper.map(g => g.grupp_namn));
-    for (const [id, namn] of gruppindelning.entries()) {
-      if (!gruppNamn.has(namn)) gruppindelning.delete(id);
-    }
-    rendera(spelare, grupper, on401);
-  } catch (fel) {
-    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte ändra antal grupper.");
-  }
+  // grupper går att ändra både här (stegaren ovan) och på Poäng-skärmen -
+  // samma kontroll. Den här skärmen bara ANVÄNDER de grupper som finns.
 }
 
 function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {

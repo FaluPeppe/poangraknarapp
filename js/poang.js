@@ -8,6 +8,7 @@ import { anropaMedToken } from "./auth.js";
 import { visaToast, textFargForBg } from "./ui.js";
 import { nav } from "./nav.js";
 import { spelaLjud, vibrera } from "./ljud.js";
+import { byggAntalGrupperStegare } from "./antalgrupper.js";
 
 // ---- Tidtagarur-tillstånd (modulnivå - överlever navigering mellan
 // flikar, precis som Intervaller-timerns tillstånd) ----
@@ -88,7 +89,7 @@ function rendera(grupper, on401) {
   container.innerHTML = "";
 
   container.appendChild(byggTidtagare(on401));
-  container.appendChild(byggGenvagsrad(on401));
+  container.appendChild(byggGruppinstallning(grupper.length, on401));
 
   const lagRad = document.createElement("div");
   lagRad.className = "lag-container-inre";
@@ -131,21 +132,36 @@ function rendera(grupper, on401) {
     lagRad.appendChild(kort);
   });
   container.appendChild(lagRad);
+
+  container.appendChild(byggAvslutningsrad(on401));
 }
 
-// OBS: "Antal grupper"-stegaren bor numera på Dela in grupper-skärmen
-// (js/grupper.js), inte här. Grupperna byggs alltid FRÅN färgpaletten i
-// Inställningar → Hantera färger, i den ordningen.
-
-function byggGenvagsrad(on401) {
+// Grupp-relaterade kontroller ovanför poängkorten: gå till Dela in grupper,
+// och "Antal grupper"-stegaren (delad med Dela in grupper-skärmen, se
+// antalgrupper.js). Grupperna byggs alltid FRÅN färgpaletten i Inställningar
+// → Hantera färger, i den ordningen.
+function byggGruppinstallning(antalGrupper, on401) {
   const rad = document.createElement("div");
-  rad.className = "poang-genvagar";
+  rad.className = "poang-gruppinstallning";
 
   const grupperKnapp = document.createElement("button");
   grupperKnapp.className = "narvaro-knapp";
   grupperKnapp.textContent = "👥 Dela in i grupper";
   grupperKnapp.onclick = () => nav.gaTillGrupper("poang");
   rad.appendChild(grupperKnapp);
+
+  rad.appendChild(byggAntalGrupperStegare(antalGrupper, on401, () => laddaPoang(on401)));
+
+  return rad;
+}
+
+// Avslutande åtgärder UNDER poängkorten: spara matchen i historiken, eller
+// nollställa poängen (utan att spara). Nollställ är medvetet grå och lågmäld
+// - den ska inte konkurrera med "Avsluta och spara" och inte förväxlas med
+// en av västfärgerna.
+function byggAvslutningsrad(on401) {
+  const rad = document.createElement("div");
+  rad.className = "poang-avslutning";
 
   const avslutaKnapp = document.createElement("button");
   avslutaKnapp.className = "knapp-avsluta-genvag";

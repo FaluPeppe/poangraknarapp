@@ -39,7 +39,7 @@ function rendera(historik, resultat, on401) {
     const periodForm = document.createElement("div");
     periodForm.className = "avsluta-form";
     const periodRubrik = document.createElement("p");
-    periodRubrik.style.cssText = "font-weight:600;margin-bottom:8px;";
+    periodRubrik.style.cssText = "font-weight:700;margin:0 0 6px 0;";
     periodRubrik.textContent = "Tidsperiod";
     periodForm.appendChild(periodRubrik);
     
@@ -85,7 +85,7 @@ function rendera(historik, resultat, on401) {
     }
     
     const visaRubrik = document.createElement("p");
-    visaRubrik.style.cssText = "font-weight:600;margin:14px 0 8px 0;";
+    visaRubrik.style.cssText = "font-weight:700;margin:12px 0 6px 0;";
     visaRubrik.textContent = "Visa";
     periodForm.appendChild(visaRubrik);
     [

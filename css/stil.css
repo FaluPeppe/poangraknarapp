@@ -476,6 +476,23 @@ body {
   margin-bottom: 6px;
   cursor: pointer;
 }
+/* Radioknappar/kryssrutor inuti .avsluta-form ska INTE ärva formulärets
+   label/input-regler (de gäller textfält) - håll dem som kompakta rader
+   med knappen och texten bredvid varandra. */
+.avsluta-form .radio-rad {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+  margin-bottom: 3px;
+}
+.avsluta-form .radio-rad input {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  flex-shrink: 0;
+}
 .knapp-slumpa {
   width: 100%;
   padding: 12px;

@@ -11,6 +11,30 @@ export function visaToast(text) {
 
 // visaTid() togs bort - svarstidsmätningen visades inte längre i UI:t.
 
+// En inställningsrad: etikett + liten hjälptext till vänster, själva
+// kontrollen (radioknappar, kryssruta, ...) till höger PÅ SAMMA RAD. Staplas
+// automatiskt på smal skärm. Används av Appinställningar-skärmen.
+export function byggInstallningsRad(etikett, hjalptext, kontrollEl) {
+  const rad = document.createElement("div");
+  rad.className = "installning-rad";
+
+  const vanster = document.createElement("div");
+  vanster.className = "installning-etikett";
+  const namn = document.createElement("span");
+  namn.className = "installning-namn";
+  namn.textContent = etikett;
+  vanster.appendChild(namn);
+  if (hjalptext) {
+    const hj = document.createElement("span");
+    hj.className = "installning-hjalp";
+    hj.textContent = hjalptext;
+    vanster.appendChild(hj);
+  }
+  rad.appendChild(vanster);
+  rad.appendChild(kontrollEl);
+  return rad;
+}
+
 // Enkel ljushetsberäkning - samma princip som i den riktiga Shiny-appen,
 // så text alltid syns tydligt oavsett bakgrundsfärg.
 export function textFargForBg(hex) {

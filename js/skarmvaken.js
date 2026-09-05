@@ -7,6 +7,8 @@
 // saknas gör funktionen helt enkelt ingenting (ingen krasch) - skärmen
 // beter sig då som vanligt (slocknar enligt telefonens egna inställning).
 
+import { byggInstallningsRad } from "./ui.js";
+
 const NYCKEL = "kif_skarmvaken_minuter";
 const STANDARD_MINUTER = "10"; // "0" = av/aldrig
 
@@ -67,27 +69,17 @@ export function initSkarmvaken() {
   });
 }
 
-// Bygger valbaren (radioknappar) för Inställningar-hubben.
+// Bygger en inställningsrad (etikett + radioknappar på samma rad) för
+// Appinställningar-skärmen.
 export function byggSkarmvakenValjare() {
-  const wrapper = document.createElement("div");
-  wrapper.className = "avsluta-form skarmvaken-val";
-
-  const rubrik = document.createElement("p");
-  rubrik.style.cssText = "font-weight:600;margin-bottom:4px;";
-  rubrik.textContent = "Håll skärmen vaken";
-  wrapper.appendChild(rubrik);
-
-  const info = document.createElement("p");
-  info.className = "grupper-info-liten";
-  info.textContent = "Förhindrar att skärmen slocknar mitt i en match. Kräver stöd i webbläsaren (fungerar i de flesta moderna, men inte alla).";
-  wrapper.appendChild(info);
-
   const alternativ = [
-    { varde: "1", etikett: "1 minut" },
-    { varde: "5", etikett: "5 minuter" },
-    { varde: "10", etikett: "10 minuter" },
+    { varde: "1", etikett: "1 min" },
+    { varde: "5", etikett: "5 min" },
+    { varde: "10", etikett: "10 min" },
     { varde: "0", etikett: "Aldrig" },
   ];
+  const kontroll = document.createElement("div");
+  kontroll.className = "installning-kontroll";
   const nuvarande = hamtaSkarmvakenMinuter();
   alternativ.forEach(a => {
     const radRad = document.createElement("label");
@@ -100,8 +92,12 @@ export function byggSkarmvakenValjare() {
     radio.onchange = () => sparaSkarmvakenMinuter(a.varde);
     radRad.appendChild(radio);
     radRad.appendChild(document.createTextNode(" " + a.etikett));
-    wrapper.appendChild(radRad);
+    kontroll.appendChild(radRad);
   });
 
-  return wrapper;
+  return byggInstallningsRad(
+    "Håll skärmen vaken",
+    "Förhindrar att skärmen slocknar mitt i en match. Kräver stöd i webbläsaren (fungerar i de flesta moderna, men inte alla).",
+    kontroll
+  );
 }

@@ -6,6 +6,8 @@
 // Safari stödjer inte Vibration API alls, oavsett app eller "Lägg till på
 // hemskärmen". vibrera() är no-op där, helt ofarligt att anropa ändå.
 
+import { byggInstallningsRad } from "./ui.js";
+
 const LJUD_NYCKEL = "kif_timer_ljud";
 const VIBRATION_NYCKEL = "kif_timer_vibration";
 
@@ -67,38 +69,51 @@ export function vibrera(monster = [300]) {
   }
 }
 
-// Bygger ett återanvändbart formulärfragment: ljudval + vibrationskryssruta.
-// Returnerar ett <div> att stoppa in var som helst i en skärms inställningar.
+// Bygger två inställningsrader (ljudval som radioknappar + vibrationskryssruta),
+// etikett och kontroll på samma rad. Används av Appinställningar-skärmen.
 export function byggLjudOchVibrationsval() {
-  const wrapper = document.createElement("div");
-  wrapper.className = "ljud-vibration-val";
-  
-  const ljudRad = document.createElement("div");
-  const ljudLabel = document.createElement("label");
-  ljudLabel.textContent = "Ljud när tiden är slut: ";
-  const ljudSelect = document.createElement("select");
-  ljudSelect.className = "ljud-val-select";
+  const wrapper = document.createDocumentFragment();
+
+  // Ljud - radioknappar
+  const ljudKontroll = document.createElement("div");
+  ljudKontroll.className = "installning-kontroll";
+  const valtLjud = hamtaValtLjud();
   Object.entries(LJUDALTERNATIV).forEach(([key, v]) => {
-    const opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = v.namn;
-    if (key === hamtaValtLjud()) opt.selected = true;
-    ljudSelect.appendChild(opt);
+    const rad = document.createElement("label");
+    rad.className = "radio-rad";
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "timer-ljud";
+    radio.value = key;
+    radio.checked = key === valtLjud;
+    radio.onchange = () => sparaValtLjud(key);
+    rad.appendChild(radio);
+    rad.appendChild(document.createTextNode(" " + v.namn));
+    ljudKontroll.appendChild(rad);
   });
-  ljudSelect.onchange = () => sparaValtLjud(ljudSelect.value);
-  ljudRad.appendChild(ljudLabel);
-  ljudRad.appendChild(ljudSelect);
-  wrapper.appendChild(ljudRad);
-  
-  const vibrationRad = document.createElement("label");
-  vibrationRad.className = "vibration-etikett";
-  const vibrationCheck = document.createElement("input");
-  vibrationCheck.type = "checkbox";
-  vibrationCheck.checked = vibrationPatorn();
-  vibrationCheck.onchange = () => sattVibration(vibrationCheck.checked);
-  vibrationRad.appendChild(vibrationCheck);
-  vibrationRad.appendChild(document.createTextNode(" Vibrera också (fungerar bara på Android, inte iPhone)"));
-  wrapper.appendChild(vibrationRad);
-  
+  wrapper.appendChild(byggInstallningsRad(
+    "Ljud när tiden är slut",
+    "Gäller tidtagaruret på Poäng och alla intervalltimrar.",
+    ljudKontroll
+  ));
+
+  // Vibration - kryssruta
+  const vibKontroll = document.createElement("div");
+  vibKontroll.className = "installning-kontroll";
+  const vibRad = document.createElement("label");
+  vibRad.className = "radio-rad";
+  const vibCheck = document.createElement("input");
+  vibCheck.type = "checkbox";
+  vibCheck.checked = vibrationPatorn();
+  vibCheck.onchange = () => sattVibration(vibCheck.checked);
+  vibRad.appendChild(vibCheck);
+  vibRad.appendChild(document.createTextNode(" Vibrera"));
+  vibKontroll.appendChild(vibRad);
+  wrapper.appendChild(byggInstallningsRad(
+    "Vibration",
+    "Fungerar bara på Android, inte iPhone.",
+    vibKontroll
+  ));
+
   return wrapper;
 }

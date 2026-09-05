@@ -7,7 +7,7 @@
 import { anropaMedToken } from "./auth.js";
 import { visaToast, textFargForBg } from "./ui.js";
 import { nav } from "./nav.js";
-import { spelaLjud, vibrera, byggLjudOchVibrationsval } from "./ljud.js";
+import { spelaLjud, vibrera } from "./ljud.js";
 
 // ---- Tidtagarur-tillstånd (modulnivå - överlever navigering mellan
 // flikar, precis som Intervaller-timerns tillstånd) ----
@@ -208,9 +208,10 @@ function byggTidtagare(on401) {
   display.textContent = formateraTid(visad_tid);
   wrapper.appendChild(display);
 
-  // Min/sek-fälten (och ljudvalet) visas bara INNAN klockan någonsin
-  // startats - en pausad klocka ska återupptas från där den var, inte
-  // låta en ändrad inställning smyga sig in.
+  // Min/sek-fälten visas bara INNAN klockan någonsin startats - en pausad
+  // klocka ska återupptas från där den var, inte låta en ändrad inställning
+  // smyga sig in. (Ljud/vibration ställs numera under Inställningar →
+  // Appinställningar.)
   if (!timer_har_startats) {
     const installningsRad = document.createElement("div");
     installningsRad.className = "tidtagare-installning";
@@ -234,10 +235,6 @@ function byggTidtagare(on401) {
     installningsRad.appendChild(sekInput);
     installningsRad.appendChild(sekLabel);
     wrapper.appendChild(installningsRad);
-
-    const ljudOchVibration = byggLjudOchVibrationsval();
-    ljudOchVibration.classList.add("tidtagare-ljudval");
-    wrapper.appendChild(ljudOchVibration);
   }
 
   const knappRad = document.createElement("div");
@@ -293,8 +290,6 @@ async function vaxlaTidtagare(on401) {
 
     const installningsRad = document.querySelector(".tidtagare-installning");
     if (installningsRad) installningsRad.remove();
-    const ljudRad = document.querySelector(".tidtagare-ljudval");
-    if (ljudRad) ljudRad.remove();
   }
   // ÅTERUPPTA (eller precis satt igång) - timer_sekunder_kvar är redan
   // rätt värde i båda fallen, rör den inte här.

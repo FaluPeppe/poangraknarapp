@@ -25,7 +25,8 @@ import { initStatistik } from "./statistik.js";
 import { initIntervaller } from "./intervaller.js";
 import { nav } from "./nav.js";
 import { initHeaderLagval } from "./header.js";
-import { initSkarmvaken, byggSkarmvakenValjare } from "./skarmvaken.js";
+import { initSkarmvaken } from "./skarmvaken.js";
+import { initAppinstallningar } from "./appinstallningar.js";
 
 function visaLoginVy() {
   document.getElementById("login-vy").classList.remove("dold");
@@ -53,6 +54,7 @@ const hanteraSkarmar = {
   positioner: { container: "positioner-container", knapp: "hantera-positioner-knapp", init: () => initPositioner(visaLoginVy) },
   farger: { container: "farger-container", knapp: "hantera-farger-knapp", init: () => initFarger(visaLoginVy) },
   statistik: { container: "statistik-container", knapp: "hantera-statistik-knapp", init: () => initStatistik(visaLoginVy) },
+  appinstallningar: { container: "appinstallningar-container", knapp: "hantera-appinstallningar-knapp", init: () => initAppinstallningar() },
 };
 
 const alla_containers = [
@@ -81,9 +83,6 @@ function visaInstallningarHubb() {
   doljAllt();
   document.getElementById("installningar-hubb").classList.remove("dold");
   document.getElementById("nav-installningar-knapp").classList.add("aktiv");
-  const plats = document.getElementById("skarmvaken-installning");
-  plats.innerHTML = "";
-  plats.appendChild(byggSkarmvakenValjare());
 }
 
 function visaHanteraSkarm(namn) {

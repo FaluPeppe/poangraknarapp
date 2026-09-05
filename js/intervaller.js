@@ -9,7 +9,7 @@
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast } from "./ui.js";
-import { spelaLjud, vibrera, byggLjudOchVibrationsval } from "./ljud.js";
+import { spelaLjud, vibrera } from "./ljud.js";
 
 // ---- Timer-tillstånd (modulnivå - ska överleva så länge sidan är öppen) ----
 let block = [{ typ: "lop", sekunder: 15 }, { typ: "vila", sekunder: 10 }];
@@ -97,7 +97,8 @@ function rendera(on401) {
   knappRad.appendChild(nollstallKnapp);
   container.appendChild(knappRad);
 
-  // ---- Inställningar: blocklista + varv + ljud/vibration ----
+  // ---- Inställningar: blocklista + varv (ljud/vibration ligger numera
+  // under Inställningar → Appinställningar) ----
   const installningar = document.createElement("div");
   installningar.className = "avsluta-form";
 
@@ -156,8 +157,6 @@ function rendera(on401) {
   varvInput.value = varv;
   varvInput.onchange = () => { varv = Math.max(1, parseInt(varvInput.value, 10) || 1); };
   installningar.appendChild(varvInput);
-
-  installningar.appendChild(byggLjudOchVibrationsval());
 
   const sparaKnapp = document.createElement("button");
   sparaKnapp.className = "knapp-primar";

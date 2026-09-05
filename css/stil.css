@@ -557,17 +557,6 @@ body {
 }
 
 .tidtagare-display.tidtagare-varning { color: #c0392b; }
-.tidtagare-ljudval {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 10px;
-}
-.tidtagare-ljudval select {
-  margin-bottom: 0;
-  width: auto;
-  display: inline-block;
-  padding: 4px 8px;
-}
 
 .farg-swatch {
   display: inline-block;
@@ -710,23 +699,38 @@ body {
   cursor: pointer;
   color: #c0392b;
 }
-.ljud-vibration-val {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 10px;
-}
-.ljud-vibration-val select {
-  margin-bottom: 0;
-  width: auto;
-  display: inline-block;
-  padding: 4px 8px;
-}
-.vibration-etikett {
+/* ---- Appinställningar (inställningsrader: etikett vänster, kontroll höger) ---- */
+.installning-rad {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  cursor: pointer;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+.installning-rad:first-child { padding-top: 0; }
+.installning-rad:last-child { padding-bottom: 0; border-bottom: none; }
+.installning-etikett {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.installning-namn { font-weight: 600; font-size: 14px; color: #1A1A1A; }
+.installning-hjalp { font-size: 12px; color: #888; }
+.installning-kontroll {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px 14px;
+  flex: 0 0 auto;
+  max-width: 52%;
+}
+.installning-kontroll .radio-rad {
+  margin-bottom: 0;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .sport-pillar {

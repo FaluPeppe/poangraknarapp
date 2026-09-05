@@ -4,6 +4,6 @@
 // för att poang.js importerar main.js (cirkulärt), fyller main.js i dessa
 // funktioner vid start, och poang.js bara anropar dem.
 export const nav = {
-  gaTillGrupper: () => {},
+  gaTillGrupper: (ursprung) => {}, // ursprung: "narvaro" | "poang" - styr vart "← Tillbaka" leder
   gaTillAvsluta: () => {},
 };

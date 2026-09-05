@@ -188,8 +188,8 @@ function byggGenvagsrad(on401) {
 
   const grupperKnapp = document.createElement("button");
   grupperKnapp.className = "narvaro-knapp";
-  grupperKnapp.textContent = "👥 Till Närvaro";
-  grupperKnapp.onclick = () => nav.gaTillGrupper();
+  grupperKnapp.textContent = "👥 Dela in i grupper";
+  grupperKnapp.onclick = () => nav.gaTillGrupper("poang");
   rad.appendChild(grupperKnapp);
 
   const avslutaKnapp = document.createElement("button");

@@ -19,11 +19,11 @@
 import { anropaMedToken } from "./auth.js";
 import { visaToast, textFargForBg } from "./ui.js";
 
-// spelar_id -> true/false. Modulnivå (överlever navigering mellan flikar,
-// men ALDRIG skickas till servern). Sås första gången från den DELADE
-// listan (så den lokala starten är rimlig), men är sedan helt fristående.
+// spelar_id -> true/false. Modulnivå (överlever navigering fram och
+// tillbaka i samma sittning), men skickas ALDRIG till servern. Synkas från
+// den DELADE listan (Närvaro-fliken) varje gång skärmen öppnas - se
+// initGrupper - och kan sedan finjusteras lokalt inför slumpningen.
 const lokaltNarvarande = new Map();
-let lokalt_narvaro_sadd = false;
 
 // spelar_id -> grupp_namn. Samma modulnivå-princip som ovan.
 const gruppindelning = new Map();
@@ -56,20 +56,19 @@ export async function initGrupper(on401) {
   const spelare = await spelareRes.json();
   const grupper = await grupperRes.json();
 
-  // Så den lokala närvaron EN gång, från den delade listan - efter det är
-  // den helt fristående och rörs aldrig av den delade listans ändringar.
-  if (!lokalt_narvaro_sadd) {
-    spelare.forEach(s => lokaltNarvarande.set(s.id, !s.franvarande));
-    lokalt_narvaro_sadd = true;
-  }
-  // Nytillkomna spelare (t.ex. nyss aktiverade) får ett rimligt default.
-  spelare.forEach(s => {
-    if (!lokaltNarvarande.has(s.id)) lokaltNarvarande.set(s.id, !s.franvarande);
-  });
+  // Synka den lokala närvaron från den delade listan varje gång skärmen
+  // öppnas - Närvaro-fliken är lagets sanning. De lokala ändringarna
+  // härifrån är bara till för slumpa-steget i samma sittning och skickas
+  // aldrig tillbaka till servern. Spelare som redan lagts i en grupp lokalt
+  // behålls som närvarande så en pågående indelning inte plötsligt tappar
+  // folk.
+  spelare.forEach(s => lokaltNarvarande.set(s.id, !s.franvarande));
+  for (const id of gruppindelning.keys()) lokaltNarvarande.set(id, true);
 
-  // Städa bort gruppval för spelare som inte längre är lokalt närvarande.
+  // Städa bort gruppval för spelare som inte längre finns kvar i truppen.
+  const finnsKvar = new Set(spelare.map(s => s.id));
   for (const id of gruppindelning.keys()) {
-    if (!lokaltNarvarande.get(id)) gruppindelning.delete(id);
+    if (!finnsKvar.has(id)) gruppindelning.delete(id);
   }
 
   rendera(spelare, grupper, on401);
@@ -81,11 +80,16 @@ function rendera(spelare, grupper, on401) {
 
   const narvarande_spelare = spelare.filter(s => lokaltNarvarande.get(s.id));
 
-  // ---- Instruktion + räknare ----
+  // ---- Rubrik + instruktion + räknare ----
+  const rubrik = document.createElement("h2");
+  rubrik.className = "grupper-rubrik";
+  rubrik.textContent = "Dela in i grupper";
+  container.appendChild(rubrik);
+
   const info = document.createElement("p");
   info.className = "grupper-info";
   info.innerHTML = `Bocka i/ur för att lägga till eller ta bort spelare, och slumpa (om) baserat på urvalet.<br>
-    <span class="grupper-info-liten">Det här påverkar bara din egen indelning här och nu - inte den delade närvarolistan i Inställningar.</span>`;
+    <span class="grupper-info-liten">Det här påverkar bara din egen indelning här och nu - inte den delade närvarolistan under Närvaro.</span>`;
   container.appendChild(info);
 
   const raknare = document.createElement("p");

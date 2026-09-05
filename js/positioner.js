@@ -9,7 +9,7 @@
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast } from "./ui.js";
-import { SPORT_SVG } from "./sport-ikoner.js";
+import { SPORT_SVG, IKON_ATTRIBUTION_HTML } from "./sport-ikoner.js";
 
 const STANDARDPOSITIONER = {
   Fotboll: ["Målvakt", "Försvarare", "Mittfältare (centralt)", "Mittfältare (ytter)", "Anfallare", "Ytter"],
@@ -170,6 +170,11 @@ function byggBytSport(positioner, on401) {
       sportRad.appendChild(knapp);
     });
   wrapper.appendChild(sportRad);
+
+  const attribution = document.createElement("p");
+  attribution.className = "ikon-attribution";
+  attribution.innerHTML = IKON_ATTRIBUTION_HTML;
+  wrapper.appendChild(attribution);
 
   return wrapper;
 }

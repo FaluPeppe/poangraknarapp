@@ -9,10 +9,7 @@ export function visaToast(text) {
   setTimeout(() => el.classList.remove("visas"), 2200);
 }
 
-export function visaTid(ms) {
-  const el = document.getElementById("matning-tid");
-  if (el) el.textContent = ms.toFixed(0) + " ms";
-}
+// visaTid() togs bort - svarstidsmätningen visades inte längre i UI:t.
 
 // Enkel ljushetsberäkning - samma princip som i den riktiga Shiny-appen,
 // så text alltid syns tydligt oavsett bakgrundsfärg.

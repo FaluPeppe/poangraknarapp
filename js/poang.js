@@ -5,7 +5,7 @@
 // Avsluta match.
 
 import { anropaMedToken } from "./auth.js";
-import { visaToast, visaTid, textFargForBg } from "./ui.js";
+import { visaToast, textFargForBg } from "./ui.js";
 import { nav } from "./nav.js";
 import { spelaLjud, vibrera, byggLjudOchVibrationsval } from "./ljud.js";
 
@@ -25,7 +25,6 @@ let timer_id = null;
 // Ljud+vibration-valet delas med Intervaller-skärmen - se ljud.js.
 
 export async function initPoang(on401) {
-  const t0 = performance.now();
   let migRes;
   try {
     migRes = await anropaMedToken("/mig", {}, on401);
@@ -36,7 +35,6 @@ export async function initPoang(on401) {
     }
     return;
   }
-  visaTid(performance.now() - t0);
   if (!migRes.ok) {
     visaToast("Kunde inte hämta laginfo.");
     return;
@@ -71,14 +69,12 @@ async function laddaTidtagarInstallning(on401) {
 async function laddaPoang(on401) {
   const container = document.getElementById("lag-container");
   container.innerHTML = '<span style="color:#888;">Laddar...</span>';
-  const t0 = performance.now();
   let res;
   try {
     res = await anropaMedToken("/poang", {}, on401);
   } catch (fel) {
     return;
   }
-  visaTid(performance.now() - t0);
   if (!res.ok) {
     visaToast("Kunde inte hämta poäng.");
     return;
@@ -218,14 +214,12 @@ async function poangKlick(gruppNamn, varde, on401) {
   el.textContent = nytt;
   el.setAttribute("data-poang", nytt);
 
-  const t0 = performance.now();
   try {
     const res = await anropaMedToken("/poang", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ grupp_namn: gruppNamn, poang: nytt }),
     }, on401);
-    visaTid(performance.now() - t0);
     if (!res.ok) throw new Error("Servern svarade med fel");
   } catch (fel) {
     el.textContent = nuvarande;

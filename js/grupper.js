@@ -186,11 +186,24 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
   rubrik.textContent = "Hur ska grupperna slumpas?";
   wrapper.appendChild(rubrik);
 
-  const alternativ = [
-    { varde: "slump", etikett: "Helt slumpmässigt" },
-    { varde: "position", etikett: "Jämn fördelning av positioner" },
-    { varde: "kategori", etikett: "Jämn fördelning av kategori" },
-  ];
+  // Bara erbjud positioner/kategori som val OM nagon spelare faktiskt har
+  // det ifyllt - annars ar valet meningslost (blir bara en "Okand"-hink
+  // for alla, samma som ren slump, men mer forvirrande att se som en egen
+  // knapp). Kollar mot HELA truppen, inte bara de just nu narvarande - en
+  // tranare som lagt in positioner ska se valet aven om just idag rakar
+  // ingen av de narvarande ha nagon satt.
+  const har_positioner = spelare.some(s => (s.positioner || "").trim().length > 0);
+  const har_kategori = spelare.some(s => (s.kategori || "").trim().length > 0);
+
+  const alternativ = [{ varde: "slump", etikett: "Bara slump" }];
+  if (har_positioner) alternativ.push({ varde: "position", etikett: "Slump + positioner" });
+  if (har_kategori) alternativ.push({ varde: "kategori", etikett: "Slump + kategori" });
+  if (har_positioner && har_kategori) alternativ.push({ varde: "bada", etikett: "Slump + positioner + kategori" });
+
+  // Om ett tidigare valt alternativ inte langre finns med (t.ex. alla
+  // positioner togs bort sen sist) - falla tillbaka till ren slump.
+  if (!alternativ.some(a => a.varde === slumpmetod)) slumpmetod = "slump";
+
   alternativ.forEach(a => {
     const radRad = document.createElement("label");
     radRad.className = "radio-rad";
@@ -209,14 +222,28 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
   slumpaKnapp.className = "knapp-slumpa";
   slumpaKnapp.textContent = "🎲 Slumpa om";
   slumpaKnapp.onclick = () => {
-    if (slumpmetod === "slump") fordelaSlumpmassigt(narvarande_spelare, grupper);
-    else if (slumpmetod === "position") fordelaEfterFalt(narvarande_spelare, grupper, s => forstaVarde(s.positioner));
-    else fordelaEfterFalt(narvarande_spelare, grupper, s => forstaVarde(s.kategori));
+    fordelaMedMetod(slumpmetod, narvarande_spelare, grupper);
     rendera(spelare, grupper, on401);
   };
   wrapper.appendChild(slumpaKnapp);
 
   return wrapper;
+}
+
+// Slår ihop position+kategori till EN sammansatt nyckel när "bada" ar
+// valt - ger en enkel, begriplig approximation av "jamn pa bade
+// position OCH kategori samtidigt" med samma hink-metod som anvands for
+// ett enskilt falt.
+function fordelaMedMetod(metod, narvarande, grupper) {
+  if (metod === "slump") {
+    fordelaSlumpmassigt(narvarande, grupper);
+  } else if (metod === "position") {
+    fordelaEfterFalt(narvarande, grupper, s => forstaVarde(s.positioner));
+  } else if (metod === "kategori") {
+    fordelaEfterFalt(narvarande, grupper, s => forstaVarde(s.kategori));
+  } else if (metod === "bada") {
+    fordelaEfterFalt(narvarande, grupper, s => `${forstaVarde(s.positioner)} | ${forstaVarde(s.kategori)}`);
+  }
 }
 
 function byggGruppBlock(grupp, alla_grupper, narvarande_spelare, spelare, on401) {
@@ -360,3 +387,5 @@ function fordelaEfterFalt(narvarande, grupper, vardeFn) {
     });
   }
 }
+
+

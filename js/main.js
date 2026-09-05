@@ -22,6 +22,7 @@ import { initStatistik } from "./statistik.js";
 import { initIntervaller } from "./intervaller.js";
 import { nav } from "./nav.js";
 import { initHeaderLagval } from "./header.js";
+import { initSkarmvaken, byggSkarmvakenValjare } from "./skarmvaken.js";
 
 function visaLoginVy() {
   document.getElementById("login-vy").classList.remove("dold");
@@ -76,6 +77,9 @@ function visaInstallningarHubb() {
   doljAllt();
   document.getElementById("installningar-hubb").classList.remove("dold");
   document.getElementById("nav-installningar-knapp").classList.add("aktiv");
+  const plats = document.getElementById("skarmvaken-installning");
+  plats.innerHTML = "";
+  plats.appendChild(byggSkarmvakenValjare());
 }
 
 function visaHanteraSkarm(namn) {
@@ -106,6 +110,7 @@ Object.entries(hanteraSkarmar).forEach(([namn, s]) => {
 async function startaAppen() {
   visaAppVy();
   initHeaderLagval(visaLoginVy); // bygger om lagnamn-rubriken till en listruta
+  initSkarmvaken();
   visaHuvudflik("grupper"); // startskärm - Peter vill se närvaro/gruppindelning först
 }
 

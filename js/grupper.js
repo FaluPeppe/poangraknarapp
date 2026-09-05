@@ -28,7 +28,20 @@ const lokaltNarvarande = new Map();
 // spelar_id -> grupp_namn. Samma modulnivå-princip som ovan.
 const gruppindelning = new Map();
 
-let slumpmetod = "slump"; // "slump" | "position" | "kategori"
+// Om slumpningen ska jämna ut på positioner och/eller kategori (utöver ren
+// slump, som alltid gäller). Sparas per lag OCH per inloggad person i Neon
+// via /gruppindelning/installning - precis som tidtagarur-tiden. Laddas EN
+// gång per sidladdning (installningLaddad), sedan lever valet i minnet.
+let slumpaPositioner = false;
+let slumpaKategori = false;
+let installningLaddad = false;
+
+function aktuellMetod() {
+  if (slumpaPositioner && slumpaKategori) return "bada";
+  if (slumpaPositioner) return "position";
+  if (slumpaKategori) return "kategori";
+  return "slump";
+}
 
 export async function initGrupper(on401) {
   const container = document.getElementById("grupper-container");
@@ -55,6 +68,11 @@ export async function initGrupper(on401) {
 
   const spelare = await spelareRes.json();
   const grupper = await grupperRes.json();
+
+  if (!installningLaddad) {
+    await laddaInstallning(on401);
+    installningLaddad = true;
+  }
 
   // Synka den lokala närvaron från den delade listan varje gång skärmen
   // öppnas - Närvaro-fliken är lagets sanning. De lokala ändringarna
@@ -134,7 +152,7 @@ function rendera(spelare, grupper, on401) {
   markeraRad.appendChild(avmarkeraAllaKnapp);
   container.appendChild(markeraRad);
 
-  // ---- Antal grupper + slumpmetod ----
+  // ---- Antal grupper + slumpval ----
   const delasIRubrik = document.createElement("p");
   delasIRubrik.className = "grupper-delas-i";
   delasIRubrik.textContent = `Delas in i ${grupper.length} grupp${grupper.length === 1 ? "" : "er"}.`;
@@ -183,55 +201,88 @@ function rendera(spelare, grupper, on401) {
 
 function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
   const wrapper = document.createElement("div");
-  wrapper.className = "avsluta-form";
+  wrapper.className = "slump-installning";
 
   const rubrik = document.createElement("p");
-  rubrik.style.cssText = "font-weight:600;margin-bottom:8px;";
-  rubrik.textContent = "Hur ska grupperna slumpas?";
+  rubrik.className = "grupper-info-liten";
+  rubrik.style.marginBottom = "6px";
+  rubrik.textContent = "Slumpa grupperna:";
   wrapper.appendChild(rubrik);
 
-  // Bara erbjud positioner/kategori som val OM nagon spelare faktiskt har
-  // det ifyllt - annars ar valet meningslost (blir bara en "Okand"-hink
-  // for alla, samma som ren slump, men mer forvirrande att se som en egen
-  // knapp). Kollar mot HELA truppen, inte bara de just nu narvarande - en
-  // tranare som lagt in positioner ska se valet aven om just idag rakar
-  // ingen av de narvarande ha nagon satt.
+  // "Positioner"/"Kategori" erbjuds bara OM nagon spelare faktiskt har det
+  // ifyllt - annars ar valet meningslost (alla hamnar i samma "Okand"-hink,
+  // dvs samma som ren slump). Kollas mot HELA truppen, inte bara de just nu
+  // narvarande.
   const har_positioner = spelare.some(s => (s.positioner || "").trim().length > 0);
   const har_kategori = spelare.some(s => (s.kategori || "").trim().length > 0);
 
-  const alternativ = [{ varde: "slump", etikett: "Bara slump" }];
-  if (har_positioner) alternativ.push({ varde: "position", etikett: "Slump + positioner" });
-  if (har_kategori) alternativ.push({ varde: "kategori", etikett: "Slump + kategori" });
-  if (har_positioner && har_kategori) alternativ.push({ varde: "bada", etikett: "Slump + positioner + kategori" });
+  // Faltet kan ha tomts sedan valet sparades - nolla da motsvarande kryss
+  // (och spara), sa en gammal ikryssning inte spokar osynligt.
+  if (!har_positioner && slumpaPositioner) { slumpaPositioner = false; sparaInstallning(on401); }
+  if (!har_kategori && slumpaKategori) { slumpaKategori = false; sparaInstallning(on401); }
 
-  // Om ett tidigare valt alternativ inte langre finns med (t.ex. alla
-  // positioner togs bort sen sist) - falla tillbaka till ren slump.
-  if (!alternativ.some(a => a.varde === slumpmetod)) slumpmetod = "slump";
+  const rader = [
+    { etikett: "Slump (alltid på)", last: true, ikryssad: true },
+  ];
+  if (har_positioner) {
+    rader.push({ etikett: "Positioner", ikryssad: slumpaPositioner, satt: v => { slumpaPositioner = v; } });
+  }
+  if (har_kategori) {
+    rader.push({ etikett: "Kategori", ikryssad: slumpaKategori, satt: v => { slumpaKategori = v; } });
+  }
 
-  alternativ.forEach(a => {
-    const radRad = document.createElement("label");
-    radRad.className = "radio-rad";
-    const radio = document.createElement("input");
-    radio.type = "radio";
-    radio.name = "slumpmetod";
-    radio.value = a.varde;
-    radio.checked = slumpmetod === a.varde;
-    radio.onchange = () => { slumpmetod = a.varde; };
-    radRad.appendChild(radio);
-    radRad.appendChild(document.createTextNode(" " + a.etikett));
-    wrapper.appendChild(radRad);
+  rader.forEach(r => {
+    const rad = document.createElement("label");
+    rad.className = "slump-rad";
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = r.ikryssad;
+    if (r.last) {
+      box.disabled = true; // Slump gäller alltid och går inte att bocka ur.
+    } else {
+      box.onchange = () => { r.satt(box.checked); sparaInstallning(on401); };
+    }
+    rad.appendChild(box);
+    rad.appendChild(document.createTextNode(" " + r.etikett));
+    wrapper.appendChild(rad);
   });
 
   const slumpaKnapp = document.createElement("button");
   slumpaKnapp.className = "knapp-slumpa";
   slumpaKnapp.textContent = "🎲 Slumpa om";
   slumpaKnapp.onclick = () => {
-    fordelaMedMetod(slumpmetod, narvarande_spelare, grupper);
+    fordelaMedMetod(aktuellMetod(), narvarande_spelare, grupper);
     rendera(spelare, grupper, on401);
   };
   wrapper.appendChild(slumpaKnapp);
 
   return wrapper;
+}
+
+async function laddaInstallning(on401) {
+  try {
+    const res = await anropaMedToken("/gruppindelning/installning", {}, on401);
+    if (!res.ok) return; // behåll standard (ren slump) om något går fel
+    const data = await res.json();
+    if (data.installning) {
+      slumpaPositioner = data.installning.slumpa_positioner === true;
+      slumpaKategori = data.installning.slumpa_kategori === true;
+    }
+  } catch (fel) {
+    // Tyst - en glömd ikryssning är ingen katastrof, ren slump duger fint.
+  }
+}
+
+async function sparaInstallning(on401) {
+  try {
+    await anropaMedToken("/gruppindelning/installning", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slumpa_positioner: slumpaPositioner, slumpa_kategori: slumpaKategori }),
+    }, on401);
+  } catch (fel) {
+    // Tyst - samma resonemang som i laddaInstallning.
+  }
 }
 
 // Slår ihop position+kategori till EN sammansatt nyckel när "bada" ar

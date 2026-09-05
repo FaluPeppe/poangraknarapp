@@ -489,6 +489,25 @@ body {
   margin-top: 6px;
 }
 
+/* ---- Kompakt slumpval (Dela in grupper): tre kryssrutor + Slumpa om ---- */
+.slump-installning {
+  background: white;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.slump-rad {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  padding: 5px 0;
+  cursor: pointer;
+}
+.slump-rad input { width: 18px; height: 18px; flex-shrink: 0; }
+.slump-rad input:disabled { cursor: default; }
+.slump-installning .knapp-slumpa { margin-top: 10px; }
+
 .grupp-block {
   border-radius: 10px;
   padding: 12px 14px;

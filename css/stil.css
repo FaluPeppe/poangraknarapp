@@ -1,7 +1,9 @@
 * { box-sizing: border-box; }
 html {
-  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
   width: 100%;
+  max-width: 100%;
 }
 body {
   margin: 0;
@@ -10,10 +12,13 @@ body {
   color: #1A1A1A;
   padding: 16px;
   padding-bottom: 24px;
-  overflow-x: hidden;
+  /* overflow-x: clip (inte hidden) klipper utan att skapa en scroll-container
+     som kan "fastna" i sidled på iOS. touch-action-låsningen är borttagen -
+     den hindrade en från att panorera tillbaka om något ändå blev för brett. */
+  overflow-x: clip;
   width: 100%;
+  max-width: 100%;
   overscroll-behavior-x: none;
-  touch-action: pan-y;
 }
 .app-header {
   display: flex;
@@ -31,7 +36,10 @@ body {
   padding: 4px 24px 4px 0;
   margin: 0;
   cursor: pointer;
+  min-width: 0;
   max-width: 60vw;
+  overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 .app-header-left { display: flex; align-items: center; gap: 10px; }
@@ -218,8 +226,9 @@ body {
   margin-bottom: 16px;
 }
 .skarm-nav-knapp {
-  flex: 1;
-  padding: 10px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 6px;
   border-radius: 10px;
   border: 1px solid #ddd;
   background: white;
@@ -227,6 +236,9 @@ body {
   font-weight: 600;
   cursor: pointer;
   color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .skarm-nav-knapp.aktiv {
   background: #1A1A1A;

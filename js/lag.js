@@ -179,8 +179,15 @@ async function sparaLagnamn(on401) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
     visaToast("Lagnamnet sparat.");
+    // lagnamn-rubrik är numera en listruta (header.js) - uppdatera texten
+    // på den VALDA optionen, inte elementet som helhet.
     const rubrik = document.getElementById("lagnamn-rubrik");
-    if (rubrik) rubrik.textContent = lagnamn;
+    if (rubrik && rubrik.tagName === "SELECT") {
+      const valdOption = rubrik.options[rubrik.selectedIndex];
+      if (valdOption) valdOption.textContent = lagnamn;
+    } else if (rubrik) {
+      rubrik.textContent = lagnamn;
+    }
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara.");
   }

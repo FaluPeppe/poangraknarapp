@@ -18,8 +18,10 @@ import { initMedlemmar } from "./medlemmar.js";
 import { initLag } from "./lag.js";
 import { initPositioner } from "./positioner.js";
 import { initFarger } from "./farger.js";
+import { initStatistik } from "./statistik.js";
 import { initIntervaller } from "./intervaller.js";
 import { nav } from "./nav.js";
+import { initHeaderLagval } from "./header.js";
 
 function visaLoginVy() {
   document.getElementById("login-vy").classList.remove("dold");
@@ -47,6 +49,7 @@ const hanteraSkarmar = {
   lag: { container: "lag-installningar-container", knapp: "hantera-lag-knapp", init: () => initLag(visaLoginVy) },
   positioner: { container: "positioner-container", knapp: "hantera-positioner-knapp", init: () => initPositioner(visaLoginVy) },
   farger: { container: "farger-container", knapp: "hantera-farger-knapp", init: () => initFarger(visaLoginVy) },
+  statistik: { container: "statistik-container", knapp: "hantera-statistik-knapp", init: () => initStatistik(visaLoginVy) },
 };
 
 const alla_containers = [
@@ -94,11 +97,15 @@ nav.gaTillGrupper = () => visaHuvudflik("grupper");
 nav.gaTillAvsluta = () => visaHanteraSkarm("avsluta");
 
 Object.entries(hanteraSkarmar).forEach(([namn, s]) => {
-  document.getElementById(s.knapp).addEventListener("click", () => visaHanteraSkarm(namn));
+  // OBS: "avsluta" har medvetet ingen egen knapp i hubben längre - nås bara
+  // via genvägen på Poäng-skärmen (nav.gaTillAvsluta) - därav null-kollen.
+  const knappEl = document.getElementById(s.knapp);
+  if (knappEl) knappEl.addEventListener("click", () => visaHanteraSkarm(namn));
 });
 
 async function startaAppen() {
   visaAppVy();
+  initHeaderLagval(visaLoginVy); // bygger om lagnamn-rubriken till en listruta
   visaHuvudflik("grupper"); // startskärm - Peter vill se närvaro/gruppindelning först
 }
 

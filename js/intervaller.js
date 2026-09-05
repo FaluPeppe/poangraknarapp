@@ -1,12 +1,15 @@
-// Intervaller-skärmen (Fas 6d). Två delar:
-//   1. Ett formulär för att bygga/spara en blocklista (löp/vila-sekvens +
-//      antal varv) - sparas per LAG och per INLOGGAD PERSON (samma person
-//      kan ju behöva olika tider för olika lag).
-//   2. En körande nedräkningsmotor helt i webbläsaren - ingen serverkontakt
-//      medan klockan går, bara vid start/paus/spara.
+// Intervaller-skärmen. Tre delar:
+//   1. En körande nedräkningsmotor (löp/vila-block, flera varv).
+//   2. Ett formulär för att bygga/spara DEN AKTUELLA blocklistan - sparas
+//      per LAG och per INLOGGAD PERSON som "senast använda" (/intervall).
+//   3. NAMNGIVNA, SPARADE FÖRVAL (/intervall/forval) - flera olika
+//      inställningar man kan spara och snabbt växla mellan, visas som
+//      knappar längst ner. Skiljer sig från (2): (2) är bara EN, namnlös,
+//      "det jag körde senast"; det här är flera, med egna namn.
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast } from "./ui.js";
+import { spelaLjud, vibrera, byggLjudOchVibrationsval } from "./ljud.js";
 
 // ---- Timer-tillstånd (modulnivå - ska överleva så länge sidan är öppen) ----
 let block = [{ typ: "lop", sekunder: 15 }, { typ: "vila", sekunder: 10 }];
@@ -16,27 +19,27 @@ let block_index = 0;
 let varv_index = 0;
 let sekunder_kvar = block[0].sekunder;
 let timer_id = null;
+let sparade_forval = [];
 
 export async function initIntervaller(on401) {
   const container = document.getElementById("intervaller-container");
   container.innerHTML = '<span style="color:#888;">Laddar...</span>';
 
-  let res;
+  let res, forvalRes;
   try {
-    res = await anropaMedToken("/intervall", {}, on401);
+    [res, forvalRes] = await Promise.all([
+      anropaMedToken("/intervall", {}, on401),
+      anropaMedToken("/intervall/forval", {}, on401),
+    ]);
   } catch (fel) {
-    // Natverksfel/CORS-fel etc hamnar har (401 hanteras separat via on401
-    // inne i anropaMedToken, som da redan loggat ut - detta ar for ALLA
-    // ANDRA fel, sa att skarmen aldrig bara fastnar pa "Laddar..." utan
-    // nagon förklaring).
     if (fel.message !== "Utloggad") {
-      visaToast("Kunde inte ansluta till servern. Kolla webblasarens konsol (F12) for detaljer.");
+      visaToast("Kunde inte ansluta till servern. Kolla webbläsarens konsol (F12) för detaljer.");
       console.error(fel);
     }
     return;
   }
-  if (!res.ok) {
-    visaToast("Kunde inte hämta sparad inställning.");
+  if (!res.ok || !forvalRes.ok) {
+    visaToast("Kunde inte hämta sparade inställningar.");
     return;
   }
   const data = await res.json();
@@ -45,6 +48,7 @@ export async function initIntervaller(on401) {
     varv = data.installning.varv;
     aterstall_timer();
   }
+  sparade_forval = await forvalRes.json();
   rendera(on401);
 }
 
@@ -93,7 +97,7 @@ function rendera(on401) {
   knappRad.appendChild(nollstallKnapp);
   container.appendChild(knappRad);
 
-  // ---- Inställningar: blocklista + varv ----
+  // ---- Inställningar: blocklista + varv + ljud/vibration ----
   const installningar = document.createElement("div");
   installningar.className = "avsluta-form";
 
@@ -153,6 +157,8 @@ function rendera(on401) {
   varvInput.onchange = () => { varv = Math.max(1, parseInt(varvInput.value, 10) || 1); };
   installningar.appendChild(varvInput);
 
+  installningar.appendChild(byggLjudOchVibrationsval());
+
   const sparaKnapp = document.createElement("button");
   sparaKnapp.className = "knapp-primar";
   sparaKnapp.textContent = "Spara inställning";
@@ -160,6 +166,66 @@ function rendera(on401) {
   installningar.appendChild(sparaKnapp);
 
   container.appendChild(installningar);
+
+  // ---- Sparade förval (namngivna knappar) ----
+  container.appendChild(byggForvalSektion(on401));
+}
+
+function byggForvalSektion(on401) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "avsluta-form";
+
+  const rubrik = document.createElement("h3");
+  rubrik.className = "historik-rubrik";
+  rubrik.textContent = "Sparade förval";
+  wrapper.appendChild(rubrik);
+
+  if (sparade_forval.length === 0) {
+    const tom = document.createElement("p");
+    tom.className = "grupper-info-liten";
+    tom.textContent = "Inga sparade förval än - bygg en inställning ovan och spara den som ett förval.";
+    wrapper.appendChild(tom);
+  } else {
+    const forvalRad = document.createElement("div");
+    forvalRad.className = "forval-rad";
+    sparade_forval.forEach(f => {
+      const knappGrupp = document.createElement("span");
+      knappGrupp.className = "forval-knappgrupp";
+
+      const laddaKnapp = document.createElement("button");
+      laddaKnapp.className = "forval-knapp";
+      laddaKnapp.textContent = f.namn;
+      laddaKnapp.onclick = () => {
+        stoppaTimer();
+        block = f.block.map(b => ({ ...b })); // kopia - rör inte det sparade förvalets egna data
+        varv = f.varv;
+        aterstall_timer();
+        rendera(on401);
+      };
+      knappGrupp.appendChild(laddaKnapp);
+
+      const taBortKnapp = document.createElement("button");
+      taBortKnapp.className = "forval-ta-bort";
+      taBortKnapp.textContent = "✕";
+      taBortKnapp.title = `Ta bort "${f.namn}"`;
+      taBortKnapp.onclick = () => taBortForval(f.id, on401);
+      knappGrupp.appendChild(taBortKnapp);
+
+      forvalRad.appendChild(knappGrupp);
+    });
+    wrapper.appendChild(forvalRad);
+  }
+
+  const nyttNamnRad = document.createElement("div");
+  nyttNamnRad.className = "spelare-lagg-till";
+  nyttNamnRad.innerHTML = `
+    <input type="text" id="nytt-forval-namn" placeholder="Namn på förval, t.ex. Kort löppass">
+    <button id="spara-forval-knapp">💾 Spara aktuell som förval</button>
+  `;
+  wrapper.appendChild(nyttNamnRad);
+  nyttNamnRad.querySelector("#spara-forval-knapp").onclick = () => sparaForval(on401);
+
+  return wrapper;
 }
 
 function formatera_tid(sek) {
@@ -208,6 +274,8 @@ export function tick() {
         sekunder_kvar = 0;
         stoppaTimer();
         uppdateraDom();
+        spelaLjud();
+        vibrera();
         return;
       }
     }
@@ -245,5 +313,43 @@ async function sparaInstallning(on401) {
     visaToast("Inställningen sparad.");
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara.");
+  }
+}
+
+async function sparaForval(on401) {
+  const input = document.getElementById("nytt-forval-namn");
+  const namn = input.value.trim();
+  if (!namn) {
+    visaToast("Ange ett namn på förvalet.");
+    return;
+  }
+  try {
+    const res = await anropaMedToken("/intervall/forval", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ namn, block, varv }),
+    }, on401);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    visaToast(`Förvalet "${namn}" sparat.`);
+    sparade_forval.push({ id: data.id, namn, block: block.map(b => ({ ...b })), varv });
+    rendera(on401);
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara förvalet.");
+  }
+}
+
+async function taBortForval(id, on401) {
+  try {
+    const res = await anropaMedToken("/intervall/forval/ta-bort", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    }, on401);
+    if (!res.ok) throw new Error("Servern svarade med fel");
+    sparade_forval = sparade_forval.filter(f => f.id !== id);
+    rendera(on401);
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast("Kunde inte ta bort förvalet.");
   }
 }

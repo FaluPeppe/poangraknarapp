@@ -13,10 +13,8 @@
     <div class="login-kort">
       <div id="login-steg-epost">
         <h2>Logga in</h2>
-        <p>Ange din lagkod och den e-postadress du är registrerad med. Du får en engångskod skickad till e-posten.</p>
+        <p>Du behöver bara ange din e-postadress för att använda appen. Är den redan registrerad loggar vi dig in i dina lag - annars kan du skapa ett nytt.</p>
         <p class="login-fel" id="login-fel-1"></p>
-        <label for="in-lagkod">Lagkod</label>
-        <input type="text" id="in-lagkod" autocomplete="off" autocapitalize="off">
         <label for="in-epost">E-postadress</label>
         <input type="email" id="in-epost" autocomplete="email">
         <button class="login-knapp" id="skicka-kod-knapp">Skicka kod</button>
@@ -31,6 +29,27 @@
         <button class="login-knapp" id="verifiera-kod-knapp">Logga in</button>
         <button class="login-tillbaka" id="tillbaka-knapp">← Fel e-postadress? Gå tillbaka</button>
       </div>
+
+      <div id="login-steg-nytt-lag" class="dold">
+        <h2>Skapa ditt lag</h2>
+        <p>Vi kände inte igen den e-postadressen sedan tidigare. Skapa ett nytt lag så blir du admin för det.</p>
+        <p class="login-fel" id="login-fel-3"></p>
+        <label for="in-nytt-lagnamn">Lagnamn</label>
+        <input type="text" id="in-nytt-lagnamn" placeholder="T.ex. KIF P16">
+        <label for="in-nytt-sport">Sport</label>
+        <select id="in-nytt-sport">
+          <option value="">Välj sport (valfritt)</option>
+          <option>Fotboll</option>
+          <option>Handboll</option>
+          <option>Innebandy</option>
+          <option>Basket</option>
+          <option>Ishockey</option>
+          <option>Futsal</option>
+          <option>Bandy</option>
+          <option>Volleyboll</option>
+        </select>
+        <button class="login-knapp" id="skapa-lag-knapp">Skapa lag och kom igång</button>
+      </div>
     </div>
   </div>
 
@@ -39,13 +58,12 @@
     <div class="app-header">
       <div class="app-header-left">
         <h1 id="lagnamn-rubrik">Poängräkning</h1>
-        <span class="badge">Webb</span>
       </div>
       <button class="logga-ut-lank" id="logga-ut-knapp">Logga ut</button>
     </div>
 
     <div class="skarm-nav">
-      <button class="skarm-nav-knapp aktiv" id="nav-grupper-knapp">Dela in grupper</button>
+      <button class="skarm-nav-knapp aktiv" id="nav-grupper-knapp">Närvaro</button>
       <button class="skarm-nav-knapp" id="nav-poang-knapp">Poäng</button>
       <button class="skarm-nav-knapp" id="nav-intervaller-knapp">Intervaller</button>
       <button class="skarm-nav-knapp" id="nav-installningar-knapp">Inställningar</button>
@@ -58,11 +76,11 @@
       <div class="hantera-grid">
         <button class="hantera-knapp" id="hantera-spelare-knapp">Hantera spelare</button>
         <button class="hantera-knapp" id="hantera-narvaro-knapp">Hantera närvaro</button>
-        <button class="hantera-knapp" id="hantera-avsluta-knapp">Avsluta match</button>
         <button class="hantera-knapp" id="hantera-medlemmar-knapp">Tränare</button>
         <button class="hantera-knapp" id="hantera-lag-knapp">Hantera lag</button>
         <button class="hantera-knapp" id="hantera-positioner-knapp">Hantera positioner</button>
         <button class="hantera-knapp" id="hantera-farger-knapp">Hantera färger</button>
+        <button class="hantera-knapp" id="hantera-statistik-knapp">Statistik</button>
       </div>
     </div>
     <button class="tillbaka-knapp dold" id="installningar-tillbaka-knapp">← Tillbaka till Inställningar</button>
@@ -110,6 +128,11 @@
 
     <!-- Färger-skärmen (js/farger.js). -->
     <div id="farger-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Statistik-skärmen (js/statistik.js). -->
+    <div id="statistik-container" class="dold">
       <span style="color:#888;">Laddar...</span>
     </div>
 

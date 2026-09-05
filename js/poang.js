@@ -7,17 +7,22 @@
 import { anropaMedToken } from "./auth.js";
 import { visaToast, visaTid, textFargForBg } from "./ui.js";
 import { nav } from "./nav.js";
+import { spelaLjud, vibrera, byggLjudOchVibrationsval } from "./ljud.js";
 
 // ---- Tidtagarur-tillstånd (modulnivå - överlever navigering mellan
 // flikar, precis som Intervaller-timerns tillstånd) ----
 const STANDARD_MINUTER = 2;
 const STANDARD_SEKUNDER = 0;
+const VARNINGSGRANS_SEKUNDER = 10; // siffrorna blir röda de sista 10 sekunderna
 let timer_installning_laddad = false; // laddar sparad tid bara EN gång per sidladdning
 let timer_minuter = STANDARD_MINUTER;
 let timer_sekunder_satt = STANDARD_SEKUNDER;
 let timer_sekunder_kvar = STANDARD_MINUTER * 60 + STANDARD_SEKUNDER;
 let timer_kor = false;
+let timer_har_startats = false; // skiljer "aldrig startad" (visa min/sek-fält) från "pausad" (dölj dem, kan återuppta)
 let timer_id = null;
+
+// Ljud+vibration-valet delas med Intervaller-skärmen - se ljud.js.
 
 export async function initPoang(on401) {
   const t0 = performance.now();
@@ -37,8 +42,8 @@ export async function initPoang(on401) {
     return;
   }
   const mig = await migRes.json();
-  const rubrik = document.getElementById("lagnamn-rubrik");
-  if (rubrik) rubrik.textContent = mig.lagnamn;
+  // OBS: lagnamnet i headern hanteras nu av header.js (som gjort den till
+  // en listruta för att byta lag) - inte här längre.
 
   if (!timer_installning_laddad) {
     await laddaTidtagarInstallning(on401);
@@ -88,6 +93,7 @@ function rendera(grupper, on401) {
 
   container.appendChild(byggTidtagare(on401));
   container.appendChild(byggGenvagsrad(on401));
+  container.appendChild(byggAntalGrupperStegare(grupper.length, on401));
 
   const lagRad = document.createElement("div");
   lagRad.className = "lag-container-inre";
@@ -132,13 +138,61 @@ function rendera(grupper, on401) {
   container.appendChild(lagRad);
 }
 
+// Antal grupper styrs härifrån (inte på Närvaro-skärmen längre) - kan
+// aldrig bli färre än 2. Grupperna byggs alltid FRÅN färgpaletten i
+// Inställningar → Hantera färger, i den ordningen.
+function byggAntalGrupperStegare(antal, on401) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "antal-grupper-stegare";
+
+  const etikett = document.createElement("span");
+  etikett.textContent = "Antal grupper:";
+  wrapper.appendChild(etikett);
+
+  const nerKnapp = document.createElement("button");
+  nerKnapp.className = "farg-ikonknapp";
+  nerKnapp.textContent = "▼";
+  nerKnapp.disabled = antal <= 2;
+  nerKnapp.onclick = () => andraAntalGrupper(antal - 1, on401);
+  wrapper.appendChild(nerKnapp);
+
+  const varde = document.createElement("span");
+  varde.className = "antal-grupper-varde";
+  varde.textContent = antal;
+  wrapper.appendChild(varde);
+
+  const uppKnapp = document.createElement("button");
+  uppKnapp.className = "farg-ikonknapp";
+  uppKnapp.textContent = "▲";
+  uppKnapp.onclick = () => andraAntalGrupper(antal + 1, on401);
+  wrapper.appendChild(uppKnapp);
+
+  return wrapper;
+}
+
+async function andraAntalGrupper(nytt_antal, on401) {
+  if (nytt_antal < 2) return;
+  try {
+    const res = await anropaMedToken("/poang/antal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ antal: nytt_antal }),
+    }, on401);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    await laddaPoang(on401);
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte ändra antal grupper.");
+  }
+}
+
 function byggGenvagsrad(on401) {
   const rad = document.createElement("div");
   rad.className = "poang-genvagar";
 
   const grupperKnapp = document.createElement("button");
   grupperKnapp.className = "narvaro-knapp";
-  grupperKnapp.textContent = "🎲 Dela in spelare i grupper";
+  grupperKnapp.textContent = "👥 Till Närvaro";
   grupperKnapp.onclick = () => nav.gaTillGrupper();
   rad.appendChild(grupperKnapp);
 
@@ -198,13 +252,17 @@ function byggTidtagare(on401) {
   const wrapper = document.createElement("div");
   wrapper.className = "tidtagare";
 
+  const visad_tid = timer_har_startats ? timer_sekunder_kvar : (timer_minuter * 60 + timer_sekunder_satt);
   const display = document.createElement("div");
-  display.className = "tidtagare-display";
+  display.className = "tidtagare-display" + (visad_tid <= VARNINGSGRANS_SEKUNDER && visad_tid > 0 ? " tidtagare-varning" : "");
   display.id = "tidtagare-display";
-  display.textContent = formateraTid(timer_kor ? timer_sekunder_kvar : (timer_minuter * 60 + timer_sekunder_satt));
+  display.textContent = formateraTid(visad_tid);
   wrapper.appendChild(display);
 
-  if (!timer_kor) {
+  // Min/sek-fälten (och ljudvalet) visas bara INNAN klockan någonsin
+  // startats - en pausad klocka ska återupptas från där den var, inte
+  // låta en ändrad inställning smyga sig in.
+  if (!timer_har_startats) {
     const installningsRad = document.createElement("div");
     installningsRad.className = "tidtagare-installning";
     const minInput = document.createElement("input");
@@ -227,6 +285,10 @@ function byggTidtagare(on401) {
     installningsRad.appendChild(sekInput);
     installningsRad.appendChild(sekLabel);
     wrapper.appendChild(installningsRad);
+
+    const ljudOchVibration = byggLjudOchVibrationsval();
+    ljudOchVibration.classList.add("tidtagare-ljudval");
+    wrapper.appendChild(ljudOchVibration);
   }
 
   const knappRad = document.createElement("div");
@@ -255,51 +317,65 @@ function formateraTid(sek) {
 
 async function vaxlaTidtagare(on401) {
   if (timer_kor) {
+    // PAUSA - stanna klockan, behåll timer_sekunder_kvar orört, så nästa
+    // Starta återupptar exakt därifrån (inte en nollställning).
     timer_kor = false;
     if (timer_id) { clearInterval(timer_id); timer_id = null; }
-    // Ombygg hela skärmen så inställningsfälten för min/sek syns igen.
-    await laddaPoang(on401);
+    const startKnapp = document.getElementById("tidtagare-start-knapp");
+    if (startKnapp) startKnapp.textContent = "▶ Starta";
     return;
   }
 
-  // Starta: läs av (ev. ändrade) min/sek-fält, spara som senast använda,
-  // och sätt igång nedräkningen.
-  const minInput = document.getElementById("tidtagare-min");
-  const sekInput = document.getElementById("tidtagare-sek");
-  const minuter = Math.max(0, parseInt(minInput.value, 10) || 0);
-  const sekunder = Math.max(0, Math.min(59, parseInt(sekInput.value, 10) || 0));
-  if (minuter === 0 && sekunder === 0) {
-    visaToast("Ange en tid längre än 0 sekunder.");
-    return;
+  if (!timer_har_startats) {
+    // FÖRSTA starten - läs av min/sek-fälten, spara som senast använda.
+    const minInput = document.getElementById("tidtagare-min");
+    const sekInput = document.getElementById("tidtagare-sek");
+    const minuter = Math.max(0, parseInt(minInput.value, 10) || 0);
+    const sekunder = Math.max(0, Math.min(59, parseInt(sekInput.value, 10) || 0));
+    if (minuter === 0 && sekunder === 0) {
+      visaToast("Ange en tid längre än 0 sekunder.");
+      return;
+    }
+    timer_minuter = minuter;
+    timer_sekunder_satt = sekunder;
+    timer_sekunder_kvar = minuter * 60 + sekunder;
+    timer_har_startats = true;
+    sparaTidtagarInstallning(on401); // i bakgrunden - inget att vänta på för att starta klockan
+
+    const installningsRad = document.querySelector(".tidtagare-installning");
+    if (installningsRad) installningsRad.remove();
+    const ljudRad = document.querySelector(".tidtagare-ljudval");
+    if (ljudRad) ljudRad.remove();
   }
-  timer_minuter = minuter;
-  timer_sekunder_satt = sekunder;
-  timer_sekunder_kvar = minuter * 60 + sekunder;
+  // ÅTERUPPTA (eller precis satt igång) - timer_sekunder_kvar är redan
+  // rätt värde i båda fallen, rör den inte här.
+
   timer_kor = true;
-
-  sparaTidtagarInstallning(on401); // i bakgrunden - inget att vänta på för att starta klockan
-
   const startKnapp = document.getElementById("tidtagare-start-knapp");
   if (startKnapp) startKnapp.textContent = "Pausa";
-  const installningsRad = document.querySelector(".tidtagare-installning");
-  if (installningsRad) installningsRad.remove();
 
   timer_id = setInterval(() => tidtagareTick(on401), 1000);
 }
 
-function tidtagareTick(on401) {
+export function tidtagareTick(on401) {
   timer_sekunder_kvar--;
   const display = document.getElementById("tidtagare-display");
-  if (display) display.textContent = formateraTid(Math.max(0, timer_sekunder_kvar));
+  if (display) {
+    display.textContent = formateraTid(Math.max(0, timer_sekunder_kvar));
+    display.classList.toggle("tidtagare-varning", timer_sekunder_kvar <= VARNINGSGRANS_SEKUNDER && timer_sekunder_kvar > 0);
+  }
   if (timer_sekunder_kvar <= 0) {
     timer_kor = false;
     if (timer_id) { clearInterval(timer_id); timer_id = null; }
+    spelaLjud();
+    vibrera();
     visaToast("Tiden är slut!");
   }
 }
 
 function nollstallTidtagare(on401) {
   timer_kor = false;
+  timer_har_startats = false;
   if (timer_id) { clearInterval(timer_id); timer_id = null; }
   timer_sekunder_kvar = timer_minuter * 60 + timer_sekunder_satt;
   laddaPoang(on401);

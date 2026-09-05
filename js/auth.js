@@ -2,6 +2,13 @@
 // alla andra skärmar (poäng, grupper, spelare, ...) ska använda för att
 // prata med sin Worker, samt själva inloggningsformulärets logik.
 //
+// Flödet är numera BARA e-post (ingen lagkod) - se auth-worker.js för
+// den fulla motiveringen. Tre steg i UI:t:
+//   1. Ange e-post -> skicka kod
+//   2. Ange koden -> antingen loggas man in direkt (redan medlem
+//      nagonstans), ELLER visas steg 3 om eposten är helt ny.
+//   3. (bara for nya epostadresser) Ange lagnamn+sport -> skapar laget.
+//
 // De rena funktionerna (hamtaToken/sparaToken/taBortToken/anropaMedToken)
 // har medvetet INGET DOM-beroende - de går att testa direkt i Node utan
 // webbläsare. DOM-kopplingen (formulär, knappar) ligger samlad i
@@ -41,23 +48,45 @@ export async function anropaMedToken(path, opts = {}, on401 = () => {}) {
   return res;
 }
 
-export async function skickaKod(lagkod, epost) {
+export async function skickaKod(epost) {
   const res = await fetch(AUTH_WORKER_URL + "/auth/starta", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ lagkod, epost }),
+    body: JSON.stringify({ epost }),
   });
-  if (!res.ok) throw new Error("Kunde inte skicka kod. Försök igen.");
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Kunde inte skicka kod. Försök igen.");
 }
 
-export async function verifieraKod(lagkod, epost, kod) {
+// Returnerar { klar: true } om inloggningen är fullständig (token sparad),
+// eller { klar: false, pending_token } om eposten var ny och steg 3
+// (Skapa lag) behöver visas härnäst.
+export async function verifieraKod(epost, kod) {
   const res = await fetch(AUTH_WORKER_URL + "/auth/verifiera", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ lagkod, epost, kod }),
+    body: JSON.stringify({ epost, kod }),
   });
   const data = await res.json();
-  if (!res.ok || !data.token) throw new Error(data.error || "Fel kod. Försök igen.");
+  if (!res.ok) throw new Error(data.error || "Fel kod. Försök igen.");
+  if (data.token) {
+    sparaToken(data.token);
+    return { klar: true };
+  }
+  if (data.ny_anvandare && data.pending_token) {
+    return { klar: false, pending_token: data.pending_token };
+  }
+  throw new Error("Oväntat svar från servern.");
+}
+
+export async function skapaLag(lagnamn, sport, pending_token) {
+  const res = await fetch(AUTH_WORKER_URL + "/auth/nytt-lag", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + pending_token },
+    body: JSON.stringify({ lagnamn, sport }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.token) throw new Error(data.error || "Kunde inte skapa laget. Försök igen.");
   sparaToken(data.token);
 }
 
@@ -69,37 +98,49 @@ export async function verifieraKod(lagkod, epost, kod) {
 export function initLogin(callbacks) {
   const stegEpost = document.getElementById("login-steg-epost");
   const stegKod = document.getElementById("login-steg-kod");
+  const stegNyttLag = document.getElementById("login-steg-nytt-lag");
   const felEpost = document.getElementById("login-fel-1");
   const felKod = document.getElementById("login-fel-2");
-  let vantande_lagkod = null;
+  const felNyttLag = document.getElementById("login-fel-3");
   let vantande_epost = null;
+  let pending_token = null;
 
-  function visaEpostSteg() {
-    stegEpost.classList.remove("dold");
+  function doljAllaSteg() {
+    stegEpost.classList.add("dold");
     stegKod.classList.add("dold");
+    stegNyttLag.classList.add("dold");
     felEpost.textContent = "";
     felKod.textContent = "";
+    felNyttLag.textContent = "";
+  }
+
+  function visaEpostSteg() {
+    doljAllaSteg();
+    stegEpost.classList.remove("dold");
   }
 
   function visaKodSteg() {
-    stegEpost.classList.add("dold");
+    doljAllaSteg();
     stegKod.classList.remove("dold");
     document.getElementById("in-kod").value = "";
   }
 
+  function visaNyttLagSteg() {
+    doljAllaSteg();
+    stegNyttLag.classList.remove("dold");
+  }
+
   document.getElementById("skicka-kod-knapp").addEventListener("click", async () => {
-    const lagkod = document.getElementById("in-lagkod").value.trim();
     const epost = document.getElementById("in-epost").value.trim();
     felEpost.textContent = "";
-    if (!lagkod || !epost) {
-      felEpost.textContent = "Fyll i både lagkod och e-postadress.";
+    if (!epost) {
+      felEpost.textContent = "Ange din e-postadress.";
       return;
     }
     const knapp = document.getElementById("skicka-kod-knapp");
     knapp.disabled = true;
     try {
-      await skickaKod(lagkod, epost);
-      vantande_lagkod = lagkod;
+      await skickaKod(epost);
       vantande_epost = epost;
       visaKodSteg();
     } catch (fel) {
@@ -119,10 +160,35 @@ export function initLogin(callbacks) {
     const knapp = document.getElementById("verifiera-kod-knapp");
     knapp.disabled = true;
     try {
-      await verifieraKod(vantande_lagkod, vantande_epost, kod);
-      callbacks.efterInloggning();
+      const resultat = await verifieraKod(vantande_epost, kod);
+      if (resultat.klar) {
+        callbacks.efterInloggning();
+      } else {
+        pending_token = resultat.pending_token;
+        visaNyttLagSteg();
+      }
     } catch (fel) {
       felKod.textContent = fel.message;
+    } finally {
+      knapp.disabled = false;
+    }
+  });
+
+  document.getElementById("skapa-lag-knapp").addEventListener("click", async () => {
+    const lagnamn = document.getElementById("in-nytt-lagnamn").value.trim();
+    const sport = document.getElementById("in-nytt-sport").value;
+    felNyttLag.textContent = "";
+    if (!lagnamn) {
+      felNyttLag.textContent = "Ange ett lagnamn.";
+      return;
+    }
+    const knapp = document.getElementById("skapa-lag-knapp");
+    knapp.disabled = true;
+    try {
+      await skapaLag(lagnamn, sport, pending_token);
+      callbacks.efterInloggning();
+    } catch (fel) {
+      felNyttLag.textContent = fel.message;
     } finally {
       knapp.disabled = false;
     }

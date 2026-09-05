@@ -15,6 +15,17 @@ body {
   margin-bottom: 16px;
 }
 .app-header h1 { font-size: 20px; margin: 0; }
+.lagnamn-valjare {
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  padding: 4px 24px 4px 0;
+  margin: 0;
+  cursor: pointer;
+  max-width: 60vw;
+  text-overflow: ellipsis;
+}
 .app-header-left { display: flex; align-items: center; gap: 10px; }
 .badge {
   font-size: 11px;
@@ -402,6 +413,13 @@ body {
   cursor: pointer;
 }
 
+.markera-rad {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.markera-rad button { flex: 1; }
+
 /* ---- Dela in grupper (ny design) ---- */
 .grupper-info { font-size: 13px; color: #555; margin-bottom: 4px; }
 .grupper-info-liten { font-size: 12px; color: #888; }
@@ -497,6 +515,264 @@ body {
   font-size: 15px;
   cursor: pointer;
   margin: 16px 0 24px 0;
+}
+
+.tidtagare-display.tidtagare-varning { color: #c0392b; }
+.tidtagare-ljudval {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+.tidtagare-ljudval select {
+  margin-bottom: 0;
+  width: auto;
+  display: inline-block;
+  padding: 4px 8px;
+}
+
+.farg-swatch {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 10px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+.farg-knapprad { display: flex; gap: 4px; }
+.farg-ikonknapp {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.farg-ikonknapp:disabled { opacity: 0.3; cursor: default; }
+.farg-ikonknapp-ta-bort { color: #c0392b; border-color: #f0c0c0; }
+.farg-palett {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.farg-palett-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.15);
+  cursor: pointer;
+  padding: 0;
+}
+.farg-palett-swatch:hover { transform: scale(1.1); }
+
+.antal-grupper-stegare {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: #444;
+}
+.antal-grupper-varde {
+  font-size: 18px;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+}
+
+.spelar-chiprad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.spelar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 6px 6px 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.spelar-chip-inaktiv { opacity: 0.5; }
+.chip-ikonknapp {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+  border-radius: 50%;
+}
+.spelare-redigera-chip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: white;
+  border: 1px solid #1A1A1A;
+  border-radius: 12px;
+  padding: 8px;
+  width: 100%;
+}
+.spelare-redigera-chip input { flex: 1; min-width: 90px; }
+
+.positioner-kryssrad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.positioner-kryss-etikett { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+
+.bulk-spelare-rad {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.bulk-spelare-rad input { flex: 1; }
+.bulk-spelare-rad select { flex: 1; margin-bottom: 0; }
+
+.forval-rad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.forval-knappgrupp {
+  display: inline-flex;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+}
+.forval-knapp {
+  border: none;
+  background: white;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.forval-ta-bort {
+  border: none;
+  border-left: 1px solid #ccc;
+  background: #f2f2f2;
+  padding: 8px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  color: #c0392b;
+}
+.ljud-vibration-val {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+.ljud-vibration-val select {
+  margin-bottom: 0;
+  width: auto;
+  display: inline-block;
+  padding: 4px 8px;
+}
+.vibration-etikett {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  cursor: pointer;
+}
+
+.sport-pillar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.sport-grupp {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sport-futsal-lank {
+  border: none;
+  background: none;
+  color: #666;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 2px;
+  align-self: flex-end;
+  margin-bottom: 6px;
+}
+.sport-pill-med-ikon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+}
+.sport-pill-med-ikon svg { color: inherit; }
+.sport-pill-med-ikon.vald svg { color: white; }
+
+/* ---- Bekräftelsedialog (t.ex. Byt sport) ---- */
+.dialog-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+.dialog-ruta {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  max-width: 420px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.dialog-ruta h3 { margin: 0 0 12px 0; font-size: 17px; }
+.dialog-ruta p { font-size: 14px; color: #444; margin: 0 0 10px 0; }
+.dialog-knapprad-huvud {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.dialog-knapp-sekundar, .dialog-knapp-primar {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dialog-knapp-sekundar { border: 1px solid #ccc; background: white; color: #333; }
+.dialog-knapp-primar { border: none; background: #1A1A1A; color: white; }
+/* Den "farliga" knappen (rör spelarnas egen data) är AVSIKTLIGT mindre,
+   avskild och mindre framträdande än de två vanliga valen ovan - så man
+   inte råkar trycka fel av misstag när man bara vill avbryta eller byta. */
+.dialog-knapp-farlig {
+  display: block;
+  width: auto;
+  margin: 10px auto 0 auto;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0a0a0;
+  background: white;
+  color: #c0392b;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 /* ---- Delat: mätning + toast ---- */

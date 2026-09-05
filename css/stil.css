@@ -704,22 +704,6 @@ body {
   gap: 8px;
   margin-bottom: 4px;
 }
-.sport-grupp {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.sport-futsal-lank {
-  border: none;
-  background: none;
-  color: #666;
-  font-size: 12px;
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 4px 2px;
-  align-self: flex-end;
-  margin-bottom: 6px;
-}
 .sport-pill-med-ikon {
   display: flex;
   flex-direction: column;

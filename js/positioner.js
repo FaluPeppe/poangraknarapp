@@ -141,34 +141,17 @@ function byggBytSport(positioner, on401) {
   const sportRad = document.createElement("div");
   sportRad.className = "sport-pillar";
 
-  // Fotboll och Futsal delar samma ikon (ingen bra egen futsal-ikon hittad
-  // i samma stil) - Futsal visas som en liten textlänk bredvid, istället
-  // för en egen stor ikon-knapp. De sätter fortfarande OLIKA positioner
-  // (Futsal har en enklare uppsättning) - bara visningen är delad.
-  const fotbollGrupp = document.createElement("span");
-  fotbollGrupp.className = "sport-grupp";
-  const fotbollKnapp = document.createElement("button");
-  fotbollKnapp.className = "spelar-pill sport-pill-med-ikon";
-  fotbollKnapp.innerHTML = `${SPORT_SVG.Fotboll || ""}<span>Fotboll</span>`;
-  fotbollKnapp.onclick = () => bytSport("Fotboll", positioner, on401);
-  const futsalLank = document.createElement("button");
-  futsalLank.className = "sport-futsal-lank";
-  futsalLank.textContent = "Futsal";
-  futsalLank.title = "Futsal (samma ikon som fotboll, egna positioner)";
-  futsalLank.onclick = () => bytSport("Futsal", positioner, on401);
-  fotbollGrupp.appendChild(fotbollKnapp);
-  fotbollGrupp.appendChild(futsalLank);
-  sportRad.appendChild(fotbollGrupp);
-
-  Object.keys(STANDARDPOSITIONER)
-    .filter(sport => sport !== "Fotboll" && sport !== "Futsal")
-    .forEach(sport => {
-      const knapp = document.createElement("button");
-      knapp.className = "spelar-pill sport-pill-med-ikon";
-      knapp.innerHTML = `${SPORT_SVG[sport] || ""}<span>${sport}</span>`;
-      knapp.onclick = () => bytSport(sport, positioner, on401);
-      sportRad.appendChild(knapp);
-    });
+  // Fotboll och Futsal delar samma bild (ingen egen futsal-ikon i samma
+  // stil hittades) - men visas nu som VANLIGA, likadana knappar. De sätter
+  // fortfarande OLIKA positioner (Futsal har en enklare uppsättning) -
+  // bara bilden är delad, inte funktionen.
+  Object.keys(STANDARDPOSITIONER).forEach(sport => {
+    const knapp = document.createElement("button");
+    knapp.className = "spelar-pill sport-pill-med-ikon";
+    knapp.innerHTML = `${SPORT_SVG[sport] || ""}<span>${sport}</span>`;
+    knapp.onclick = () => bytSport(sport, positioner, on401);
+    sportRad.appendChild(knapp);
+  });
   wrapper.appendChild(sportRad);
 
   const attribution = document.createElement("p");

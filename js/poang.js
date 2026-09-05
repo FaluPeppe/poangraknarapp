@@ -89,7 +89,6 @@ function rendera(grupper, on401) {
 
   container.appendChild(byggTidtagare(on401));
   container.appendChild(byggGenvagsrad(on401));
-  container.appendChild(byggAntalGrupperStegare(grupper.length, on401));
 
   const lagRad = document.createElement("div");
   lagRad.className = "lag-container-inre";
@@ -134,53 +133,9 @@ function rendera(grupper, on401) {
   container.appendChild(lagRad);
 }
 
-// Antal grupper styrs härifrån (inte på Närvaro-skärmen längre) - kan
-// aldrig bli färre än 2. Grupperna byggs alltid FRÅN färgpaletten i
+// OBS: "Antal grupper"-stegaren bor numera på Dela in grupper-skärmen
+// (js/grupper.js), inte här. Grupperna byggs alltid FRÅN färgpaletten i
 // Inställningar → Hantera färger, i den ordningen.
-function byggAntalGrupperStegare(antal, on401) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "antal-grupper-stegare";
-
-  const etikett = document.createElement("span");
-  etikett.textContent = "Antal grupper:";
-  wrapper.appendChild(etikett);
-
-  const nerKnapp = document.createElement("button");
-  nerKnapp.className = "farg-ikonknapp";
-  nerKnapp.textContent = "▼";
-  nerKnapp.disabled = antal <= 2;
-  nerKnapp.onclick = () => andraAntalGrupper(antal - 1, on401);
-  wrapper.appendChild(nerKnapp);
-
-  const varde = document.createElement("span");
-  varde.className = "antal-grupper-varde";
-  varde.textContent = antal;
-  wrapper.appendChild(varde);
-
-  const uppKnapp = document.createElement("button");
-  uppKnapp.className = "farg-ikonknapp";
-  uppKnapp.textContent = "▲";
-  uppKnapp.onclick = () => andraAntalGrupper(antal + 1, on401);
-  wrapper.appendChild(uppKnapp);
-
-  return wrapper;
-}
-
-async function andraAntalGrupper(nytt_antal, on401) {
-  if (nytt_antal < 2) return;
-  try {
-    const res = await anropaMedToken("/poang/antal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ antal: nytt_antal }),
-    }, on401);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
-    await laddaPoang(on401);
-  } catch (fel) {
-    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte ändra antal grupper.");
-  }
-}
 
 function byggGenvagsrad(on401) {
   const rad = document.createElement("div");

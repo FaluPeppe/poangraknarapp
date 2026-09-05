@@ -12,7 +12,7 @@ export function initAppinstallningar() {
   container.innerHTML = "";
 
   const rubrik = document.createElement("h2");
-  rubrik.className = "historik-rubrik";
+  rubrik.className = "grupper-rubrik";
   rubrik.textContent = "Appinställningar";
   container.appendChild(rubrik);
 
@@ -21,8 +21,10 @@ export function initAppinstallningar() {
   info.textContent = "Personliga inställningar som gäller den här webbläsaren, inte hela laget.";
   container.appendChild(info);
 
+  // Eget kort - INTE .avsluta-form, vars label/input-regler (tänkta för
+  // textfält) annars slår mot radioknapparna här.
   const kort = document.createElement("div");
-  kort.className = "avsluta-form";
+  kort.className = "appinstallningar-kort";
   kort.appendChild(byggSkarmvakenValjare());
   kort.appendChild(byggLjudOchVibrationsval());
   container.appendChild(kort);

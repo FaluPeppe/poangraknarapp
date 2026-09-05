@@ -387,5 +387,3 @@ function fordelaEfterFalt(narvarande, grupper, vardeFn) {
     });
   }
 }
-
-

@@ -11,26 +11,25 @@ export function visaToast(text) {
 
 // visaTid() togs bort - svarstidsmätningen visades inte längre i UI:t.
 
-// En inställningsrad: etikett + liten hjälptext till vänster, själva
-// kontrollen (radioknappar, kryssruta, ...) till höger PÅ SAMMA RAD. Staplas
-// automatiskt på smal skärm. Används av Appinställningar-skärmen.
+// En inställningsrad för Appinställningar: rubrik + liten hjälptext, och
+// under dem själva kontrollen (radioknapparna i EN rad, kryssruta, ...).
+// Radioknapparna ligger alltså på samma rad som varandra, inte staplade.
 export function byggInstallningsRad(etikett, hjalptext, kontrollEl) {
   const rad = document.createElement("div");
   rad.className = "installning-rad";
 
-  const vanster = document.createElement("div");
-  vanster.className = "installning-etikett";
   const namn = document.createElement("span");
   namn.className = "installning-namn";
   namn.textContent = etikett;
-  vanster.appendChild(namn);
+  rad.appendChild(namn);
+
   if (hjalptext) {
     const hj = document.createElement("span");
     hj.className = "installning-hjalp";
     hj.textContent = hjalptext;
-    vanster.appendChild(hj);
+    rad.appendChild(hj);
   }
-  rad.appendChild(vanster);
+
   rad.appendChild(kontrollEl);
   return rad;
 }

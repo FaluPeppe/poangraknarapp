@@ -699,37 +699,24 @@ body {
   cursor: pointer;
   color: #c0392b;
 }
-/* ---- Appinställningar (inställningsrader: etikett vänster, kontroll höger) ---- */
+/* ---- Appinställningar: rubrik + hjälptext, radioknapparna i en rad under ---- */
 .installning-rad {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 12px 0;
+  padding: 14px 0;
   border-bottom: 1px solid #eee;
 }
 .installning-rad:first-child { padding-top: 0; }
 .installning-rad:last-child { padding-bottom: 0; border-bottom: none; }
-.installning-etikett {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.installning-namn { font-weight: 600; font-size: 14px; color: #1A1A1A; }
-.installning-hjalp { font-size: 12px; color: #888; }
+.installning-namn { display: block; font-weight: 600; font-size: 14px; color: #1A1A1A; }
+.installning-hjalp { display: block; font-size: 12px; color: #888; margin-top: 2px; }
 .installning-kontroll {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 2px 14px;
-  flex: 0 0 auto;
-  max-width: 52%;
+  gap: 8px 18px;
+  margin-top: 10px;
 }
 .installning-kontroll .radio-rad {
   margin-bottom: 0;
-  font-size: 13px;
+  font-size: 14px;
   white-space: nowrap;
 }
 

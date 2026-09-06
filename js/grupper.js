@@ -18,6 +18,7 @@
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast, textFargForBg } from "./ui.js";
+import { nav } from "./nav.js";
 import { byggAntalGrupperStegare } from "./antalgrupper.js";
 
 // spelar_id -> true/false. Modulnivå (överlever navigering fram och
@@ -196,12 +197,15 @@ function rendera(spelare, grupper, on401) {
   // ---- Godkänn-knapp ----
   // OBS: varje tilldelning ovan gäller redan direkt (inget "utkast"-läge
   // att skilja på i vår modell) - den här knappen är en tydlig
-  // avslutningspunkt som matchar Shiny-appens flöde, men gör inget
-  // funktionellt utöver att bekräfta att du är klar.
+  // avslutningspunkt: den tar dig tillbaka dit du kom ifrån (Närvaro eller
+  // Poäng), precis som "← Tillbaka", och bekräftar med en toast.
   const godkannKnapp = document.createElement("button");
   godkannKnapp.className = "knapp-godkann";
   godkannKnapp.textContent = "✓ Godkänn och kör igång";
-  godkannKnapp.onclick = () => visaToast("Klart! Gruppindelningen gäller redan.");
+  godkannKnapp.onclick = () => {
+    nav.gaTillbakaFranGrupper();
+    visaToast("Gruppindelningen är genomförd.");
+  };
   container.appendChild(godkannKnapp);
 
   // OBS: gruppadministration (lägg till/ändra/ta bort grupper/färger) finns

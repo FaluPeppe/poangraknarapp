@@ -112,10 +112,12 @@ document.getElementById("nav-poang-knapp").addEventListener("click", () => visaH
 document.getElementById("nav-intervaller-knapp").addEventListener("click", () => visaHuvudflik("intervaller"));
 document.getElementById("nav-installningar-knapp").addEventListener("click", visaInstallningarHubb);
 document.getElementById("installningar-tillbaka-knapp").addEventListener("click", visaInstallningarHubb);
-document.getElementById("grupper-tillbaka-knapp").addEventListener("click", () => visaHuvudflik(grupperUrsprung));
+const gaTillbakaFranGrupper = () => visaHuvudflik(grupperUrsprung);
+document.getElementById("grupper-tillbaka-knapp").addEventListener("click", gaTillbakaFranGrupper);
 
 // Koppla in nav-bryggan - se nav.js för varför detta görs indirekt.
 nav.gaTillGrupper = (ursprung) => visaGrupperSkarm(ursprung);
+nav.gaTillbakaFranGrupper = gaTillbakaFranGrupper;
 nav.gaTillAvsluta = () => visaHanteraSkarm("avsluta");
 
 Object.entries(hanteraSkarmar).forEach(([namn, s]) => {

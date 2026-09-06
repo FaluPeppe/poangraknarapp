@@ -141,7 +141,9 @@ function rendera(mig, minaLag, on401) {
   anslut.appendChild(anslutRubrik);
   const anslutInfo = document.createElement("p");
   anslutInfo.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
-  anslutInfo.textContent = "Om du har en kod till ett lag som inte redan finns i listan ovan.";
+  anslutInfo.textContent = "För att DU ska gå med i någon annans lag. Har du fått en lagkod "
+    + "klistrar du in den här. (Ska du istället släppa in en ledare i det här laget - "
+    + "se \"Anslutna ledare\" nedan.)";
   anslut.appendChild(anslutInfo);
   const anslutLabel = document.createElement("label");
   anslutLabel.textContent = "Lagkod";
@@ -162,6 +164,11 @@ function rendera(mig, minaLag, on401) {
   ledareRubrik.className = "historik-rubrik";
   ledareRubrik.textContent = "Anslutna ledare";
   container.appendChild(ledareRubrik);
+  const ledareInfo = document.createElement("p");
+  ledareInfo.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
+  ledareInfo.textContent = "Vilka som kan logga in och hantera det här laget. "
+    + (jag_ar_admin ? "Bjud in fler med deras e-postadress." : "");
+  container.appendChild(ledareInfo);
   const ledarePlats = document.createElement("div");
   ledarePlats.id = "lag-ledare-sektion";
   ledarePlats.innerHTML = '<span style="color:#888;">Laddar...</span>';

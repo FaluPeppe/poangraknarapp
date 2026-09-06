@@ -55,12 +55,29 @@ function rendera(medlemmar, mig, on401) {
   // OBS: detta är bara för att VISA rätt UI - den riktiga behörighets-
   // kontrollen sker alltid på servern (se worker.js: ar_admin_just_nu).
   const jag_ar_admin = mig.roll === "admin";
+  const min_epost = (mig.epost || "").toLowerCase();
 
+  // ---- Bjud in (bara admins) ----
+  // OBS: "bjuda in" = lägga till e-postadressen i lagets behörighetslista.
+  // Något mejl skickas INTE - personen kommer åt laget nästa gång hen
+  // loggar in i appen med just den adressen (vanlig e-post + engångskod).
   if (jag_ar_admin) {
+    const bjudInRubrik = document.createElement("h4");
+    bjudInRubrik.className = "ledare-underrubrik";
+    bjudInRubrik.textContent = "Bjud in en ledare";
+    container.appendChild(bjudInRubrik);
+
+    const bjudInInfo = document.createElement("p");
+    bjudInInfo.className = "grupper-info-liten";
+    bjudInInfo.textContent = "Skriv ledarens e-postadress. Hen kommer åt laget nästa gång "
+      + "hen loggar in i appen med den adressen - inget mejl skickas härifrån, "
+      + "så säg till hen att logga in. Välj Admin om hen också ska kunna bjuda in fler och ändra laginställningar.";
+    container.appendChild(bjudInInfo);
+
     const laggTill = document.createElement("div");
     laggTill.className = "spelare-lagg-till";
     laggTill.innerHTML = `
-      <input type="email" id="ny-medlem-epost" placeholder="E-postadress">
+      <input type="email" id="ny-medlem-epost" placeholder="E-postadress" autocomplete="off">
       <select id="ny-medlem-roll">
         <option value="medlem">Medlem</option>
         <option value="admin">Admin</option>
@@ -71,9 +88,23 @@ function rendera(medlemmar, mig, on401) {
     document.getElementById("lagg-till-medlem-knapp").onclick = () => laggTillMedlem(on401);
   }
 
+  // ---- Lista: vilka som redan har åtkomst ----
+  const listRubrik = document.createElement("h4");
+  listRubrik.className = "ledare-underrubrik";
+  listRubrik.textContent = "Har åtkomst nu";
+  container.appendChild(listRubrik);
+
+  if (!jag_ar_admin) {
+    const info = document.createElement("p");
+    info.className = "grupper-info-liten";
+    info.textContent = "Bara admins kan bjuda in eller ta bort ledare.";
+    container.appendChild(info);
+  }
+
   const lista = document.createElement("div");
   lista.className = "spelar-lista";
   medlemmar.forEach(m => {
+    const ar_jag = m.epost.toLowerCase() === min_epost;
     const rad = document.createElement("div");
     rad.className = "spelar-rad";
 
@@ -82,6 +113,12 @@ function rendera(medlemmar, mig, on401) {
     const epost = document.createElement("div");
     epost.className = "spelar-namn";
     epost.textContent = m.epost;
+    if (ar_jag) {
+      const duBadge = document.createElement("span");
+      duBadge.className = "badge ledare-du-badge";
+      duBadge.textContent = "Du";
+      epost.appendChild(duBadge);
+    }
     info.appendChild(epost);
     const roll = document.createElement("div");
     roll.className = "spelar-positioner";
@@ -89,7 +126,9 @@ function rendera(medlemmar, mig, on401) {
     info.appendChild(roll);
     rad.appendChild(info);
 
-    if (jag_ar_admin) {
+    // Admins ser knapparna för alla UTOM sig själva - att degradera eller
+    // ta bort sig själv härifrån mitt i en session ställer bara till det.
+    if (jag_ar_admin && !ar_jag) {
       const rollKnapp = document.createElement("button");
       rollKnapp.className = "narvaro-knapp";
       rollKnapp.textContent = m.roll === "admin" ? "Gör till medlem" : "Gör till admin";
@@ -124,7 +163,7 @@ async function laggTillMedlem(on401) {
     }, on401);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
-    visaToast("Ledaren är tillagd.");
+    visaToast(`${epost} kan nu logga in i laget. Säg till hen att logga in med den adressen.`);
     await initMedlemmar(on401);
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte lägga till.");

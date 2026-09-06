@@ -14,6 +14,7 @@
 
 import { anropaMedToken, sparaToken } from "./auth.js";
 import { visaToast } from "./ui.js";
+import { initMedlemmar } from "./medlemmar.js";
 
 export async function initLag(on401) {
   const container = document.getElementById("lag-installningar-container");
@@ -155,6 +156,17 @@ function rendera(mig, minaLag, on401) {
   anslutKnapp.onclick = () => anslutTillLag(on401);
   anslut.appendChild(anslutKnapp);
   container.appendChild(anslut);
+
+  // ---- Anslutna ledare (tidigare en egen "Tränare"-knapp i hubben) ----
+  const ledareRubrik = document.createElement("h3");
+  ledareRubrik.className = "historik-rubrik";
+  ledareRubrik.textContent = "Anslutna ledare";
+  container.appendChild(ledareRubrik);
+  const ledarePlats = document.createElement("div");
+  ledarePlats.id = "lag-ledare-sektion";
+  ledarePlats.innerHTML = '<span style="color:#888;">Laddar...</span>';
+  container.appendChild(ledarePlats);
+  initMedlemmar(on401, "lag-ledare-sektion"); // fylls i asynkront, ovanstående skelett finns redan i DOM:en
 }
 
 function escapeHtml(text) {

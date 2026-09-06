@@ -1,13 +1,24 @@
-// Medlemshantering-skärmen (Fas 5). Bara admins kan lägga till/ändra/ta
-// bort - Workern kontrollerar detta på riktigt (färsk koll mot databasen,
-// se worker.js), men vi anpassar även UI:t efter roll så en vanlig medlem
-// inte ens ser knappar den ändå skulle nekas att använda.
+// Anslutna ledare - vem som har tillgång till laget, och deras roller.
+// Bara admins kan lägga till/ändra/ta bort - Workern kontrollerar detta på
+// riktigt (färsk koll mot databasen, se worker.js), men vi anpassar även
+// UI:t efter roll så en vanlig medlem inte ens ser knappar den ändå skulle
+// nekas att använda.
+//
+// Bor numera INUTI Hantera lag-skärmen (lag.js) istället för att vara en
+// egen Hantera-knapp - containerId skickas in av anroparen och kommas ihåg
+// (CONTAINER_ID) så att de interna "ladda om"-anropen efter en ändring
+// automatiskt målar om RÄTT container utan att lag.js behöver bry sig om
+// det.
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast } from "./ui.js";
 
-export async function initMedlemmar(on401) {
-  const container = document.getElementById("medlemmar-container");
+let CONTAINER_ID = "medlemmar-container"; // standard - kan override:as av anroparen
+
+export async function initMedlemmar(on401, containerId = CONTAINER_ID) {
+  CONTAINER_ID = containerId;
+  const container = document.getElementById(CONTAINER_ID);
+  if (!container) return; // kontainern kanske inte finns än (t.ex. lag.js hann inte rendera skelettet)
   container.innerHTML = '<span style="color:#888;">Laddar...</span>';
 
   let migRes, medlemmarRes;
@@ -28,7 +39,7 @@ export async function initMedlemmar(on401) {
     return;
   }
   if (!migRes.ok || !medlemmarRes.ok) {
-    visaToast("Kunde inte hämta medlemmar.");
+    visaToast("Kunde inte hämta ledare.");
     return;
   }
 
@@ -38,7 +49,8 @@ export async function initMedlemmar(on401) {
 }
 
 function rendera(medlemmar, mig, on401) {
-  const container = document.getElementById("medlemmar-container");
+  const container = document.getElementById(CONTAINER_ID);
+  if (!container) return;
   container.innerHTML = "";
   // OBS: detta är bara för att VISA rätt UI - den riktiga behörighets-
   // kontrollen sker alltid på servern (se worker.js: ar_admin_just_nu).
@@ -112,7 +124,7 @@ async function laggTillMedlem(on401) {
     }, on401);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
-    visaToast("Tränaren är tillagd.");
+    visaToast("Ledaren är tillagd.");
     await initMedlemmar(on401);
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte lägga till.");

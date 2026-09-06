@@ -17,7 +17,7 @@ import { initGrupper } from "./grupper.js";
 import { initSpelare } from "./spelare.js";
 import { initNarvaro } from "./narvaro.js";
 import { initAvsluta } from "./avsluta.js";
-import { initMedlemmar } from "./medlemmar.js";
+// medlemmar.js importeras nu av lag.js istället (Anslutna ledare bor där).
 import { initLag } from "./lag.js";
 import { initPositioner } from "./positioner.js";
 import { initFarger } from "./farger.js";
@@ -50,7 +50,6 @@ const huvudflikar = {
 const hanteraSkarmar = {
   spelare: { container: "spelare-container", knapp: "hantera-spelare-knapp", init: () => initSpelare(visaLoginVy) },
   avsluta: { container: "avsluta-container", knapp: "hantera-avsluta-knapp", init: () => initAvsluta(visaLoginVy) },
-  medlemmar: { container: "medlemmar-container", knapp: "hantera-medlemmar-knapp", init: () => initMedlemmar(visaLoginVy) },
   lag: { container: "lag-installningar-container", knapp: "hantera-lag-knapp", init: () => initLag(visaLoginVy) },
   positioner: { container: "positioner-container", knapp: "hantera-positioner-knapp", init: () => initPositioner(visaLoginVy) },
   farger: { container: "farger-container", knapp: "hantera-farger-knapp", init: () => initFarger(visaLoginVy) },

@@ -195,6 +195,8 @@ export function initLogin(callbacks) {
   });
 
   document.getElementById("tillbaka-knapp").addEventListener("click", visaEpostSteg);
+  const tillbakaFranNyttLag = document.getElementById("tillbaka-fran-nytt-lag-knapp");
+  if (tillbakaFranNyttLag) tillbakaFranNyttLag.addEventListener("click", visaEpostSteg);
   document.getElementById("in-kod").addEventListener("keydown", (e) => {
     if (e.key === "Enter") document.getElementById("verifiera-kod-knapp").click();
   });
@@ -208,4 +210,19 @@ export function initLogin(callbacks) {
   });
 
   visaEpostSteg();
+
+  // Inbjudningslänk: e-postadressen ligger i URL-fragmentet
+  // (#epost=...) - förifyll fältet så den inbjudna bara behöver
+  // trycka "Skicka kod". Fragmentet plockas bort direkt efteråt så
+  // adressen inte ligger kvar i adressfältet/historiken.
+  try {
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const inbjudenEpost = (hash.get("epost") || "").trim();
+    if (inbjudenEpost) {
+      document.getElementById("in-epost").value = inbjudenEpost;
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  } catch (fel) {
+    // Trasigt fragment - strunta i det, vanliga inloggningen funkar ändå.
+  }
 }

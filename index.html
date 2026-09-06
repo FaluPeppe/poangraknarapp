@@ -63,7 +63,7 @@
     </div>
 
     <div class="skarm-nav">
-      <button class="skarm-nav-knapp aktiv" id="nav-grupper-knapp">Närvaro</button>
+      <button class="skarm-nav-knapp aktiv" id="nav-narvaro-knapp">Närvaro</button>
       <button class="skarm-nav-knapp" id="nav-poang-knapp">Poäng</button>
       <button class="skarm-nav-knapp" id="nav-intervaller-knapp">Intervaller</button>
       <button class="skarm-nav-knapp" id="nav-installningar-knapp">Inställningar</button>
@@ -75,14 +75,14 @@
     <div id="installningar-hubb" class="dold">
       <div class="hantera-grid">
         <button class="hantera-knapp" id="hantera-spelare-knapp">Hantera spelare</button>
-        <button class="hantera-knapp" id="hantera-narvaro-knapp">Hantera närvaro</button>
+        <button class="hantera-knapp" id="hantera-medlemmar-knapp">Tränare</button>
         <button class="hantera-knapp" id="hantera-lag-knapp">Hantera lag</button>
         <button class="hantera-knapp" id="hantera-positioner-knapp">Hantera positioner</button>
         <button class="hantera-knapp" id="hantera-farger-knapp">Hantera färger</button>
         <button class="hantera-knapp" id="hantera-poangmatcher-knapp">Hantera poängmatcher</button>
         <button class="hantera-knapp" id="hantera-statistik-knapp">Statistik</button>
+        <button class="hantera-knapp" id="hantera-appinstallningar-knapp">Appinställningar</button>
       </div>
-      <div id="skarmvaken-installning"></div>
     </div>
     <button class="tillbaka-knapp dold" id="installningar-tillbaka-knapp">← Tillbaka till Inställningar</button>
 
@@ -91,7 +91,10 @@
       <span style="color:#888;">Laddar...</span>
     </div>
 
-    <!-- Dela in grupper-skärmen (js/grupper.js). -->
+    <!-- Dela in grupper-skärmen (js/grupper.js). Ingen egen flik - nås via
+         en knapp på Närvaro- eller Poäng-skärmen. "← Tillbaka" leder dit
+         man kom ifrån. -->
+    <button class="tillbaka-knapp dold" id="grupper-tillbaka-knapp">← Tillbaka</button>
     <div id="grupper-container" class="dold">
       <span style="color:#888;">Laddar...</span>
     </div>
@@ -101,7 +104,7 @@
       <span style="color:#888;">Laddar...</span>
     </div>
 
-    <!-- Hantera närvaro-skärmen (js/narvaro.js) - den DELADE listan. -->
+    <!-- Närvaro-fliken (js/narvaro.js) - den DELADE laglistan. -->
     <div id="narvaro-container" class="dold">
       <span style="color:#888;">Laddar...</span>
     </div>
@@ -111,9 +114,12 @@
       <span style="color:#888;">Laddar...</span>
     </div>
 
+    <!-- Tränare/medlemshantering-skärmen (js/medlemmar.js). -->
+    <div id="medlemmar-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
     <!-- Hantera lag-skärmen (js/lag.js). -->
-    <!-- OBS: "Anslutna ledare" (tidigare en egen Tränare-knapp/container,
-         js/medlemmar.js) byggs numera IN i den här skärmen av lag.js. -->
     <div id="lag-installningar-container" class="dold">
       <span style="color:#888;">Laddar...</span>
     </div>
@@ -136,6 +142,12 @@
 
     <!-- Statistik-skärmen (js/statistik.js). -->
     <div id="statistik-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Appinställningar-skärmen (js/appinstallningar.js) - personliga,
+         lokalt sparade val: ljud/vibration för timrarna + håll skärmen vaken. -->
+    <div id="appinstallningar-container" class="dold">
       <span style="color:#888;">Laddar...</span>
     </div>
 

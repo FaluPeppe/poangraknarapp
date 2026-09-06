@@ -1,6 +1,13 @@
-// Håller skärmen vaken en valbar tid med Screen Wake Lock API - så
-// skärmen inte hinner slockna mitt i en match. Personlig inställning,
-// sparas lokalt i webbläsaren (inte per lag).
+// Håller skärmen vaken med Screen Wake Lock API - så skärmen inte hinner
+// slockna mitt i en match. Personlig inställning, sparas lokalt i webb-
+// läsaren (inte per lag).
+//
+// Tre lägen:
+//   "pa"  - hela tiden appen är framme (standard). Locken släpps ändå
+//           automatiskt så fort appen inte är den synliga fliken/appen, så
+//           det kostar bara batteri medan man faktiskt tittar på appen.
+//   "10"  - på i 10 minuter räknat från appstart / att man ändrar valet.
+//   "0"   - aldrig, telefonens egen tidsgräns gäller.
 //
 // OBS om webbläsarstöd:
 //  - Wake Lock API finns i Android Chrome och i Safari 16.4+ (iOS 16.4,
@@ -16,25 +23,26 @@
 
 import { byggInstallningsRad } from "./ui.js";
 
-const NYCKEL = "kif_skarmvaken_minuter";
-const STANDARD_MINUTER = "10"; // "0" = av/aldrig
+const NYCKEL = "kif_skarmvaken_minuter"; // behåller nyckeln - äldre "5"/"10" ligger kvar
+const STANDARD = "pa";
 
 let aktivt_lock = null;
-let slutar_vid = 0;       // ms-tidstämpel då locken ska släppas (0 = inaktiv)
+let alltid = false;       // "pa"-läget: ingen bortre gräns
+let slutar_vid = 0;       // ms-tidstämpel då locken ska släppas (bara minut-läget)
 let slapp_timer = null;
 let lyssnare_kopplade = false;
 
-export function hamtaSkarmvakenMinuter() {
-  return localStorage.getItem(NYCKEL) || STANDARD_MINUTER;
+export function hamtaSkarmvakenLage() {
+  return localStorage.getItem(NYCKEL) || STANDARD;
 }
 
-export function sparaSkarmvakenMinuter(varde) {
+export function sparaSkarmvakenLage(varde) {
   localStorage.setItem(NYCKEL, varde);
   initSkarmvaken(); // applicera direkt - annars måste sidan laddas om
 }
 
 function aktiv() {
-  return slutar_vid > 0 && Date.now() < slutar_vid;
+  return alltid || (slutar_vid > 0 && Date.now() < slutar_vid);
 }
 
 async function begarLock() {
@@ -80,32 +88,53 @@ function kopplaLyssnare() {
 export function initSkarmvaken() {
   if (slapp_timer) { clearTimeout(slapp_timer); slapp_timer = null; }
 
-  const minuter = parseInt(hamtaSkarmvakenMinuter(), 10);
-  if (!minuter || minuter <= 0) { // "Aldrig"
+  // Migrera äldre värden ("1"/"5" min) till "10" - de korta lägena är borta.
+  const ratt = localStorage.getItem(NYCKEL);
+  if (ratt === "1" || ratt === "5") localStorage.setItem(NYCKEL, "10");
+
+  const lage = hamtaSkarmvakenLage();
+
+  if (lage === "0") { // "Aldrig"
+    alltid = false;
     slutar_vid = 0;
     slappLock();
     return;
   }
 
+  if (lage === "pa") { // "Hela tiden appen är öppen"
+    alltid = true;
+    slutar_vid = 0;
+    kopplaLyssnare();
+    begarLock(); // Android/Chrome får locken direkt; iPhone tar första trycket
+    return;
+  }
+
+  // Minut-läge
+  const minuter = parseInt(lage, 10);
+  if (!minuter || minuter <= 0) {
+    alltid = false;
+    slutar_vid = 0;
+    slappLock();
+    return;
+  }
+  alltid = false;
   slutar_vid = Date.now() + minuter * 60 * 1000;
   slapp_timer = setTimeout(() => { slutar_vid = 0; slappLock(); }, minuter * 60 * 1000);
-
   kopplaLyssnare();
-  begarLock(); // Android/Chrome får locken direkt; iPhone tar första trycket vid
+  begarLock();
 }
 
 // Bygger en inställningsrad (etikett + radioknappar på samma rad) för
 // Appinställningar-skärmen.
 export function byggSkarmvakenValjare() {
   const alternativ = [
-    { varde: "1", etikett: "1 min" },
-    { varde: "5", etikett: "5 min" },
+    { varde: "pa", etikett: "Hela tiden" },
     { varde: "10", etikett: "10 min" },
     { varde: "0", etikett: "Aldrig" },
   ];
   const kontroll = document.createElement("div");
   kontroll.className = "installning-kontroll";
-  const nuvarande = hamtaSkarmvakenMinuter();
+  const nuvarande = hamtaSkarmvakenLage();
   alternativ.forEach(a => {
     const radRad = document.createElement("label");
     radRad.className = "radio-rad";
@@ -114,7 +143,7 @@ export function byggSkarmvakenValjare() {
     radio.name = "skarmvaken-minuter";
     radio.value = a.varde;
     radio.checked = nuvarande === a.varde;
-    radio.onchange = () => sparaSkarmvakenMinuter(a.varde);
+    radio.onchange = () => sparaSkarmvakenLage(a.varde);
     radRad.appendChild(radio);
     radRad.appendChild(document.createTextNode(" " + a.etikett));
     kontroll.appendChild(radRad);
@@ -122,7 +151,7 @@ export function byggSkarmvakenValjare() {
 
   return byggInstallningsRad(
     "Håll skärmen vaken",
-    "Förhindrar att skärmen slocknar mitt i en match. På iPhone: aktiveras vid första tryck i appen och fungerar inte i Låst energiläge.",
+    'Förhindrar att skärmen slocknar mitt i en match. "Hela tiden" gäller så länge appen är framme - byter du app eller låser telefonen släpps den. På iPhone: aktiveras vid första tryck i appen och fungerar inte i Låst energiläge.',
     kontroll
   );
 }

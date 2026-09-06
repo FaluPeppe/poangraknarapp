@@ -138,7 +138,7 @@ function rendera(medlemmar, mig, on401) {
       const taBortKnapp = document.createElement("button");
       taBortKnapp.className = "narvaro-knapp";
       taBortKnapp.textContent = "Ta bort";
-      taBortKnapp.onclick = () => taBortMedlem(m.epost, on401);
+      taBortKnapp.onclick = () => bekraftaTaBortLedare(m.epost, m.roll === "admin", on401);
       rad.appendChild(taBortKnapp);
     }
 
@@ -163,13 +163,56 @@ async function laggTillMedlem(on401) {
     }, on401);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
-    visaToast(data.mejl_skickat === false
-      ? `${epost} är tillagd, men inbjudningsmejlet gick inte fram. Säg till hen att logga in med adressen.`
-      : `Inbjudan skickad till ${epost}.`);
+    if (data.mejl_skickat === false) {
+      console.warn("Inbjudningsmejl misslyckades:", data.mejl_fel || "(ingen detalj från servern)");
+      visaToast(`${epost} är tillagd, men mejlet gick inte fram (detaljer i konsolen, F12). Säg till hen att logga in med adressen.`);
+    } else {
+      visaToast(`Inbjudan skickad till ${epost}.`);
+    }
     await initMedlemmar(on401);
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte lägga till.");
   }
+}
+
+// Bekräftelsedialog innan en ledare tas bort - att förlora sin åtkomst ska
+// inte kunna hända på en felklickad knapp. Samma .dialog-ruta-mönster som
+// poangmatcher.js/positioner.js.
+function bekraftaTaBortLedare(epost, ar_admin, on401) {
+  const overlay = document.createElement("div");
+  overlay.className = "dialog-overlay";
+  const dialog = document.createElement("div");
+  dialog.className = "dialog-ruta";
+
+  const rubrik = document.createElement("h3");
+  rubrik.textContent = "Ta bort ledare?";
+  dialog.appendChild(rubrik);
+  const p = document.createElement("p");
+  p.textContent = `${epost}${ar_admin ? " (admin idag)" : ""} förlorar åtkomsten till laget. `
+    + "Hen kan bjudas in igen senare.";
+  dialog.appendChild(p);
+
+  const knappRad = document.createElement("div");
+  knappRad.className = "dialog-knapprad-huvud";
+  const avbryt = document.createElement("button");
+  avbryt.className = "dialog-knapp-sekundar";
+  avbryt.textContent = "Avbryt";
+  avbryt.onclick = () => overlay.remove();
+  const taBort = document.createElement("button");
+  taBort.className = "dialog-knapp-primar";
+  taBort.textContent = "Ta bort";
+  taBort.onclick = async () => {
+    taBort.disabled = true;
+    avbryt.disabled = true;
+    await taBortMedlem(epost, on401);
+    overlay.remove();
+  };
+  knappRad.appendChild(avbryt);
+  knappRad.appendChild(taBort);
+  dialog.appendChild(knappRad);
+
+  overlay.appendChild(dialog);
+  document.body.appendChild(overlay);
 }
 
 async function andraRoll(epost, ny_roll, on401) {

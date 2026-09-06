@@ -1,6 +1,6 @@
-// Hantera lag-skärmen (Fas 6a, utökad). Lagnamn + möjlighet att skapa
-// ytterligare lag, byta mellan sina egna lag, och (för admins) bjuda in
-// ledare - samma funktioner som Shiny-appens "Hantera lag".
+// Hantera lag-skärmen (Fas 6a, utökad). Lagnamn, skapa ytterligare lag, byta
+// mellan sina lag, bjuda in ledare (admin), tipsa en vän om appen, och lämna
+// laget.
 //
 // UTELÄMNAT MEDVETET (matchar inte vår inloggningsmodell eller är separat
 // funktionalitet som förtjänar sin egen omgång):
@@ -11,11 +11,10 @@
 //     e-post via engångskod, så den är redan känd.
 //   - "Koppla bort den här enheten" - vi har ingen enhetsparkoppling
 //     separat från inloggningen (JWT), så begreppet finns inte hos oss.
-//   - "Tipsa en vän om appen" - generisk marknadsföring, inte laghantering.
 //   - "Dela lag" och "Min hemskärmslänk" - inte byggda än, kan tas i en
 //     egen omgång.
 
-import { anropaMedToken, sparaToken } from "./auth.js";
+import { anropaMedToken, sparaToken, taBortToken } from "./auth.js";
 import { visaToast } from "./ui.js";
 import { initMedlemmar } from "./medlemmar.js";
 
@@ -23,11 +22,12 @@ export async function initLag(on401) {
   const container = document.getElementById("lag-installningar-container");
   container.innerHTML = '<span style="color:#888;">Laddar...</span>';
 
-  let migRes, minaLagRes;
+  let migRes, minaLagRes, medlemmarRes;
   try {
-    [migRes, minaLagRes] = await Promise.all([
+    [migRes, minaLagRes, medlemmarRes] = await Promise.all([
       anropaMedToken("/mig", {}, on401),
       anropaMedToken("/lag/mina", {}, on401),
+      anropaMedToken("/medlemmar", {}, on401),
     ]);
   } catch (fel) {
     if (fel.message !== "Utloggad") {
@@ -36,16 +36,17 @@ export async function initLag(on401) {
     }
     return;
   }
-  if (!migRes.ok || !minaLagRes.ok) {
+  if (!migRes.ok || !minaLagRes.ok || !medlemmarRes.ok) {
     visaToast("Kunde inte hämta laginfo.");
     return;
   }
   const mig = await migRes.json();
   const minaLag = await minaLagRes.json();
-  rendera(mig, minaLag, on401);
+  const medlemmar = await medlemmarRes.json();
+  rendera(mig, minaLag, medlemmar, on401);
 }
 
-function rendera(mig, minaLag, on401) {
+function rendera(mig, minaLag, medlemmar, on401) {
   const container = document.getElementById("lag-installningar-container");
   container.innerHTML = "";
   const jag_ar_admin = mig.roll === "admin";
@@ -150,6 +151,273 @@ function rendera(mig, minaLag, on401) {
   ledarePlats.innerHTML = '<span style="color:#888;">Laddar...</span>';
   container.appendChild(ledarePlats);
   initMedlemmar(on401, "lag-ledare-sektion"); // fylls i asynkront, ovanstående skelett finns redan i DOM:en
+
+  // ---- Tipsa en vän (ingen lagkoppling) ----
+  container.appendChild(byggTipsaVan(on401));
+
+  // ---- Fler val: lämna laget (bakom en expander så man inte råkar trycka) ----
+  container.appendChild(byggFlerVal(mig, medlemmar, on401));
+}
+
+// ---- Tipsa en vän ----
+function byggTipsaVan(on401) {
+  const form = document.createElement("div");
+  form.className = "avsluta-form";
+  const rubrik = document.createElement("h3");
+  rubrik.className = "historik-rubrik";
+  rubrik.textContent = "Tipsa en vän om appen";
+  form.appendChild(rubrik);
+  const info = document.createElement("p");
+  info.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
+  info.textContent = "Skickar ett mejl med en länk till appen. Ingen koppling till dina lag – "
+    + "din e-postadress står som avsändare att svara till.";
+  form.appendChild(info);
+
+  const epostLabel = document.createElement("label");
+  epostLabel.textContent = "Väns e-postadress";
+  form.appendChild(epostLabel);
+  const epostInput = document.createElement("input");
+  epostInput.type = "email";
+  epostInput.id = "tipsa-epost";
+  epostInput.placeholder = "van@exempel.se";
+  form.appendChild(epostInput);
+
+  const medLabel = document.createElement("label");
+  medLabel.textContent = "Egen hälsning (valfritt)";
+  form.appendChild(medLabel);
+  const medInput = document.createElement("textarea");
+  medInput.id = "tipsa-meddelande";
+  medInput.rows = 2;
+  medInput.maxLength = 500;
+  medInput.className = "lag-textarea";
+  form.appendChild(medInput);
+
+  const knapp = document.createElement("button");
+  knapp.className = "knapp-primar";
+  knapp.textContent = "Skicka tips";
+  knapp.onclick = () => skickaTips(knapp, on401);
+  form.appendChild(knapp);
+  return form;
+}
+
+async function skickaTips(knapp, on401) {
+  const epost = document.getElementById("tipsa-epost").value.trim();
+  const meddelande = document.getElementById("tipsa-meddelande").value.trim();
+  if (!epost) {
+    visaToast("Ange en e-postadress.");
+    return;
+  }
+  knapp.disabled = true;
+  try {
+    const res = await anropaMedToken("/tipsa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ epost, meddelande }),
+    }, on401);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    visaToast(`Tips skickat till ${epost}.`);
+    document.getElementById("tipsa-epost").value = "";
+    document.getElementById("tipsa-meddelande").value = "";
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte skicka tipset.");
+  } finally {
+    knapp.disabled = false;
+  }
+}
+
+// ---- Fler val (expander) + Lämna laget ----
+function byggFlerVal(mig, medlemmar, on401) {
+  const wrap = document.createElement("div");
+  wrap.className = "lag-fler-val";
+
+  const toggle = document.createElement("button");
+  toggle.className = "lag-fler-val-toggle";
+  toggle.textContent = "Fler val ▾";
+  wrap.appendChild(toggle);
+
+  const innehall = document.createElement("div");
+  innehall.hidden = true;
+  toggle.onclick = () => {
+    innehall.hidden = !innehall.hidden;
+    toggle.textContent = innehall.hidden ? "Fler val ▾" : "Fler val ▴";
+  };
+
+  const lamnaKnapp = document.createElement("button");
+  lamnaKnapp.className = "lag-lamna-knapp";
+  lamnaKnapp.textContent = "Lämna laget";
+  lamnaKnapp.onclick = () => startaLamnaLaget(mig, medlemmar, on401);
+  innehall.appendChild(lamnaKnapp);
+
+  wrap.appendChild(innehall);
+  return wrap;
+}
+
+// Avgör vilket fall det är och öppnar rätt dialog. Servern dubbelkollar allt.
+function startaLamnaLaget(mig, medlemmar, on401) {
+  const min = (mig.epost || "").toLowerCase();
+  const jag = medlemmar.find(m => m.epost.toLowerCase() === min);
+  const andra = medlemmar.filter(m => m.epost.toLowerCase() !== min);
+  const admins = medlemmar.filter(m => m.roll === "admin");
+
+  if (andra.length === 0) {
+    dialogRaderaLag(mig, on401);                       // Fall C
+  } else if (jag && jag.roll === "admin" && admins.length === 1) {
+    dialogUtseAdmin(mig, andra, on401);                // Fall B
+  } else {
+    dialogLamnaEnkelt(mig, on401);                     // Fall A
+  }
+}
+
+function byggOverlay() {
+  const overlay = document.createElement("div");
+  overlay.className = "dialog-overlay";
+  const dialog = document.createElement("div");
+  dialog.className = "dialog-ruta";
+  overlay.appendChild(dialog);
+  return { overlay, dialog };
+}
+
+// Fall A: vanlig avgång.
+function dialogLamnaEnkelt(mig, on401) {
+  const { overlay, dialog } = byggOverlay();
+  const rubrik = document.createElement("h3");
+  rubrik.textContent = "Lämna laget?";
+  dialog.appendChild(rubrik);
+  const p = document.createElement("p");
+  p.textContent = `Du lämnar "${mig.lagnamn}" och förlorar åtkomsten. En admin kan bjuda in dig igen senare.`;
+  dialog.appendChild(p);
+
+  const rad = document.createElement("div");
+  rad.className = "dialog-knapprad-huvud";
+  const avbryt = dlgKnapp("dialog-knapp-sekundar", "Avbryt", () => overlay.remove());
+  const ok = dlgKnapp("dialog-knapp-primar", "Lämna laget", () => utforLamna({}, overlay, [avbryt, ok], on401));
+  rad.append(avbryt, ok);
+  dialog.appendChild(rad);
+  document.body.appendChild(overlay);
+}
+
+// Fall B: enda admin - måste utse en efterträdare.
+function dialogUtseAdmin(mig, andra, on401) {
+  const { overlay, dialog } = byggOverlay();
+  const rubrik = document.createElement("h3");
+  rubrik.textContent = "Utse en ny administratör";
+  dialog.appendChild(rubrik);
+  const p = document.createElement("p");
+  p.textContent = `Du är enda administratör för "${mig.lagnamn}". När du lämnar måste någon annan kunna hantera laget. Välj vem som blir administratör:`;
+  dialog.appendChild(p);
+
+  let vald = null;
+  const bekraftelse = document.createElement("p");
+  bekraftelse.className = "dialog-bekraftelse";
+  bekraftelse.hidden = true;
+
+  const lista = document.createElement("div");
+  lista.className = "dialog-radiolista";
+  andra.forEach(m => {
+    const label = document.createElement("label");
+    label.className = "radio-rad";
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "ny-admin";
+    radio.value = m.epost;
+    radio.onchange = () => {
+      vald = m.epost;
+      bekraftelse.hidden = false;
+      bekraftelse.textContent = `${m.epost} blir administratör för "${mig.lagnamn}". Det kan du inte ändra efter att du lämnat.`;
+      ok.disabled = false;
+      ok.textContent = `Gör ${m.epost} till admin och lämna laget`;
+    };
+    label.append(radio, document.createTextNode(" " + m.epost));
+    lista.appendChild(label);
+  });
+  dialog.appendChild(lista);
+  dialog.appendChild(bekraftelse);
+
+  const rad = document.createElement("div");
+  rad.className = "dialog-knapprad-huvud";
+  const avbryt = dlgKnapp("dialog-knapp-sekundar", "Avbryt", () => overlay.remove());
+  const ok = dlgKnapp("dialog-knapp-primar", "Välj någon ovan först", () => {
+    if (vald) utforLamna({ ny_admin_epost: vald }, overlay, [avbryt, ok], on401);
+  });
+  ok.disabled = true;
+  rad.append(avbryt, ok);
+  dialog.appendChild(rad);
+  document.body.appendChild(overlay);
+}
+
+// Fall C: sista personen - hela laget raderas. Skriv lagnamnet för att låsa upp.
+function dialogRaderaLag(mig, on401) {
+  const { overlay, dialog } = byggOverlay();
+  const rubrik = document.createElement("h3");
+  rubrik.textContent = `Ta bort "${mig.lagnamn}" permanent?`;
+  dialog.appendChild(rubrik);
+
+  const varning = document.createElement("p");
+  varning.className = "dialog-varning";
+  varning.innerHTML = `Du är den sista i laget. Lämnar du tas <strong>hela laget bort för alltid</strong> – `
+    + `alla spelare, all närvaro, alla sparade poängmatcher, all statistik, positioner och färger. `
+    + `Det går inte att ångra.`;
+  dialog.appendChild(varning);
+
+  const label = document.createElement("label");
+  label.className = "poangmatch-falt-etikett";
+  label.textContent = `Skriv "${mig.lagnamn}" för att bekräfta:`;
+  dialog.appendChild(label);
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "poangmatch-falt";
+  input.autocomplete = "off";
+  dialog.appendChild(input);
+
+  const rad = document.createElement("div");
+  rad.className = "dialog-knapprad-huvud";
+  const avbryt = dlgKnapp("dialog-knapp-sekundar", "Avbryt", () => overlay.remove());
+  const ok = dlgKnapp("dialog-knapp-fara", `Ta bort "${mig.lagnamn}" för alltid`, () => {
+    if (input.value.trim() === mig.lagnamn) {
+      utforLamna({ bekrafta_lagnamn: input.value.trim() }, overlay, [avbryt, ok], on401);
+    }
+  });
+  ok.disabled = true;
+  input.oninput = () => { ok.disabled = input.value.trim() !== mig.lagnamn; };
+  rad.append(avbryt, ok);
+  dialog.appendChild(rad);
+  document.body.appendChild(overlay);
+}
+
+function dlgKnapp(klass, text, onclick) {
+  const b = document.createElement("button");
+  b.className = klass;
+  b.textContent = text;
+  b.onclick = onclick;
+  return b;
+}
+
+async function utforLamna(body, overlay, knappar, on401) {
+  knappar.forEach(k => { k.disabled = true; });
+  try {
+    const res = await anropaMedToken("/lag/lamna", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }, on401);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    overlay.remove();
+    if (data.ny_token) {
+      // Med i andra lag - byt dit och ladda om.
+      sparaToken(data.ny_token);
+      window.location.reload();
+    } else {
+      // Inga andra lag - logga ut.
+      taBortToken();
+      visaToast(data.raderat ? "Laget borttaget." : "Du har lämnat laget.");
+      setTimeout(() => window.location.reload(), 1200);
+    }
+  } catch (fel) {
+    knappar.forEach(k => { k.disabled = false; }); // låt användaren försöka igen / avbryta
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte lämna laget.");
+  }
 }
 
 function escapeHtml(text) {

@@ -981,3 +981,63 @@ body {
   background: #2e7d32;
   vertical-align: middle;
 }
+/* ---- Hantera lag: tipsa en vän + lämna laget ---- */
+.lag-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  font-family: inherit;
+  margin-bottom: 12px;
+  resize: vertical;
+}
+.lag-fler-val { margin-top: 26px; border-top: 1px solid #eee; padding-top: 10px; }
+.lag-fler-val-toggle {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 0;
+}
+.lag-lamna-knapp {
+  display: block;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #e0a0a0;
+  background: white;
+  color: #c0392b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dialog-radiolista { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.dialog-bekraftelse {
+  background: #fff6e5;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px !important;
+  color: #7a5c00 !important;
+}
+.dialog-varning {
+  background: #fdecea;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px !important;
+  color: #a01b0b !important;
+}
+.dialog-knapp-fara {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  background: #c0392b;
+  color: white;
+}
+.dialog-knapp-primar:disabled,
+.dialog-knapp-fara:disabled { opacity: 0.45; cursor: default; }

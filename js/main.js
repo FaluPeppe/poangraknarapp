@@ -19,6 +19,7 @@ import { initLag } from "./lag.js";
 import { initPositioner } from "./positioner.js";
 import { initFarger } from "./farger.js";
 import { initStatistik } from "./statistik.js";
+import { initPoangmatcher } from "./poangmatcher.js";
 import { initIntervaller } from "./intervaller.js";
 import { nav } from "./nav.js";
 import { initHeaderLagval } from "./header.js";
@@ -49,6 +50,7 @@ const hanteraSkarmar = {
   lag: { container: "lag-installningar-container", knapp: "hantera-lag-knapp", init: () => initLag(visaLoginVy) },
   positioner: { container: "positioner-container", knapp: "hantera-positioner-knapp", init: () => initPositioner(visaLoginVy) },
   farger: { container: "farger-container", knapp: "hantera-farger-knapp", init: () => initFarger(visaLoginVy) },
+  poangmatcher: { container: "poangmatcher-container", knapp: "hantera-poangmatcher-knapp", init: () => initPoangmatcher(visaLoginVy) },
   statistik: { container: "statistik-container", knapp: "hantera-statistik-knapp", init: () => initStatistik(visaLoginVy) },
 };
 

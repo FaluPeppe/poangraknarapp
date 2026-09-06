@@ -913,3 +913,55 @@ body {
 }
 .toast.visas { opacity: 1; }
 .dold { display: none !important; }
+
+/* ---- Hantera poängmatcher ---- */
+.poangmatch-rad {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.poangmatch-info { flex: 1; cursor: pointer; min-width: 0; }
+.poangmatch-knappar { display: flex; gap: 4px; flex-shrink: 0; }
+
+.poangmatch-falt-etikett {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.poangmatch-falt {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+.poangmatch-datumtid { display: flex; gap: 10px; }
+.poangmatch-datumtid > div { flex: 1; }
+
+.poangmatch-grupp {
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+  margin-top: 8px;
+}
+.poangmatch-grupp-topp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.poangmatch-grupp-topp .grupp-chip { flex: 1; }
+.poangmatch-poang {
+  width: 72px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  text-align: center;
+}

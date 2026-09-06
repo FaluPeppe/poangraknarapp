@@ -206,24 +206,25 @@ function visaBekraftelsedialog(sport, ta_bort, lagg_till, beromda_spelare, on401
   rubrik.textContent = `Byt till ${sport}`;
   dialog.appendChild(rubrik);
 
+  const antal = beromda_spelare.length;
+
   if (ta_bort.length > 0) {
     const p1 = document.createElement("p");
-    p1.textContent = `Byte till ${sport} tar bort: ${ta_bort.map(p => p.namn).join(", ")}.`;
+    p1.textContent = `Lagets positionslista byter till ${sport}. Ur listan försvinner: ${ta_bort.map(p => p.namn).join(", ")}.`;
     dialog.appendChild(p1);
   }
-  if (beromda_spelare.length > 0) {
+  if (lagg_till.length > 0) {
     const p2 = document.createElement("p");
-    p2.textContent = `${beromda_spelare.length} spelare har någon av dessa positioner: ${beromda_spelare.map(s => s.namn).join(", ")}.`;
+    p2.textContent = `Till listan läggs: ${lagg_till.join(", ")}. Positioner som finns i båda sporterna, och egna tillagda positioner, rörs inte.`;
     dialog.appendChild(p2);
   }
-  if (lagg_till.length > 0) {
+  if (antal > 0) {
     const p3 = document.createElement("p");
-    p3.textContent = `Lägger också till: ${lagg_till.join(", ")}.`;
+    p3.textContent = `${antal} spelare är taggade med någon av positionerna som lämnar listan: ${beromda_spelare.map(s => s.namn).join(", ")}.`;
     dialog.appendChild(p3);
-  }
-  if (beromda_spelare.length > 0) {
+
     const p4 = document.createElement("p");
-    p4.textContent = "Vill du behålla positionerna hos dem, eller ta bort helt?";
+    p4.textContent = `Behåll dem på spelarna? Då ligger positionen kvar på spelaren (utöver de nya du sätter), även om den inte längre är en av lagets – du kan ta bort den manuellt senare. "Ta bort" rensar den från de ${antal} spelarna nu.`;
     dialog.appendChild(p4);
   }
 
@@ -239,16 +240,16 @@ function visaBekraftelsedialog(sport, ta_bort, lagg_till, beromda_spelare, on401
   avbrytKnapp.onclick = () => overlay.remove();
   const behallKnapp = document.createElement("button");
   behallKnapp.className = "dialog-knapp-primar";
-  behallKnapp.textContent = "Byt (behåll hos spelare)";
+  behallKnapp.textContent = antal > 0 ? "Byt – behåll på spelarna" : "Byt";
   behallKnapp.onclick = () => { overlay.remove(); genomforBytSport(ta_bort, lagg_till, [], on401); };
   knappRad.appendChild(avbrytKnapp);
   knappRad.appendChild(behallKnapp);
   dialog.appendChild(knappRad);
 
-  if (beromda_spelare.length > 0) {
+  if (antal > 0) {
     const taBortKnapp = document.createElement("button");
     taBortKnapp.className = "dialog-knapp-farlig";
-    taBortKnapp.textContent = `Byt och ta bort (från ${beromda_spelare.length} spelare)`;
+    taBortKnapp.textContent = `Byt och ta bort från ${antal} spelare`;
     taBortKnapp.onclick = () => { overlay.remove(); genomforBytSport(ta_bort, lagg_till, beromda_spelare, on401); };
     dialog.appendChild(taBortKnapp);
   }

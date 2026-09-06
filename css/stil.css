@@ -508,23 +508,29 @@ body {
 .spelar-pillar {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 14px;
 }
 .spelar-pill {
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 20px;
   border: 1px solid #ccc;
   background: white;
-  color: #444;
-  font-size: 14px;
+  color: #333;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
+/* Närvaro + Dela in grupper: större touchvänliga pillar. Scopat till
+   .spelar-pillar så sport-knapparna (som också har .spelar-pill) inte rörs. */
+.spelar-pillar .spelar-pill {
+  padding: 12px 18px;
+  border-radius: 22px;
+  font-size: 15px;
+  color: #444;
+}
 /* Ovalda spelare: svag överstrykning + dämpad text, så det syns snabbt
-   vilka som INTE är med - utan att de skriker lika högt som de valda.
-   Bara i närvaro-/gruppindelningslistorna (.spelar-pillar) - INTE på
-   sport-pillarna, som också använder .spelar-pill. */
+   vilka som INTE är med - utan att de skriker lika högt som de valda. */
 .spelar-pillar .spelar-pill:not(.vald) {
   color: #808080;
   text-decoration: line-through;
@@ -536,6 +542,7 @@ body {
   color: white;
   border-color: #1A1A1A;
 }
+.spelar-pillar .spelar-pill.vald { color: white; }
 
 .radio-rad {
   display: flex;

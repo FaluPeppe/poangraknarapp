@@ -67,7 +67,7 @@ function rendera(on401) {
 
   const etikett = document.createElement("div");
   etikett.className = "intervall-etikett";
-  etikett.textContent = aktuellt_block.typ === "lop" ? "LÖP" : "VILA";
+  etikett.textContent = aktuellt_block.typ === "lop" ? "LÖPNING" : "VILA";
   klockaDiv.appendChild(etikett);
 
   const tid = document.createElement("div");
@@ -121,7 +121,7 @@ function rendera(on401) {
     blockRad.className = "intervall-block-rad";
 
     const typVal = document.createElement("select");
-    typVal.innerHTML = `<option value="lop">Löp</option><option value="vila">Vila</option>`;
+    typVal.innerHTML = `<option value="lop">Löpning</option><option value="vila">Vila</option>`;
     typVal.value = b.typ;
     typVal.onchange = () => { block[i].typ = typVal.value; };
 
@@ -393,7 +393,7 @@ function uppdateraDom() {
     klockaDiv.classList.toggle("intervall-lop", block[block_index].typ === "lop");
     klockaDiv.classList.toggle("intervall-vila", block[block_index].typ === "vila");
     const etikettEl = klockaDiv.querySelector(".intervall-etikett");
-    if (etikettEl) etikettEl.textContent = block[block_index].typ === "lop" ? "LÖP" : "VILA";
+    if (etikettEl) etikettEl.textContent = block[block_index].typ === "lop" ? "LÖPNING" : "VILA";
   }
 }
 

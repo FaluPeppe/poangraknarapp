@@ -162,13 +162,10 @@ async function laggTillMedlem(on401) {
       body: JSON.stringify({ epost, roll: rollFalt.value }),
     }, on401);
     const data = await res.json();
+    // Servern skickar mejlet FÖRST och lägger bara till personen om det gick
+    // fram - misslyckas mejlet kommer det som ett vanligt fel här nedan.
     if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
-    if (data.mejl_skickat === false) {
-      console.warn("Inbjudningsmejl misslyckades:", data.mejl_fel || "(ingen detalj från servern)");
-      visaToast(`${epost} är tillagd, men mejlet gick inte fram (detaljer i konsolen, F12). Säg till hen att logga in med adressen.`);
-    } else {
-      visaToast(`Inbjudan skickad till ${epost}.`);
-    }
+    visaToast(`Inbjudan skickad till ${epost}.`);
     await initMedlemmar(on401);
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte lägga till.");

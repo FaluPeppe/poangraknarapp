@@ -11,7 +11,7 @@
 //   nås via en knapp på Närvaro- eller Poäng-skärmen, med "← Tillbaka" dit
 //   man kom ifrån.
 
-import { hamtaToken, initLogin } from "./auth.js";
+import { hamtaToken, initLogin, fornyaTokenVidBehov } from "./auth.js";
 import { initPoang } from "./poang.js";
 import { initGrupper } from "./grupper.js";
 import { initSpelare } from "./spelare.js";
@@ -130,6 +130,7 @@ Object.entries(hanteraSkarmar).forEach(([namn, s]) => {
 
 async function startaAppen() {
   visaAppVy();
+  fornyaTokenVidBehov(visaLoginVy); // rullar 30-dagarstoken framåt för aktiva användare (i bakgrunden)
   initHeaderLagval(visaLoginVy); // bygger om lagnamn-rubriken till en listruta
   initSkarmvaken();
   visaHuvudflik("narvaro"); // startskärm - Peter vill se närvaro först

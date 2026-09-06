@@ -48,6 +48,22 @@ export async function anropaMedToken(path, opts = {}, on401 = () => {}) {
   return res;
 }
 
+// Rullar inloggningen framåt: anropar /fornya-token vid appstart. Servern
+// svarar med en färsk 30-dagars token om den nuvarande har mindre än 20
+// dagar kvar, annars { token: null }. Den som öppnar appen minst en gång i
+// månaden loggas alltså aldrig ut; bara 30 dagars total inaktivitet kräver
+// en ny kod. Tyst - misslyckas det är det ingen katastrof, token gäller ändå.
+export async function fornyaTokenVidBehov(on401) {
+  try {
+    const res = await anropaMedToken("/fornya-token", {}, on401);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && data.token) sparaToken(data.token);
+  } catch (fel) {
+    // tyst
+  }
+}
+
 export async function skickaKod(epost) {
   const res = await fetch(AUTH_WORKER_URL + "/auth/starta", {
     method: "POST",

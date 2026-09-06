@@ -452,6 +452,9 @@ async function sparaLagnamn(on401) {
     } else if (rubrik) {
       rubrik.textContent = lagnamn;
     }
+    // Rita om skärmen så "Byt lag"-listan (och allt annat som visar
+    // lagnamnet) hämtar det nya namnet.
+    await initLag(on401);
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara.");
   }

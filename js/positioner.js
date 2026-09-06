@@ -1,11 +1,10 @@
-// Hantera positioner-skärmen. Utökad med "Byt sport" (färdiga
-// standarduppsättningar) och redigering, i Shiny-appens stil.
+// Hantera positioner-skärmen. "Byt sport" (färdiga standarduppsättningar)
+// och redigering, i Shiny-appens stil.
 //
-// Viktig princip: en position räknas som "standard" om den finns med i
-// NÅGON av idrotternas färdiga listor (STANDARDPOSITIONER nedan). Bara
-// STANDARD-positioner byts ut när man byter sport - egna, fritt tillagda
-// positioner (t.ex. "Foto-ansvarig" eller vad som helst) rörs ALDRIG av
-// ett sportbyte, oavsett vilken sport man väljer.
+// Viktig princip: "Byt sport" LÄGGER TILL den valda idrottens standard-
+// positioner - det tar aldrig bort något. Vill man rensa bort en position
+// gör man det en och en med ✕ i listan; då visas vilka spelare som är
+// taggade med den och man väljer om taggen ska bort från dem också.
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast } from "./ui.js";
@@ -22,7 +21,6 @@ const STANDARDPOSITIONER = {
   Volleyboll: ["Passare", "Diagonal", "Kant", "Mittblockerare", "Libero"],
 };
 // Emoji-mappen SPORT_IKON ar ersatt av egna SVG-piktogram - se sport-ikoner.js.
-const ALLA_STANDARDNAMN = new Set(Object.values(STANDARDPOSITIONER).flat());
 
 let redigerar_id = null;
 
@@ -101,7 +99,7 @@ function rendera(positioner, on401) {
       const taBortKnapp = document.createElement("button");
       taBortKnapp.className = "farg-ikonknapp farg-ikonknapp-ta-bort";
       taBortKnapp.textContent = "✕";
-      taBortKnapp.onclick = () => taBortPosition(p.id, on401);
+      taBortKnapp.onclick = () => taBortPosition(p.id, p.namn, on401);
       rad.appendChild(taBortKnapp);
     }
 
@@ -135,7 +133,7 @@ function byggBytSport(positioner, on401) {
 
   const info = document.createElement("p");
   info.className = "grupper-info-liten";
-  info.textContent = "Byter till en annan idrotts standarduppsättning - tar bort positioner som inte hör dit (du får en varning om spelare berörs) och lägger till de som saknas. Egna tillagda positioner kan alltid läggas till/redigeras oavsett.";
+  info.textContent = "Lägger till den valda idrottens standardpositioner. Inget tas bort – vill du rensa bort en position gör du det med ✕ i listan nedan (du får se vilka spelare som har den).";
   wrapper.appendChild(info);
 
   const sportRad = document.createElement("div");
@@ -162,134 +160,72 @@ function byggBytSport(positioner, on401) {
   return wrapper;
 }
 
+// "Byt sport" LÄGGER TILL den valda idrottens standarduppsättning - tar
+// aldrig bort något. Vill man städa bort en position görs det med ✕ i
+// listan (taBortPosition), som visar vilka spelare som berörs och låter en
+// välja om taggen ska bort från dem också.
 async function bytSport(sport, positioner, on401) {
-  const nya_namn = STANDARDPOSITIONER[sport];
-  const nuvarande_namn = positioner.map(p => p.namn);
+  const nuvarande = new Set(positioner.map(p => p.namn));
+  const lagg_till = STANDARDPOSITIONER[sport].filter(n => !nuvarande.has(n));
 
-  const ta_bort = positioner.filter(p => ALLA_STANDARDNAMN.has(p.namn) && !nya_namn.includes(p.namn));
-  const lagg_till = nya_namn.filter(n => !nuvarande_namn.includes(n));
-
-  if (ta_bort.length === 0 && lagg_till.length === 0) {
-    visaToast(`Positionerna stämmer redan överens med ${sport}.`);
+  if (lagg_till.length === 0) {
+    visaToast(`${sport}s positioner finns redan i listan.`);
     return;
   }
 
-  // Kolla vilka spelare som berörs (har någon av ta_bort-positionerna) -
-  // för att kunna varna INNAN något ändras, precis som i Shiny-appen.
-  let beromda_spelare = [];
-  if (ta_bort.length > 0) {
-    try {
-      const res = await anropaMedToken("/spelare/alla", {}, on401);
-      if (res.ok) {
-        const alla_spelare = await res.json();
-        const ta_bort_namn = new Set(ta_bort.map(p => p.namn));
-        beromda_spelare = alla_spelare.filter(s =>
-          (s.positioner || "").split(",").map(x => x.trim()).some(pos => ta_bort_namn.has(pos))
-        );
-      }
-    } catch (fel) {
-      // Om det skulle strula - fortsätt ändå, bara utan spelarvarningen.
-    }
-  }
+  const { overlay, dialog } = byggDialog(`Lägg till ${sport}s positioner`);
+  const p = document.createElement("p");
+  p.textContent = `Lägger till: ${lagg_till.join(", ")}. Inget tas bort – vill du städa bort en position gör du det med ✕ i listan nedan.`;
+  dialog.appendChild(p);
 
-  visaBekraftelsedialog(sport, ta_bort, lagg_till, beromda_spelare, on401);
-}
-
-function visaBekraftelsedialog(sport, ta_bort, lagg_till, beromda_spelare, on401) {
-  const overlay = document.createElement("div");
-  overlay.className = "dialog-overlay";
-
-  const dialog = document.createElement("div");
-  dialog.className = "dialog-ruta";
-
-  const rubrik = document.createElement("h3");
-  rubrik.textContent = `Byt till ${sport}`;
-  dialog.appendChild(rubrik);
-
-  const antal = beromda_spelare.length;
-
-  if (ta_bort.length > 0) {
-    const p1 = document.createElement("p");
-    p1.textContent = `Lagets positionslista byter till ${sport}. Ur listan försvinner: ${ta_bort.map(p => p.namn).join(", ")}.`;
-    dialog.appendChild(p1);
-  }
-  if (lagg_till.length > 0) {
-    const p2 = document.createElement("p");
-    p2.textContent = `Till listan läggs: ${lagg_till.join(", ")}. Positioner som finns i båda sporterna, och egna tillagda positioner, rörs inte.`;
-    dialog.appendChild(p2);
-  }
-  if (antal > 0) {
-    const p3 = document.createElement("p");
-    p3.textContent = `${antal} spelare är taggade med någon av positionerna som lämnar listan: ${beromda_spelare.map(s => s.namn).join(", ")}.`;
-    dialog.appendChild(p3);
-
-    const p4 = document.createElement("p");
-    p4.textContent = `Behåll dem på spelarna? Då ligger positionen kvar på spelaren (utöver de nya du sätter), även om den inte längre är en av lagets – du kan ta bort den manuellt senare. "Ta bort" rensar den från de ${antal} spelarna nu.`;
-    dialog.appendChild(p4);
-  }
-
-  // ---- Knappar: de TVÅ VANLIGA valen är lika stora och tydligast -
-  // "Byt och ta bort" (den mer oåterkalleliga varianten som även rör
-  // spelarnas egna data) är MEDVETET mindre och avskild, så man inte
-  // råkar trycka på den av misstag.
-  const knappRad = document.createElement("div");
-  knappRad.className = "dialog-knapprad-huvud";
-  const avbrytKnapp = document.createElement("button");
-  avbrytKnapp.className = "dialog-knapp-sekundar";
-  avbrytKnapp.textContent = "Avbryt";
-  avbrytKnapp.onclick = () => overlay.remove();
-  const behallKnapp = document.createElement("button");
-  behallKnapp.className = "dialog-knapp-primar";
-  behallKnapp.textContent = antal > 0 ? "Byt – behåll på spelarna" : "Byt";
-  behallKnapp.onclick = () => { overlay.remove(); genomforBytSport(ta_bort, lagg_till, [], on401); };
-  knappRad.appendChild(avbrytKnapp);
-  knappRad.appendChild(behallKnapp);
-  dialog.appendChild(knappRad);
-
-  if (antal > 0) {
-    const taBortKnapp = document.createElement("button");
-    taBortKnapp.className = "dialog-knapp-farlig";
-    taBortKnapp.textContent = `Byt och ta bort från ${antal} spelare`;
-    taBortKnapp.onclick = () => { overlay.remove(); genomforBytSport(ta_bort, lagg_till, beromda_spelare, on401); };
-    dialog.appendChild(taBortKnapp);
-  }
-
-  overlay.appendChild(dialog);
+  const rad = document.createElement("div");
+  rad.className = "dialog-knapprad-huvud";
+  const avbryt = dlgKnapp("dialog-knapp-sekundar", "Avbryt", () => overlay.remove());
+  const ok = dlgKnapp("dialog-knapp-primar", "Lägg till", async () => {
+    ok.disabled = avbryt.disabled = true;
+    overlay.remove();
+    await laggTillFleraPositioner(lagg_till, on401);
+  });
+  rad.append(avbryt, ok);
+  dialog.appendChild(rad);
   document.body.appendChild(overlay);
 }
 
-async function genomforBytSport(ta_bort, lagg_till, rensa_hos_spelare, on401) {
+async function laggTillFleraPositioner(namn_lista, on401) {
   try {
-    for (const p of ta_bort) {
-      await anropaMedToken("/positioner/ta-bort", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: p.id }),
-      }, on401);
-    }
-    for (const namn of lagg_till) {
+    for (const namn of namn_lista) {
       await anropaMedToken("/positioner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ namn }),
       }, on401);
     }
-    if (rensa_hos_spelare.length > 0) {
-      const ta_bort_namn = new Set(ta_bort.map(p => p.namn));
-      for (const s of rensa_hos_spelare) {
-        const kvarvarande = (s.positioner || "").split(",").map(x => x.trim()).filter(x => x && !ta_bort_namn.has(x)).join(", ");
-        await anropaMedToken("/spelare/andra", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: s.id, namn: s.namn, positioner: kvarvarande, kategori: s.kategori || "" }),
-        }, on401);
-      }
-    }
-    visaToast("Positionerna uppdaterade.");
+    visaToast("Positionerna tillagda.");
     await initPositioner(on401);
   } catch (fel) {
-    if (fel.message !== "Utloggad") visaToast("Något gick fel vid bytet - kolla listan och försök igen om något saknas.");
+    if (fel.message !== "Utloggad") visaToast("Något gick fel - kolla listan.");
   }
+}
+
+// ---- Delade dialog-hjälpare ----
+function byggDialog(rubrikText) {
+  const overlay = document.createElement("div");
+  overlay.className = "dialog-overlay";
+  const dialog = document.createElement("div");
+  dialog.className = "dialog-ruta";
+  const rubrik = document.createElement("h3");
+  rubrik.textContent = rubrikText;
+  dialog.appendChild(rubrik);
+  overlay.appendChild(dialog);
+  return { overlay, dialog };
+}
+
+function dlgKnapp(klass, text, onclick) {
+  const b = document.createElement("button");
+  b.className = klass;
+  b.textContent = text;
+  b.onclick = onclick;
+  return b;
 }
 
 async function laggTillPosition(on401) {
@@ -334,7 +270,60 @@ async function sparaRedigering(id, namn, on401) {
   }
 }
 
-async function taBortPosition(id, on401) {
+// Ta bort en position. Är någon spelare taggad med den visas de först, och
+// man får välja: ta bort ur lagets lista men behåll taggen på spelarna,
+// eller ta bort helt (även från spelarna). Ingen spelare finns -> enkel
+// bekräftelse.
+async function taBortPosition(id, namn, on401) {
+  let beromda = [];
+  try {
+    const res = await anropaMedToken("/spelare/alla", {}, on401);
+    if (res.ok) {
+      const alla = await res.json();
+      beromda = alla.filter(s =>
+        (s.positioner || "").split(",").map(x => x.trim()).includes(namn)
+      );
+    }
+  } catch (fel) {
+    if (fel.message === "Utloggad") return;
+    // annars: fortsätt utan spelarlistan
+  }
+
+  const { overlay, dialog } = byggDialog(`Ta bort positionen "${namn}"?`);
+  const antal = beromda.length;
+
+  if (antal > 0) {
+    const p1 = document.createElement("p");
+    p1.textContent = `${antal} spelare är taggade med "${namn}": ${beromda.map(s => s.namn).join(", ")}.`;
+    dialog.appendChild(p1);
+    const p2 = document.createElement("p");
+    p2.textContent = `"Behåll på spelarna" tar bort positionen ur lagets lista men låter taggen sitta kvar på spelarna. "Ta bort helt" rensar den även från de ${antal} spelarna.`;
+    dialog.appendChild(p2);
+  }
+
+  const rad = document.createElement("div");
+  rad.className = "dialog-knapprad-huvud";
+  const avbryt = dlgKnapp("dialog-knapp-sekundar", "Avbryt", () => overlay.remove());
+  const behall = dlgKnapp("dialog-knapp-primar", antal > 0 ? "Behåll på spelarna" : "Ta bort", async () => {
+    behall.disabled = avbryt.disabled = true;
+    overlay.remove();
+    await utforTaBortPosition(id, namn, [], on401);
+  });
+  rad.append(avbryt, behall);
+  dialog.appendChild(rad);
+
+  if (antal > 0) {
+    const helt = dlgKnapp("dialog-knapp-farlig", `Ta bort helt (från ${antal} spelare)`, async () => {
+      helt.disabled = true;
+      overlay.remove();
+      await utforTaBortPosition(id, namn, beromda, on401);
+    });
+    dialog.appendChild(helt);
+  }
+  document.body.appendChild(overlay);
+}
+
+async function utforTaBortPosition(id, namn, rensa_hos_spelare, on401) {
   try {
     const res = await anropaMedToken("/positioner/ta-bort", {
       method: "POST",
@@ -342,8 +331,17 @@ async function taBortPosition(id, on401) {
       body: JSON.stringify({ id }),
     }, on401);
     if (!res.ok) throw new Error("Servern svarade med fel");
+    for (const s of rensa_hos_spelare) {
+      const kvar = (s.positioner || "").split(",").map(x => x.trim()).filter(x => x && x !== namn).join(", ");
+      await anropaMedToken("/spelare/andra", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: s.id, namn: s.namn, positioner: kvar, kategori: s.kategori || "" }),
+      }, on401);
+    }
+    visaToast("Positionen borttagen.");
     await initPositioner(on401);
   } catch (fel) {
-    if (fel.message !== "Utloggad") visaToast("Kunde inte ta bort.");
+    if (fel.message !== "Utloggad") visaToast("Kunde inte ta bort positionen.");
   }
 }

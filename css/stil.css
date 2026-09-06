@@ -400,7 +400,17 @@ body {
   letter-spacing: 2px;
 }
 .intervall-klocka.sista-varvet .intervall-sista { display: inline-block; }
-.intervall-klocka.sista-varvet { box-shadow: 0 0 0 3px #FBC02D; }
+.intervall-klocka.sista-varvet {
+  box-shadow: 0 0 0 4px #FF1744; /* lysande röd - "sista varvet, kör!" */
+  animation: sista-varvet-puls 1s ease-in-out infinite;
+}
+@keyframes sista-varvet-puls {
+  0%, 100% { box-shadow: 0 0 0 4px #FF1744; }
+  50%      { box-shadow: 0 0 0 4px rgba(255, 23, 68, 0.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intervall-klocka.sista-varvet { animation: none; box-shadow: 0 0 0 4px #FF1744; }
+}
 .intervall-knapprad { display: flex; gap: 8px; margin-bottom: 20px; }
 .intervall-knapprad button { flex: 1; }
 /* Antal varv: − [ fält ] +  på en rad (fältet går fortfarande att skriva i) */

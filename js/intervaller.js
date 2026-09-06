@@ -14,6 +14,7 @@ import { spelaLjud, vibrera } from "./ljud.js";
 // ---- Timer-tillstånd (modulnivå - ska överleva så länge sidan är öppen) ----
 let block = [{ typ: "lop", sekunder: 15 }, { typ: "vila", sekunder: 10 }];
 let varv = 4;
+let hoppa_sista_vila = true; // hoppa över den allra sista vila-intervallen
 let kor = false;
 let block_index = 0;
 let varv_index = 0;
@@ -46,6 +47,7 @@ export async function initIntervaller(on401) {
   if (data.installning) {
     block = data.installning.block;
     varv = data.installning.varv;
+    hoppa_sista_vila = data.installning.hoppa_sista_vila !== false;
     aterstall_timer();
   }
   sparade_forval = await forvalRes.json();
@@ -191,6 +193,19 @@ function rendera(on401) {
   varvRad.appendChild(varvUpp);
   installningar.appendChild(varvRad);
 
+  // Hoppa över den allra sista vila-intervallen (ingen vila efter sista löpet).
+  // Gäller bara om listans sista block är en vila.
+  const hoppaRad = document.createElement("label");
+  hoppaRad.className = "radio-rad";
+  hoppaRad.style.marginTop = "10px";
+  const hoppaCb = document.createElement("input");
+  hoppaCb.type = "checkbox";
+  hoppaCb.checked = hoppa_sista_vila;
+  hoppaCb.onchange = () => { hoppa_sista_vila = hoppaCb.checked; };
+  hoppaRad.appendChild(hoppaCb);
+  hoppaRad.appendChild(document.createTextNode(" Hoppa över sista vila-intervallet"));
+  installningar.appendChild(hoppaRad);
+
   const sparaKnapp = document.createElement("button");
   sparaKnapp.className = "knapp-primar";
   sparaKnapp.textContent = "Spara inställning";
@@ -231,6 +246,7 @@ function byggForvalSektion(on401) {
         stoppaTimer();
         block = f.block.map(b => ({ ...b })); // kopia - rör inte det sparade förvalets egna data
         varv = f.varv;
+        hoppa_sista_vila = f.hoppa_sista_vila !== false;
         aterstall_timer();
         rendera(on401);
       };
@@ -320,29 +336,48 @@ function stoppaTimer() {
   }
 }
 
+// Nästa steg { bi, vi } efter det block som nyss tog slut - eller null om
+// passet är klart. null-fallen: alla varv körda, ELLER "hoppa över sista
+// vila-intervallet" när nästa block skulle vara just den (listans sista
+// block på sista varvet, och det är en vila).
+function nastaSteg() {
+  let bi = block_index + 1;
+  let vi = varv_index;
+  if (bi >= block.length) { bi = 0; vi++; }
+  if (vi >= varv) return null;
+  if (hoppa_sista_vila && vi === varv - 1 && bi === block.length - 1 && block[bi].typ === "vila") {
+    return null;
+  }
+  return { bi, vi };
+}
+
 // Exporterad bara för test - kör ETT sekundsteg av klockan utan att vänta
 // på en riktig setInterval-tick.
+//
+// En interval på t.ex. 15 sek körs i EXAKT 15 sekunder: displayen går
+// 15,14,...,1 (15 värden à en sekund) och byter sedan block. "0:00" visas
+// bara i slutet av hela passet, inte mellan varje block (annars blev varje
+// block en sekund för långt).
 export function tick() {
   sekunder_kvar--;
-  if (sekunder_kvar < 0) {
-    block_index++;
-    if (block_index >= block.length) {
-      block_index = 0;
-      varv_index++;
-      if (varv_index >= varv) {
-        // Klart! Stanna på sista blocket, sekunder 0.
-        varv_index = varv - 1;
-        block_index = block.length - 1;
-        sekunder_kvar = 0;
-        stoppaTimer();
-        uppdateraDom();
-        spelaLjud();
-        vibrera();
-        return;
-      }
-    }
-    sekunder_kvar = block[block_index].sekunder;
+  if (sekunder_kvar > 0) {
+    uppdateraDom();
+    return;
   }
+  // Blocket är slut.
+  const steg = nastaSteg();
+  if (!steg) {
+    // Passet klart - stanna på 0:00 på det block som just kördes.
+    sekunder_kvar = 0;
+    stoppaTimer();
+    uppdateraDom();
+    spelaLjud();
+    vibrera();
+    return;
+  }
+  block_index = steg.bi;
+  varv_index = steg.vi;
+  sekunder_kvar = block[block_index].sekunder;
   uppdateraDom();
 }
 
@@ -367,7 +402,7 @@ async function sparaInstallning(on401) {
     const res = await anropaMedToken("/intervall", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ block, varv }),
+      body: JSON.stringify({ block, varv, hoppa_sista_vila }),
     }, on401);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
@@ -388,12 +423,12 @@ async function sparaForval(on401) {
     const res = await anropaMedToken("/intervall/forval", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ namn, block, varv }),
+      body: JSON.stringify({ namn, block, varv, hoppa_sista_vila }),
     }, on401);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
     visaToast(`Förvalet "${namn}" sparat.`);
-    sparade_forval.push({ id: data.id, namn, block: block.map(b => ({ ...b })), varv });
+    sparade_forval.push({ id: data.id, namn, block: block.map(b => ({ ...b })), varv, hoppa_sista_vila });
     rendera(on401);
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara förvalet.");

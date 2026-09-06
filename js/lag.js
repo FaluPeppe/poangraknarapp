@@ -1,9 +1,12 @@
 // Hantera lag-skärmen (Fas 6a, utökad). Lagnamn + möjlighet att skapa
-// ytterligare lag, ansluta till ett befintligt lag med kod, och byta
-// mellan sina egna lag - samma funktioner som Shiny-appens "Hantera lag".
+// ytterligare lag, byta mellan sina egna lag, och (för admins) bjuda in
+// ledare - samma funktioner som Shiny-appens "Hantera lag".
 //
 // UTELÄMNAT MEDVETET (matchar inte vår inloggningsmodell eller är separat
 // funktionalitet som förtjänar sin egen omgång):
+//   - "Anslut till ett lag med kod" - borttagen. Lagkoden var en
+//     återanvändbar delad hemlighet; all åtkomst går numera via
+//     admin-inbjudan på e-post (medlemmar.js -> POST /medlemmar).
 //   - "Bekräfta din e-post" - vår inloggning kräver alltid en verifierad
 //     e-post via engångskod, så den är redan känd.
 //   - "Koppla bort den här enheten" - vi har ingen enhetsparkoppling
@@ -132,33 +135,6 @@ function rendera(mig, minaLag, on401) {
   skapa.appendChild(skapaKnapp);
   container.appendChild(skapa);
 
-  // ---- Anslut till ett lag med kod ----
-  const anslut = document.createElement("div");
-  anslut.className = "avsluta-form";
-  const anslutRubrik = document.createElement("h3");
-  anslutRubrik.className = "historik-rubrik";
-  anslutRubrik.textContent = "Anslut till ett lag med kod";
-  anslut.appendChild(anslutRubrik);
-  const anslutInfo = document.createElement("p");
-  anslutInfo.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
-  anslutInfo.textContent = "För att DU ska gå med i någon annans lag. Har du fått en lagkod "
-    + "klistrar du in den här. (Ska du istället släppa in en ledare i det här laget - "
-    + "se \"Anslutna ledare\" nedan.)";
-  anslut.appendChild(anslutInfo);
-  const anslutLabel = document.createElement("label");
-  anslutLabel.textContent = "Lagkod";
-  anslut.appendChild(anslutLabel);
-  const anslutInput = document.createElement("input");
-  anslutInput.type = "text";
-  anslutInput.id = "anslut-lagkod-input";
-  anslut.appendChild(anslutInput);
-  const anslutKnapp = document.createElement("button");
-  anslutKnapp.className = "knapp-primar";
-  anslutKnapp.textContent = "Anslut";
-  anslutKnapp.onclick = () => anslutTillLag(on401);
-  anslut.appendChild(anslutKnapp);
-  container.appendChild(anslut);
-
   // ---- Anslutna ledare (tidigare en egen "Tränare"-knapp i hubben) ----
   const ledareRubrik = document.createElement("h3");
   ledareRubrik.className = "historik-rubrik";
@@ -231,28 +207,6 @@ async function skapaNyttLag(on401) {
     await initLag(on401);
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte skapa laget.");
-  }
-}
-
-async function anslutTillLag(on401) {
-  const input = document.getElementById("anslut-lagkod-input");
-  const lagkod = input.value.trim();
-  if (!lagkod) {
-    visaToast("Ange en lagkod.");
-    return;
-  }
-  try {
-    const res = await anropaMedToken("/lag/anslut", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lagkod }),
-    }, on401);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
-    visaToast(`Du är nu med i "${data.lagnamn}"!`);
-    await initLag(on401);
-  } catch (fel) {
-    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte ansluta.");
   }
 }
 

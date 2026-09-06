@@ -58,9 +58,9 @@ function rendera(medlemmar, mig, on401) {
   const min_epost = (mig.epost || "").toLowerCase();
 
   // ---- Bjud in (bara admins) ----
-  // OBS: "bjuda in" = lägga till e-postadressen i lagets behörighetslista.
-  // Något mejl skickas INTE - personen kommer åt laget nästa gång hen
-  // loggar in i appen med just den adressen (vanlig e-post + engångskod).
+  // "Bjud in" = lägga till e-postadressen i lagets behörighetslista OCH
+  // skicka ett inbjudningsmejl (worker.js -> skicka_inbjudan_mejl). Personen
+  // loggar sedan in helt vanligt med den adressen (e-post + engångskod).
   if (jag_ar_admin) {
     const bjudInRubrik = document.createElement("h4");
     bjudInRubrik.className = "ledare-underrubrik";
@@ -69,9 +69,9 @@ function rendera(medlemmar, mig, on401) {
 
     const bjudInInfo = document.createElement("p");
     bjudInInfo.className = "grupper-info-liten";
-    bjudInInfo.textContent = "Skriv ledarens e-postadress. Hen kommer åt laget nästa gång "
-      + "hen loggar in i appen med den adressen - inget mejl skickas härifrån, "
-      + "så säg till hen att logga in. Välj Admin om hen också ska kunna bjuda in fler och ändra laginställningar.";
+    bjudInInfo.textContent = "Skriv ledarens e-postadress så skickar vi ett mejl med en "
+      + "inloggningslänk. Hen kommer åt laget så fort hen loggat in med den adressen. "
+      + "Välj Admin om hen också ska kunna bjuda in fler och ändra laginställningar.";
     container.appendChild(bjudInInfo);
 
     const laggTill = document.createElement("div");
@@ -163,7 +163,9 @@ async function laggTillMedlem(on401) {
     }, on401);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
-    visaToast(`${epost} kan nu logga in i laget. Säg till hen att logga in med den adressen.`);
+    visaToast(data.mejl_skickat === false
+      ? `${epost} är tillagd, men inbjudningsmejlet gick inte fram. Säg till hen att logga in med adressen.`
+      : `Inbjudan skickad till ${epost}.`);
     await initMedlemmar(on401);
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte lägga till.");

@@ -6,6 +6,7 @@
 
 import { byggSkarmvakenValjare } from "./skarmvaken.js";
 import { byggLjudOchVibrationsval } from "./ljud.js";
+import { byggInstalleraValjare } from "./installera.js";
 
 export function initAppinstallningar() {
   const container = document.getElementById("appinstallningar-container");
@@ -27,5 +28,6 @@ export function initAppinstallningar() {
   kort.className = "appinstallningar-kort";
   kort.appendChild(byggSkarmvakenValjare());
   kort.appendChild(byggLjudOchVibrationsval());
+  kort.appendChild(byggInstalleraValjare());
   container.appendChild(kort);
 }

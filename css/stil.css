@@ -1050,3 +1050,7 @@ body {
 }
 .dialog-knapp-primar:disabled,
 .dialog-knapp-fara:disabled { opacity: 0.45; cursor: default; }
+
+/* ---- Appinställningar: lägg till på hemskärmen ---- */
+.installera-kontroll { margin-top: 10px; }
+.installera-info { font-size: 13px; color: #666; margin: 0; line-height: 1.4; }

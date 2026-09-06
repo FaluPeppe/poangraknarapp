@@ -5,6 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poängräknarapp</title>
 <link rel="stylesheet" href="css/stil.css">
+
+<!-- Webbapp / lägg till på hemskärmen -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Poäng">
+<script>
+  // Fånga install-prompten så tidigt som möjligt (kan fyra innan modulerna
+  // laddat). js/installera.js läser window.__installPrompt.
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    window.__installPrompt = e;
+    window.dispatchEvent(new Event("installprompt-redo"));
+  });
+  window.addEventListener("appinstalled", () => {
+    window.__installPrompt = null;
+    window.dispatchEvent(new Event("app-installerad"));
+  });
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+</script>
 </head>
 <body>
 

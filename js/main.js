@@ -29,6 +29,19 @@ import { initHeaderLagval } from "./header.js";
 import { initSkarmvaken } from "./skarmvaken.js";
 import { initAppinstallningar } from "./appinstallningar.js";
 
+// Markera hela innehållet när man går in i ett textfält - då kan man skriva
+// över ett förifyllt eller gammalt värde direkt. Gäller alla text-/textarea-
+// fält i appen. (type=number stödjer inte .select() och hoppas över.)
+document.addEventListener("focusin", (e) => {
+  const el = e.target;
+  if (!el || typeof el.select !== "function") return;
+  const typ = (el.getAttribute("type") || "text").toLowerCase();
+  const marker = el.tagName === "TEXTAREA" || ["text", "email", "search", "tel", "url"].includes(typ);
+  if (!marker) return;
+  // Efter webbläsarens egen fokushantering, annars nollas markeringen ibland.
+  setTimeout(() => { try { el.select(); } catch (fel) { /* strunt samma */ } }, 0);
+});
+
 function visaLoginVy() {
   document.getElementById("login-vy").classList.remove("dold");
   document.getElementById("app-vy").classList.add("dold");

@@ -4,7 +4,7 @@
 // match.
 
 import { anropaMedToken } from "./auth.js";
-import { visaToast, textFargForBg } from "./ui.js";
+import { visaToast, textFargForBg, formateraDatumTid } from "./ui.js";
 import { hamtaGruppindelningForSparning } from "./grupper.js";
 
 export async function initAvsluta(on401) {
@@ -55,6 +55,8 @@ function rendera(grupper, historik, on401) {
   input.type = "text";
   input.id = "omgang-namn-input";
   input.placeholder = "T.ex. Tisdagsträning U13";
+  // Förifyll med datum + tid så man kan spara direkt och döpa om efteråt.
+  input.value = formateraDatumTid();
   form.appendChild(input);
 
   const sammanfattning = document.createElement("div");
@@ -107,7 +109,7 @@ function rendera(grupper, historik, on401) {
 
     const rubrik = document.createElement("div");
     rubrik.className = "historik-kort-rubrik";
-    rubrik.textContent = `${o.namn} — ${o.datum} ${o.tid}`;
+    rubrik.textContent = `${o.namn} — ${formateraDatumTid(o.datum, o.tid)}`;
     kort.appendChild(rubrik);
 
     const grupprad = document.createElement("div");

@@ -34,6 +34,27 @@ export function byggInstallningsRad(etikett, hjalptext, kontrollEl) {
   return rad;
 }
 
+// Svensk datum/tid-text, t.ex. "Tisdag 3 sep kl. 17.32".
+//   formateraDatumTid()                 -> nu
+//   formateraDatumTid("2026-09-03", "17:32")
+// datum: "ÅÅÅÅ-MM-DD"-sträng, Date, eller utelämnat (=nu). tid: "HH:MM" (=nu).
+const VECKODAGAR = ["Söndag", "Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag"];
+const MANADER = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+
+export function formateraDatumTid(datum, tid) {
+  const nu = new Date();
+  let d;
+  if (datum instanceof Date) d = datum;
+  else if (typeof datum === "string" && /^\d{4}-\d{2}-\d{2}/.test(datum)) d = new Date(datum.slice(0, 10) + "T00:00:00");
+  else d = nu;
+
+  let tt;
+  if (typeof tid === "string" && /^\d{1,2}:\d{2}/.test(tid)) tt = tid.slice(0, 5).replace(":", ".");
+  else tt = `${String(nu.getHours()).padStart(2, "0")}.${String(nu.getMinutes()).padStart(2, "0")}`;
+
+  return `${VECKODAGAR[d.getDay()]} ${d.getDate()} ${MANADER[d.getMonth()]} kl. ${tt}`;
+}
+
 // Enkel ljushetsberäkning - samma princip som i den riktiga Shiny-appen,
 // så text alltid syns tydligt oavsett bakgrundsfärg.
 export function textFargForBg(hex) {

@@ -8,7 +8,7 @@
 // störtflod av anrop.
 
 import { anropaMedToken } from "./auth.js";
-import { visaToast } from "./ui.js";
+import { visaToast, formateraDatumTid } from "./ui.js";
 
 let vald_period = "vecka";
 let vald_visa = "spelare";
@@ -98,7 +98,7 @@ function rendera(historik, resultat, on401) {
           begarStatistik(historik, on401);
         };
         radRad.appendChild(cb);
-        radRad.appendChild(document.createTextNode(` ${o.namn} (${o.datum})`));
+        radRad.appendChild(document.createTextNode(` ${o.namn} (${formateraDatumTid(o.datum, o.tid)})`));
         periodForm.appendChild(radRad);
       });
     }

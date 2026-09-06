@@ -11,7 +11,7 @@
 // POST /omgang/ta-bort (se worker.js).
 
 import { anropaMedToken } from "./auth.js";
-import { visaToast, textFargForBg } from "./ui.js";
+import { visaToast, textFargForBg, formateraDatumTid } from "./ui.js";
 
 export async function initPoangmatcher(on401) {
   const container = document.getElementById("poangmatcher-container");
@@ -62,7 +62,7 @@ function rendera(omgangar, on401) {
     namn.textContent = o.namn;
     const meta = document.createElement("div");
     meta.style.cssText = "font-size:12px;color:#888;";
-    meta.textContent = `${o.datum} ${o.tid}`;
+    meta.textContent = formateraDatumTid(o.datum, o.tid);
     info.appendChild(namn);
     info.appendChild(meta);
     kort.appendChild(info);
@@ -285,7 +285,7 @@ function bekraftaTaBort(omgang, on401) {
   rubrik.textContent = "Ta bort poängmatch?";
   dialog.appendChild(rubrik);
   const p = document.createElement("p");
-  p.textContent = `"${omgang.namn}" (${omgang.datum} ${omgang.tid}) tas bort permanent, inklusive lagresultat och spelarkopplingar. Går inte att ångra.`;
+  p.textContent = `"${omgang.namn}" (${formateraDatumTid(omgang.datum, omgang.tid)}) tas bort permanent, inklusive lagresultat och spelarkopplingar. Går inte att ångra.`;
   dialog.appendChild(p);
 
   const knappRad = document.createElement("div");

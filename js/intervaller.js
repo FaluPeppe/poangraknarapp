@@ -80,11 +80,10 @@ function rendera(on401) {
   varvText.textContent = `Varv ${visatVarvNr()} av ${varv}`;
   klockaDiv.appendChild(varvText);
 
+  // Alltid i DOM:en - synligheten styrs av .sista-varvet på klockan (se CSS).
   const sistaBadge = document.createElement("div");
   sistaBadge.className = "intervall-sista";
-  sistaBadge.id = "intervall-sista";
   sistaBadge.textContent = "SISTA VARVET";
-  sistaBadge.hidden = !arSistaVarvet();
   klockaDiv.appendChild(sistaBadge);
 
   container.appendChild(klockaDiv);
@@ -283,8 +282,6 @@ function visatVarvNr() {
 function uppdateraVarvVisning() {
   const varvEl = document.getElementById("intervall-varv-text");
   if (varvEl) varvEl.textContent = `Varv ${visatVarvNr()} av ${varv}`;
-  const sistaEl = document.getElementById("intervall-sista");
-  if (sistaEl) sistaEl.hidden = !arSistaVarvet();
   const klockaDiv = document.querySelector(".intervall-klocka");
   if (klockaDiv) klockaDiv.classList.toggle("sista-varvet", arSistaVarvet());
 }

@@ -389,7 +389,8 @@ body {
 .intervall-tid { font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .intervall-varv { font-size: 22px; font-weight: 700; opacity: 0.95; margin-top: 8px; }
 .intervall-sista {
-  display: inline-block;
+  display: none; /* visas bara via .sista-varvet nedan - INTE via [hidden],
+                    som författarstil för .intervall-sista annars kör över */
   margin-top: 10px;
   padding: 4px 14px;
   border-radius: 999px;
@@ -398,6 +399,7 @@ body {
   font-weight: 800;
   letter-spacing: 2px;
 }
+.intervall-klocka.sista-varvet .intervall-sista { display: inline-block; }
 .intervall-klocka.sista-varvet { box-shadow: 0 0 0 3px #FBC02D; }
 .intervall-knapprad { display: flex; gap: 8px; margin-bottom: 20px; }
 .intervall-knapprad button { flex: 1; }

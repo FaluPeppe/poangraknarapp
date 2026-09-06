@@ -522,8 +522,10 @@ body {
   cursor: pointer;
 }
 /* Ovalda spelare: svag överstrykning + dämpad text, så det syns snabbt
-   vilka som INTE är med - utan att de skriker lika högt som de valda. */
-.spelar-pill:not(.vald) {
+   vilka som INTE är med - utan att de skriker lika högt som de valda.
+   Bara i närvaro-/gruppindelningslistorna (.spelar-pillar) - INTE på
+   sport-pillarna, som också använder .spelar-pill. */
+.spelar-pillar .spelar-pill:not(.vald) {
   color: #808080;
   text-decoration: line-through;
   text-decoration-color: rgba(0, 0, 0, 0.3);

@@ -59,6 +59,7 @@ function rendera(on401) {
   // ---- Klocka ----
   const klockaDiv = document.createElement("div");
   klockaDiv.className = "intervall-klocka";
+  klockaDiv.classList.toggle("sista-varvet", arSistaVarvet());
   const aktuellt_block = block[block_index];
   klockaDiv.classList.add(aktuellt_block.typ === "lop" ? "intervall-lop" : "intervall-vila");
 
@@ -76,8 +77,15 @@ function rendera(on401) {
   const varvText = document.createElement("div");
   varvText.className = "intervall-varv";
   varvText.id = "intervall-varv-text";
-  varvText.textContent = `Varv ${varv_index + 1} av ${varv}`;
+  varvText.textContent = `Varv ${visatVarvNr()} av ${varv}`;
   klockaDiv.appendChild(varvText);
+
+  const sistaBadge = document.createElement("div");
+  sistaBadge.className = "intervall-sista";
+  sistaBadge.id = "intervall-sista";
+  sistaBadge.textContent = "SISTA VARVET";
+  sistaBadge.hidden = !arSistaVarvet();
+  klockaDiv.appendChild(sistaBadge);
 
   container.appendChild(klockaDiv);
 
@@ -151,12 +159,38 @@ function rendera(on401) {
   const varvLabel = document.createElement("label");
   varvLabel.textContent = "Antal varv (upprepningar av hela listan ovan)";
   installningar.appendChild(varvLabel);
+
+  // − [ fält ] +  på en rad. Fältet går fortfarande att skriva i manuellt.
+  const varvRad = document.createElement("div");
+  varvRad.className = "varv-stegare";
+
+  const varvNer = document.createElement("button");
+  varvNer.type = "button";
+  varvNer.className = "varv-stegare-knapp";
+  varvNer.id = "varv-ner";
+  varvNer.textContent = "−";
+  varvNer.disabled = varv <= 1;
+  varvNer.onclick = () => stegaVarv(varv - 1);
+
   const varvInput = document.createElement("input");
   varvInput.type = "number";
   varvInput.min = "1";
+  varvInput.inputMode = "numeric";
+  varvInput.className = "varv-stegare-falt";
+  varvInput.id = "varv-falt";
   varvInput.value = varv;
-  varvInput.onchange = () => { varv = Math.max(1, parseInt(varvInput.value, 10) || 1); };
-  installningar.appendChild(varvInput);
+  varvInput.onchange = () => stegaVarv(varvInput.value);
+
+  const varvUpp = document.createElement("button");
+  varvUpp.type = "button";
+  varvUpp.className = "varv-stegare-knapp";
+  varvUpp.textContent = "+";
+  varvUpp.onclick = () => stegaVarv(varv + 1);
+
+  varvRad.appendChild(varvNer);
+  varvRad.appendChild(varvInput);
+  varvRad.appendChild(varvUpp);
+  installningar.appendChild(varvRad);
 
   const sparaKnapp = document.createElement("button");
   sparaKnapp.className = "knapp-primar";
@@ -233,6 +267,38 @@ function formatera_tid(sek) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+// Sista varvet markeras bara när det finns mer än ETT varv - annars är
+// "sista" trivialt sant hela passet och säger inget.
+function arSistaVarvet() {
+  return varv >= 2 && varv_index + 1 >= varv;
+}
+
+// Klampat så displayen aldrig visar "Varv 4 av 2" om varv sänkts mitt i.
+function visatVarvNr() {
+  return Math.min(varv_index + 1, varv);
+}
+
+// Uppdaterar varv-texten, "Sista varvet"-markören och ringen runt klockan -
+// utan en full omrendering (som skulle stjäla fokus ur textfält).
+function uppdateraVarvVisning() {
+  const varvEl = document.getElementById("intervall-varv-text");
+  if (varvEl) varvEl.textContent = `Varv ${visatVarvNr()} av ${varv}`;
+  const sistaEl = document.getElementById("intervall-sista");
+  if (sistaEl) sistaEl.hidden = !arSistaVarvet();
+  const klockaDiv = document.querySelector(".intervall-klocka");
+  if (klockaDiv) klockaDiv.classList.toggle("sista-varvet", arSistaVarvet());
+}
+
+// − / + / manuell inmatning av antal varv. Ingen full omrendering.
+function stegaVarv(nytt) {
+  varv = Math.max(1, parseInt(nytt, 10) || 1);
+  const falt = document.getElementById("varv-falt");
+  if (falt) falt.value = varv;
+  const ner = document.getElementById("varv-ner");
+  if (ner) ner.disabled = varv <= 1;
+  uppdateraVarvVisning();
+}
+
 function aterstall_timer() {
   kor = false;
   block_index = 0;
@@ -288,9 +354,8 @@ export function tick() {
 // vilket bland annat skulle stjäla fokus ur ett textfält man just skriver i.
 function uppdateraDom() {
   const tidEl = document.getElementById("intervall-tid");
-  const varvEl = document.getElementById("intervall-varv-text");
   if (tidEl) tidEl.textContent = formatera_tid(sekunder_kvar);
-  if (varvEl) varvEl.textContent = `Varv ${varv_index + 1} av ${varv}`;
+  uppdateraVarvVisning();
   const klockaDiv = tidEl?.closest(".intervall-klocka");
   if (klockaDiv) {
     klockaDiv.classList.toggle("intervall-lop", block[block_index].typ === "lop");

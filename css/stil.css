@@ -387,9 +387,46 @@ body {
 .intervall-klocka.intervall-vila { background: #444; color: white; }
 .intervall-etikett { font-size: 16px; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
 .intervall-tid { font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.intervall-varv { font-size: 14px; opacity: 0.85; margin-top: 6px; }
+.intervall-varv { font-size: 22px; font-weight: 700; opacity: 0.95; margin-top: 8px; }
+.intervall-sista {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+.intervall-klocka.sista-varvet { box-shadow: 0 0 0 3px #FBC02D; }
 .intervall-knapprad { display: flex; gap: 8px; margin-bottom: 20px; }
 .intervall-knapprad button { flex: 1; }
+/* Antal varv: − [ fält ] +  på en rad (fältet går fortfarande att skriva i) */
+.varv-stegare {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.varv-stegare-knapp {
+  width: 44px;
+  flex: 0 0 auto;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #f2f2f2;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.varv-stegare-knapp:disabled { opacity: 0.4; cursor: default; }
+.avsluta-form .varv-stegare-falt {
+  width: 72px;
+  flex: 0 0 auto;
+  text-align: center;
+  margin: 0;
+  padding: 10px 4px;
+}
 .intervall-block-rad {
   display: flex;
   gap: 6px;

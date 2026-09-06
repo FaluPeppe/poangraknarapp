@@ -226,30 +226,31 @@ async function skickaTips(knapp, on401) {
   }
 }
 
-// ---- Fler val (expander) + Lämna laget ----
+// ---- Lämna laget ----
+// Alltid bakom en bekräftelsedialog (startaLamnaLaget öppnar A/B/C beroende
+// på läget) - knappen här gör inget oåterkalleligt i sig.
 function byggFlerVal(mig, medlemmar, on401) {
   const wrap = document.createElement("div");
   wrap.className = "lag-fler-val";
 
-  const toggle = document.createElement("button");
-  toggle.className = "lag-fler-val-toggle";
-  toggle.textContent = "Fler val ▾";
-  wrap.appendChild(toggle);
+  const rubrik = document.createElement("h3");
+  rubrik.className = "historik-rubrik";
+  rubrik.textContent = "Lämna laget";
+  wrap.appendChild(rubrik);
 
-  const innehall = document.createElement("div");
-  innehall.hidden = true;
-  toggle.onclick = () => {
-    innehall.hidden = !innehall.hidden;
-    toggle.textContent = innehall.hidden ? "Fler val ▾" : "Fler val ▴";
-  };
+  const info = document.createElement("p");
+  info.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
+  info.textContent = "Tar bort din åtkomst till det här laget. Är du enda administratören "
+    + "får du utse en efterträdare först; är du den sista i laget raderas hela laget. "
+    + "Du får bekräfta i nästa steg.";
+  wrap.appendChild(info);
 
   const lamnaKnapp = document.createElement("button");
   lamnaKnapp.className = "lag-lamna-knapp";
   lamnaKnapp.textContent = "Lämna laget";
   lamnaKnapp.onclick = () => startaLamnaLaget(mig, medlemmar, on401);
-  innehall.appendChild(lamnaKnapp);
+  wrap.appendChild(lamnaKnapp);
 
-  wrap.appendChild(innehall);
   return wrap;
 }
 

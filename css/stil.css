@@ -330,7 +330,7 @@ body {
   width: 100%;
   align-items: center;
 }
-.spelare-redigera input {
+.spelare-redigera > input {
   flex: 1;
   min-width: 100px;
   padding: 8px 10px;
@@ -744,7 +744,7 @@ body {
   padding: 8px;
   width: 100%;
 }
-.spelare-redigera-chip input { flex: 1; min-width: 90px; }
+.spelare-redigera-chip > input { flex: 1; min-width: 90px; }
 
 .positioner-kryssrad {
   display: flex;

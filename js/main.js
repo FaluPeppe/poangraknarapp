@@ -20,6 +20,7 @@ import { initAvsluta } from "./avsluta.js";
 // medlemmar.js importeras nu av lag.js istället (Anslutna ledare bor där).
 import { initLag } from "./lag.js";
 import { initPositioner } from "./positioner.js";
+import { initKategorier } from "./kategorier.js";
 import { initFarger } from "./farger.js";
 import { initStatistik } from "./statistik.js";
 import { initPoangmatcher } from "./poangmatcher.js";
@@ -65,6 +66,7 @@ const hanteraSkarmar = {
   avsluta: { container: "avsluta-container", knapp: "hantera-avsluta-knapp", init: () => initAvsluta(visaLoginVy) },
   lag: { container: "lag-installningar-container", knapp: "hantera-lag-knapp", init: () => initLag(visaLoginVy) },
   positioner: { container: "positioner-container", knapp: "hantera-positioner-knapp", init: () => initPositioner(visaLoginVy) },
+  kategorier: { container: "kategorier-container", knapp: "hantera-kategorier-knapp", init: () => initKategorier(visaLoginVy) },
   farger: { container: "farger-container", knapp: "hantera-farger-knapp", init: () => initFarger(visaLoginVy) },
   poangmatcher: { container: "poangmatcher-container", knapp: "hantera-poangmatcher-knapp", init: () => initPoangmatcher(visaLoginVy) },
   statistik: { container: "statistik-container", knapp: "hantera-statistik-knapp", init: () => initStatistik(visaLoginVy) },

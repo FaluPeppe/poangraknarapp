@@ -16,11 +16,12 @@ export async function initSpelare(on401) {
   const container = document.getElementById("spelare-container");
   container.innerHTML = '<span style="color:#888;">Laddar...</span>';
 
-  let spelareRes, positionerRes;
+  let spelareRes, positionerRes, kategorierRes;
   try {
-    [spelareRes, positionerRes] = await Promise.all([
+    [spelareRes, positionerRes, kategorierRes] = await Promise.all([
       anropaMedToken("/spelare/alla", {}, on401),
       anropaMedToken("/positioner", {}, on401),
+      anropaMedToken("/kategorier", {}, on401),
     ]);
   } catch (fel) {
     if (fel.message !== "Utloggad") {
@@ -29,16 +30,17 @@ export async function initSpelare(on401) {
     }
     return;
   }
-  if (!spelareRes.ok || !positionerRes.ok) {
-    visaToast("Kunde inte hämta spelare eller positioner.");
+  if (!spelareRes.ok || !positionerRes.ok || !kategorierRes.ok) {
+    visaToast("Kunde inte hämta spelare, positioner eller kategorier.");
     return;
   }
   const spelare = await spelareRes.json();
   const positioner = await positionerRes.json();
-  rendera(spelare, positioner, on401);
+  const kategorier = await kategorierRes.json();
+  rendera(spelare, positioner, kategorier, on401);
 }
 
-function rendera(spelare, positioner, on401) {
+function rendera(spelare, positioner, kategorier, on401) {
   const container = document.getElementById("spelare-container");
   container.innerHTML = "";
 
@@ -48,16 +50,16 @@ function rendera(spelare, positioner, on401) {
   // ---- Chips: aktiva spelare ----
   const chipRad = document.createElement("div");
   chipRad.className = "spelar-chiprad";
-  aktiva.forEach(s => chipRad.appendChild(byggChip(s, spelare, positioner, on401)));
+  aktiva.forEach(s => chipRad.appendChild(byggChip(s, spelare, positioner, kategorier, on401)));
   container.appendChild(chipRad);
 
   // ---- Lägg till en spelare ----
-  container.appendChild(byggLaggTillEn(positioner, on401));
+  container.appendChild(byggLaggTillEn(positioner, kategorier, on401));
 
   const bulkKnapp = document.createElement("button");
   bulkKnapp.className = "narvaro-knapp";
   bulkKnapp.textContent = "👥 Lägg till flera spelare på en gång";
-  bulkKnapp.onclick = () => { bulk_synlig = !bulk_synlig; rendera(spelare, positioner, on401); };
+  bulkKnapp.onclick = () => { bulk_synlig = !bulk_synlig; rendera(spelare, positioner, kategorier, on401); };
   container.appendChild(bulkKnapp);
 
   if (bulk_synlig) {
@@ -72,14 +74,14 @@ function rendera(spelare, positioner, on401) {
     container.appendChild(inaktivRubrik);
     const inaktivChipRad = document.createElement("div");
     inaktivChipRad.className = "spelar-chiprad";
-    inaktiva.forEach(s => inaktivChipRad.appendChild(byggChip(s, spelare, positioner, on401)));
+    inaktiva.forEach(s => inaktivChipRad.appendChild(byggChip(s, spelare, positioner, kategorier, on401)));
     container.appendChild(inaktivChipRad);
   }
 }
 
-function byggChip(s, spelare, positioner, on401) {
+function byggChip(s, spelare, positioner, kategorier, on401) {
   if (redigerar_id === s.id) {
-    return byggRedigeringsformular(s, spelare, positioner, on401);
+    return byggRedigeringsformular(s, spelare, positioner, kategorier, on401);
   }
 
   const chip = document.createElement("span");
@@ -93,7 +95,7 @@ function byggChip(s, spelare, positioner, on401) {
   const redigeraKnapp = document.createElement("button");
   redigeraKnapp.className = "chip-ikonknapp";
   redigeraKnapp.textContent = "✏️";
-  redigeraKnapp.onclick = () => { redigerar_id = s.id; rendera(spelare, positioner, on401); };
+  redigeraKnapp.onclick = () => { redigerar_id = s.id; rendera(spelare, positioner, kategorier, on401); };
   chip.appendChild(redigeraKnapp);
 
   const aktivKnapp = document.createElement("button");
@@ -106,33 +108,78 @@ function byggChip(s, spelare, positioner, on401) {
   return chip;
 }
 
-function byggRedigeringsformular(s, spelare, positioner, on401) {
+function byggRedigeringsformular(s, spelare, positioner, kategorier, on401) {
   const wrapper = document.createElement("div");
   wrapper.className = "spelare-redigera spelare-redigera-chip";
-  wrapper.innerHTML = `
-    <input type="text" class="redigera-namn" value="${escapeHtml(s.namn)}" placeholder="Namn">
-    <input type="text" class="redigera-positioner" value="${escapeHtml(s.positioner || "")}" placeholder="Positioner">
-    <input type="text" class="redigera-kategori" value="${escapeHtml(s.kategori || "")}" placeholder="Kategori">
-    <div class="spelare-redigera-knappar">
-      <button class="spara-knapp">Spara</button>
-      <button class="avbryt-knapp">Avbryt</button>
-    </div>
-  `;
-  wrapper.querySelector(".spara-knapp").onclick = () => sparaRedigering(s.id, wrapper, on401);
-  wrapper.querySelector(".avbryt-knapp").onclick = () => {
+
+  const namnInput = document.createElement("input");
+  namnInput.type = "text";
+  namnInput.className = "redigera-namn";
+  namnInput.value = s.namn;
+  namnInput.placeholder = "Namn";
+  wrapper.appendChild(namnInput);
+
+  const valdaPositioner = (s.positioner || "").split(",").map(x => x.trim()).filter(Boolean);
+  wrapper.appendChild(byggKryssgrupp("Positioner", positioner, valdaPositioner, "redigera-position-kryss"));
+
+  const valdaKategorier = (s.kategori || "").split(",").map(x => x.trim()).filter(Boolean);
+  wrapper.appendChild(byggKryssgrupp("Kategori", kategorier, valdaKategorier, "redigera-kategori-kryss"));
+
+  const knappar = document.createElement("div");
+  knappar.className = "spelare-redigera-knappar";
+  const sparaKnapp = document.createElement("button");
+  sparaKnapp.className = "spara-knapp";
+  sparaKnapp.textContent = "Spara";
+  const avbrytKnapp = document.createElement("button");
+  avbrytKnapp.className = "avbryt-knapp";
+  avbrytKnapp.textContent = "Avbryt";
+  knappar.appendChild(sparaKnapp);
+  knappar.appendChild(avbrytKnapp);
+  wrapper.appendChild(knappar);
+
+  sparaKnapp.onclick = () => sparaRedigering(s.id, wrapper, on401);
+  avbrytKnapp.onclick = () => {
     redigerar_id = null;
     initSpelare(on401);
   };
   return wrapper;
 }
 
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
+// Kryssrutegrid för positioner/kategorier i redigeringsformuläret - samma
+// stil som kryssrutorna i "Lägg till spelare" (byggLaggTillEn). Tom lista
+// (laget har inga positioner/kategorier definierade än) -> visa inget alls,
+// samma princip som positionerna redan följde: bara de valbara, hanterade
+// taggarna kan sättas, ingen fri text.
+function byggKryssgrupp(rubrikText, alternativ, valda, cssKlass) {
+  const wrapper = document.createElement("div");
+  wrapper.style.width = "100%";
+  if (alternativ.length === 0) return wrapper;
+
+  const label = document.createElement("p");
+  label.className = "grupper-info-liten";
+  label.style.margin = "4px 0 2px";
+  label.textContent = rubrikText;
+  wrapper.appendChild(label);
+
+  const rad = document.createElement("div");
+  rad.className = "positioner-kryssrad";
+  alternativ.forEach(a => {
+    const etikett = document.createElement("label");
+    etikett.className = "positioner-kryss-etikett";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.value = a.namn;
+    cb.className = cssKlass;
+    cb.checked = valda.includes(a.namn);
+    etikett.appendChild(cb);
+    etikett.appendChild(document.createTextNode(" " + a.namn));
+    rad.appendChild(etikett);
+  });
+  wrapper.appendChild(rad);
+  return wrapper;
 }
 
-function byggLaggTillEn(positioner, on401) {
+function byggLaggTillEn(positioner, kategorier, on401) {
   const wrapper = document.createElement("div");
   wrapper.className = "avsluta-form";
 
@@ -145,31 +192,12 @@ function byggLaggTillEn(positioner, on401) {
   raden.className = "spelare-lagg-till";
   raden.innerHTML = `
     <input type="text" id="nytt-spelare-namn" placeholder="Namn">
-    <input type="text" id="nytt-spelare-kategori" placeholder="Kategori (valfritt)">
     <button id="lagg-till-spelare-knapp">+ Lägg till</button>
   `;
   wrapper.appendChild(raden);
 
-  if (positioner.length > 0) {
-    const posLabel = document.createElement("p");
-    posLabel.className = "grupper-info-liten";
-    posLabel.textContent = "Positioner (valfritt)";
-    wrapper.appendChild(posLabel);
-    const posRad = document.createElement("div");
-    posRad.className = "positioner-kryssrad";
-    positioner.forEach(p => {
-      const label = document.createElement("label");
-      label.className = "positioner-kryss-etikett";
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.value = p.namn;
-      cb.className = "ny-spelare-position-kryss";
-      label.appendChild(cb);
-      label.appendChild(document.createTextNode(" " + p.namn));
-      posRad.appendChild(label);
-    });
-    wrapper.appendChild(posRad);
-  }
+  wrapper.appendChild(byggKryssgrupp("Positioner (valfritt)", positioner, [], "ny-spelare-position-kryss"));
+  wrapper.appendChild(byggKryssgrupp("Kategori (valfritt)", kategorier, [], "ny-spelare-kategori-kryss"));
 
   wrapper.querySelector("#lagg-till-spelare-knapp").onclick = () => laggTillSpelare(on401);
   return wrapper;
@@ -230,18 +258,18 @@ function byggBulkFormular(positioner, on401) {
 
 async function laggTillSpelare(on401) {
   const namnFalt = document.getElementById("nytt-spelare-namn");
-  const kategoriFalt = document.getElementById("nytt-spelare-kategori");
   const namn = namnFalt.value.trim();
   if (!namn) {
     visaToast("Ange ett namn.");
     return;
   }
   const valdaPositioner = [...document.querySelectorAll(".ny-spelare-position-kryss:checked")].map(cb => cb.value);
+  const valdaKategorier = [...document.querySelectorAll(".ny-spelare-kategori-kryss:checked")].map(cb => cb.value);
   try {
     const res = await anropaMedToken("/spelare", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ namn, positioner: valdaPositioner.join(", "), kategori: kategoriFalt.value.trim() }),
+      body: JSON.stringify({ namn, positioner: valdaPositioner.join(", "), kategori: valdaKategorier.join(", ") }),
     }, on401);
     if (!res.ok) throw new Error("Servern svarade med fel");
     await initSpelare(on401);
@@ -283,8 +311,8 @@ async function sparaBulk(wrapper, on401) {
 
 async function sparaRedigering(id, wrapper, on401) {
   const namn = wrapper.querySelector(".redigera-namn").value.trim();
-  const positioner = wrapper.querySelector(".redigera-positioner").value.trim();
-  const kategori = wrapper.querySelector(".redigera-kategori").value.trim();
+  const positioner = [...wrapper.querySelectorAll(".redigera-position-kryss:checked")].map(cb => cb.value).join(", ");
+  const kategori = [...wrapper.querySelectorAll(".redigera-kategori-kryss:checked")].map(cb => cb.value).join(", ");
   if (!namn) {
     visaToast("Namnet får inte vara tomt.");
     return;

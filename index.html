@@ -103,15 +103,33 @@
          container, alltid EN nivå bakom en Hantera-skärm - "← Tillbaka"
          leder hit, inte till Poäng/Grupper/Intervaller. -->
     <div id="installningar-hubb" class="dold">
-      <div class="hantera-grid">
-        <button class="hantera-knapp" id="hantera-spelare-knapp">Hantera spelare</button>
-        <button class="hantera-knapp" id="hantera-lag-knapp">Hantera lag</button>
-        <button class="hantera-knapp" id="hantera-positioner-knapp">Hantera positioner</button>
-        <button class="hantera-knapp" id="hantera-kategorier-knapp">Hantera kategorier</button>
-        <button class="hantera-knapp" id="hantera-farger-knapp">Hantera färger</button>
-        <button class="hantera-knapp" id="hantera-poangmatcher-knapp">Hantera poängmatcher</button>
-        <button class="hantera-knapp" id="hantera-statistik-knapp">Statistik</button>
-        <button class="hantera-knapp" id="hantera-appinstallningar-knapp">Appinställningar</button>
+      <div class="hantera-sektion">
+        <h3 class="hantera-sektion-rubrik">Trupp</h3>
+        <div class="hantera-lista">
+          <button class="hantera-rad" id="hantera-spelare-knapp"><span class="hantera-ikon">🧑</span><span>Hantera spelare</span><span class="hantera-pil">›</span></button>
+          <button class="hantera-rad" id="hantera-positioner-knapp"><span class="hantera-ikon">📍</span><span>Hantera positioner</span><span class="hantera-pil">›</span></button>
+          <button class="hantera-rad" id="hantera-kategorier-knapp"><span class="hantera-ikon">🏷️</span><span>Hantera kategorier</span><span class="hantera-pil">›</span></button>
+        </div>
+      </div>
+      <div class="hantera-sektion">
+        <h3 class="hantera-sektion-rubrik">Laget</h3>
+        <div class="hantera-lista">
+          <button class="hantera-rad" id="hantera-lag-knapp"><span class="hantera-ikon">🛡️</span><span>Hantera lag</span><span class="hantera-pil">›</span></button>
+          <button class="hantera-rad" id="hantera-farger-knapp"><span class="hantera-ikon">🎨</span><span>Hantera färger</span><span class="hantera-pil">›</span></button>
+        </div>
+      </div>
+      <div class="hantera-sektion">
+        <h3 class="hantera-sektion-rubrik">Matcher</h3>
+        <div class="hantera-lista">
+          <button class="hantera-rad" id="hantera-poangmatcher-knapp"><span class="hantera-ikon">📋</span><span>Hantera poängmatcher</span><span class="hantera-pil">›</span></button>
+          <button class="hantera-rad" id="hantera-statistik-knapp"><span class="hantera-ikon">📊</span><span>Statistik</span><span class="hantera-pil">›</span></button>
+        </div>
+      </div>
+      <div class="hantera-sektion">
+        <h3 class="hantera-sektion-rubrik">App</h3>
+        <div class="hantera-lista">
+          <button class="hantera-rad" id="hantera-appinstallningar-knapp"><span class="hantera-ikon">⚙️</span><span>Appinställningar</span><span class="hantera-pil">›</span></button>
+        </div>
       </div>
     </div>
     <button class="tillbaka-knapp dold" id="installningar-tillbaka-knapp">← Tillbaka till Inställningar</button>

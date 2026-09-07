@@ -518,22 +518,42 @@ body {
   border-radius: 8px;
 }
 
-/* ---- Inställningar-hubb (Hantera-knappar) ---- */
-.hantera-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-.hantera-knapp {
-  padding: 18px 10px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  background: white;
-  font-size: 14px;
+/* ---- Inställningar-hubb (grupperad lista, som iOS/Android-inställningar) ---- */
+.hantera-sektion { margin-bottom: 20px; }
+.hantera-sektion-rubrik {
+  font-size: 12px;
   font-weight: 700;
-  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #888;
+  margin: 0 0 6px 4px;
+}
+.hantera-lista {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
+.hantera-rad {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  color: #1A1A1A;
+  cursor: pointer;
+}
+.hantera-rad:last-child { border-bottom: none; }
+.hantera-rad:active { background: #f5f5f5; }
+.hantera-ikon { font-size: 19px; width: 24px; flex-shrink: 0; text-align: center; }
+.hantera-rad > span:nth-child(2) { flex: 1; }
+.hantera-pil { color: #ccc; font-size: 20px; font-weight: 400; flex-shrink: 0; }
 .tillbaka-knapp {
   display: block;
   width: 100%;

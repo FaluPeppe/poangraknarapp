@@ -138,12 +138,12 @@ function byggLagRad(grupper, spelare, on401) {
     plusKnapp.style.background = txt;
     plusKnapp.style.color = g.grupp_farg;
     plusKnapp.textContent = "+1";
-    plusKnapp.onclick = () => poangKlick(g.grupp_namn, 1, on401);
+    plusKnapp.onclick = () => poangKlick(g, 1, on401);
 
     const minusKnapp = document.createElement("button");
     minusKnapp.className = "poang-knapp-liten";
     minusKnapp.textContent = "− 1 poäng";
-    minusKnapp.onclick = () => poangKlick(g.grupp_namn, -1, on401);
+    minusKnapp.onclick = () => poangKlick(g, -1, on401);
 
     kort.appendChild(namn);
     kort.appendChild(antalEl);
@@ -374,23 +374,29 @@ function byggAvslutningsrad(grupper, on401) {
   return rad;
 }
 
-async function poangKlick(gruppNamn, varde, on401) {
-  const el = document.getElementById("poang_" + gruppNamn);
+// OBS: tar emot HELA gruppobjektet (inte bara namnet) och uppdaterar dess
+// g.poang i samma veva som DOM:en - annars tappar "Avsluta match"-bladets
+// sammanfattning (som läser g.poang ur samma grupper-array) synken och
+// visar de gamla siffrorna från senaste sidladdningen/nollställningen.
+async function poangKlick(g, varde, on401) {
+  const el = document.getElementById("poang_" + g.grupp_namn);
   const nuvarande = parseInt(el.getAttribute("data-poang"), 10) || 0;
   const nytt = Math.max(0, nuvarande + varde);
   el.textContent = nytt;
   el.setAttribute("data-poang", nytt);
+  g.poang = nytt;
 
   try {
     const res = await anropaMedToken("/poang", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ grupp_namn: gruppNamn, poang: nytt }),
+      body: JSON.stringify({ grupp_namn: g.grupp_namn, poang: nytt }),
     }, on401);
     if (!res.ok) throw new Error("Servern svarade med fel");
   } catch (fel) {
     el.textContent = nuvarande;
     el.setAttribute("data-poang", nuvarande);
+    g.poang = nuvarande;
     if (fel.message !== "Utloggad") {
       visaToast("Kunde inte spara poängen, försök igen.");
     }

@@ -7,7 +7,7 @@
 //     samtidigt, på samma delade spelartrupp.
 //   - Ett "Förslag" som visar den aktuella (lokala) gruppindelningen, med
 //     en liten cirkelknapp per ANNAN grupp på varje spelarrad - tryck för
-//     att flytta henne dit direkt.
+//     att flytta hen dit direkt.
 //   - En "Ej tilldelade"-ruta för lokalt närvarande spelare som ännu inte
 //     har en grupp - gör det snabbt att lägga till t.ex. någon som kom
 //     sent, eller är tillbaka från särskild träning.
@@ -181,7 +181,7 @@ function rendera(spelare, grupper, on401) {
   container.appendChild(forslagRubrik);
   const forslagUnderrubrik = document.createElement("p");
   forslagUnderrubrik.className = "grupper-info-liten";
-  forslagUnderrubrik.textContent = "Tryck på en cirkel bredvid en spelare för att flytta henne dit.";
+  forslagUnderrubrik.textContent = "Tryck på en cirkel bredvid en spelare för att flytta hen dit.";
   container.appendChild(forslagUnderrubrik);
 
   grupper.forEach(g => {
@@ -335,6 +335,33 @@ function fordelaMedMetod(metod, narvarande, grupper) {
   }
 }
 
+// Bygger en flytta/lägg till-cirkel för en målgrupp. Om gruppens namn
+// slutar med " <nummer>" (färgen är en upprepning från en mindre
+// färgpalett - se cykel-logiken i /poang/antal i workern, t.ex.
+// "Orange 2") visas numret som en svag siffra i hörnet, annars skulle två
+// likafärgade cirklar vara omöjliga att skilja åt.
+function byggFlyttaKnapp(malGrupp, etikett, onClick) {
+  const knapp = document.createElement("button");
+  knapp.className = "flytta-knapp";
+  knapp.style.background = malGrupp.grupp_farg;
+  const txtFarg = textFargForBg(malGrupp.grupp_farg);
+  knapp.style.color = txtFarg;
+  knapp.title = `${etikett} ${malGrupp.grupp_namn}`;
+  knapp.textContent = "→";
+
+  const siffra = malGrupp.grupp_namn.match(/ (\d+)$/);
+  if (siffra) {
+    const badge = document.createElement("span");
+    badge.className = "flytta-knapp-siffra";
+    badge.style.color = txtFarg;
+    badge.textContent = siffra[1];
+    knapp.appendChild(badge);
+  }
+
+  knapp.onclick = onClick;
+  return knapp;
+}
+
 function byggGruppBlock(grupp, alla_grupper, narvarande_spelare, spelare, on401) {
   const txt = textFargForBg(grupp.grupp_farg);
   const block = document.createElement("div");
@@ -361,16 +388,10 @@ function byggGruppBlock(grupp, alla_grupper, narvarande_spelare, spelare, on401)
     const knappGrupp = document.createElement("span");
     knappGrupp.className = "flytta-knapp-grupp";
     andra_grupper.forEach(mal => {
-      const flyttaKnapp = document.createElement("button");
-      flyttaKnapp.className = "flytta-knapp";
-      flyttaKnapp.style.background = mal.grupp_farg;
-      flyttaKnapp.style.color = textFargForBg(mal.grupp_farg);
-      flyttaKnapp.title = `Flytta till ${mal.grupp_namn}`;
-      flyttaKnapp.textContent = "→";
-      flyttaKnapp.onclick = () => {
+      const flyttaKnapp = byggFlyttaKnapp(mal, "Flytta till", () => {
         gruppindelning.set(s.id, mal.grupp_namn);
         rendera(spelare, alla_grupper, on401);
-      };
+      });
       knappGrupp.appendChild(flyttaKnapp);
     });
     rad.appendChild(knappGrupp);
@@ -405,16 +426,10 @@ function byggEjTilldelade(ejTilldelade, grupper, spelare, on401) {
     const knappGrupp = document.createElement("span");
     knappGrupp.className = "flytta-knapp-grupp";
     grupper.forEach(g => {
-      const knapp = document.createElement("button");
-      knapp.className = "flytta-knapp";
-      knapp.style.background = g.grupp_farg;
-      knapp.style.color = textFargForBg(g.grupp_farg);
-      knapp.title = `Lägg till i ${g.grupp_namn}`;
-      knapp.textContent = "→";
-      knapp.onclick = () => {
+      const knapp = byggFlyttaKnapp(g, "Lägg till i", () => {
         gruppindelning.set(s.id, g.grupp_namn);
         rendera(spelare, grupper, on401);
-      };
+      });
       knappGrupp.appendChild(knapp);
     });
     rad.appendChild(knappGrupp);

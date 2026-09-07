@@ -621,19 +621,32 @@ body {
   padding: 4px 0;
   font-size: 14px;
 }
-.flytta-knapp-grupp { display: flex; gap: 4px; }
+.flytta-knapp-grupp { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 .flytta-knapp {
-  width: 26px;
-  height: 26px;
+  position: relative;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: none;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  flex-shrink: 0;
+}
+/* Svag siffra i hörnet när färgen är en upprepning från en mindre
+   palett (t.ex. "Orange" och "Orange 2") - annars omöjliga att skilja åt. */
+.flytta-knapp-siffra {
+  position: absolute;
+  bottom: 0;
+  right: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.55;
 }
 
 .ej-tilldelade-box {

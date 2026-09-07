@@ -11,6 +11,30 @@ export function visaToast(text) {
 
 // visaTid() togs bort - svarstidsmätningen visades inte längre i UI:t.
 
+// Delad bekräftelsedialog (.dialog-overlay/.dialog-ruta) - tidigare
+// duplicerad likadan i positioner.js/kategorier.js, nu på ett ställe.
+// byggDialog(rubrik) ger { overlay, dialog } att fylla på med eget
+// innehåll; dlgKnapp() bygger en av knapparna i botten.
+export function byggDialog(rubrikText) {
+  const overlay = document.createElement("div");
+  overlay.className = "dialog-overlay";
+  const dialog = document.createElement("div");
+  dialog.className = "dialog-ruta";
+  const rubrik = document.createElement("h3");
+  rubrik.textContent = rubrikText;
+  dialog.appendChild(rubrik);
+  overlay.appendChild(dialog);
+  return { overlay, dialog };
+}
+
+export function dlgKnapp(klass, text, onclick) {
+  const b = document.createElement("button");
+  b.className = klass;
+  b.textContent = text;
+  b.onclick = onclick;
+  return b;
+}
+
 // En inställningsrad för Appinställningar: rubrik + liten hjälptext, och
 // under dem själva kontrollen (radioknapparna i EN rad, kryssruta, ...).
 // Radioknapparna ligger alltså på samma rad som varandra, inte staplade.

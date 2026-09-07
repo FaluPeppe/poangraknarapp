@@ -1,12 +1,17 @@
 // Hantera spelare-skärmen. Ombyggd kompakt i Shiny-appens stil: spelarna
 // visas som chips (inte fulla rader) så truppen tar liten plats, plus en
-// "Lägg till flera spelare på en gång"-vy för säsongsstart/nya lag. Ingen
-// HARD delete - en spelare som slutat inaktiveras istället (databasens
-// 'aktiv'-kolumn är byggd för det), så gammal matchhistorik inte tappar
-// sin koppling.
+// "Lägg till flera spelare på en gång"-vy för säsongsstart/nya lag.
+//
+// En spelare som slutar/pausar INAKTIVERAS (mjukt) - databasens 'aktiv'-
+// kolumn är byggd för det, och en vilande spelare kan alltid aktiveras
+// igen (t.ex. någon som bara spelar med oss ibland). Först när man
+// uttryckligen trycker "Ta bort helt" på en redan inaktiv spelare
+// försvinner den permanent (går inte att ångra) - matchhistoriken
+// påverkas inte, den sparar spelarnamnet som en ögonblicksbild och har
+// ingen koppling tillbaka till spelar-tabellen.
 
 import { anropaMedToken } from "./auth.js";
-import { visaToast } from "./ui.js";
+import { visaToast, byggDialog, dlgKnapp } from "./ui.js";
 
 let redigerar_id = null;
 let bulk_synlig = false;
@@ -66,12 +71,19 @@ function rendera(spelare, positioner, kategorier, on401) {
     container.appendChild(byggBulkFormular(positioner, kategorier, on401));
   }
 
-  // ---- Inaktiva spelare (om några finns) ----
+  // ---- Vilande spelare (om några finns) ----
+  // "Vilande" istället för "Inaktiva" - täcker båda fallen bättre: den som
+  // slutat OCH den som bara spelar med oss ibland (kan aktiveras igen när
+  // som helst).
   if (inaktiva.length > 0) {
     const inaktivRubrik = document.createElement("h3");
     inaktivRubrik.className = "historik-rubrik";
-    inaktivRubrik.textContent = "Inaktiva spelare";
+    inaktivRubrik.textContent = "Vilande spelare";
     container.appendChild(inaktivRubrik);
+    const inaktivInfo = document.createElement("p");
+    inaktivInfo.className = "grupper-info-liten";
+    inaktivInfo.textContent = "Slutat eller spelar bara ibland med oss. ↺ aktiverar igen, 🗑️ tar bort helt (går inte att ångra).";
+    container.appendChild(inaktivInfo);
     const inaktivChipRad = document.createElement("div");
     inaktivChipRad.className = "spelar-chiprad";
     inaktiva.forEach(s => inaktivChipRad.appendChild(byggChip(s, spelare, positioner, kategorier, on401)));
@@ -105,7 +117,53 @@ function byggChip(s, spelare, positioner, kategorier, on401) {
   aktivKnapp.onclick = () => satAktiv(s.id, !s.aktiv, on401);
   chip.appendChild(aktivKnapp);
 
+  // "Ta bort helt" finns bara för redan vilande spelare - en sista spärr
+  // mot att av misstag radera någon som fortfarande räknas som aktiv.
+  if (!s.aktiv) {
+    const taBortKnapp = document.createElement("button");
+    taBortKnapp.className = "chip-ikonknapp";
+    taBortKnapp.textContent = "🗑️";
+    taBortKnapp.title = "Ta bort helt";
+    taBortKnapp.onclick = () => bekraftaTaBortHelt(s, on401);
+    chip.appendChild(taBortKnapp);
+  }
+
   return chip;
+}
+
+function bekraftaTaBortHelt(s, on401) {
+  const { overlay, dialog } = byggDialog(`Ta bort ${s.namn} helt?`);
+  const p = document.createElement("p");
+  p.textContent = "Går inte att ångra. Gammal matchhistorik påverkas inte - den behåller namnet oavsett.";
+  dialog.appendChild(p);
+
+  const rad = document.createElement("div");
+  rad.className = "dialog-knapprad-huvud";
+  const avbryt = dlgKnapp("dialog-knapp-sekundar", "Avbryt", () => overlay.remove());
+  const taBort = dlgKnapp("dialog-knapp-farlig", "Ta bort helt", async () => {
+    avbryt.disabled = taBort.disabled = true;
+    overlay.remove();
+    await taBortSpelareHelt(s.id, on401);
+  });
+  rad.append(avbryt, taBort);
+  dialog.appendChild(rad);
+  document.body.appendChild(overlay);
+}
+
+async function taBortSpelareHelt(id, on401) {
+  try {
+    const res = await anropaMedToken("/spelare/ta-bort", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    }, on401);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    visaToast("Spelaren borttagen.");
+    await initSpelare(on401);
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte ta bort spelaren.");
+  }
 }
 
 function byggRedigeringsformular(s, spelare, positioner, kategorier, on401) {

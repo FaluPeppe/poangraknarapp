@@ -8,7 +8,7 @@
 // automatiskt första gången skärmen används - inget försvinner.
 
 import { anropaMedToken } from "./auth.js";
-import { visaToast } from "./ui.js";
+import { visaToast, byggDialog, dlgKnapp } from "./ui.js";
 
 let redigerar_id = null;
 
@@ -231,23 +231,3 @@ async function utforTaBortKategori(id, namn, rensa_hos_spelare, on401) {
   }
 }
 
-// ---- Delade dialog-hjälpare (samma som i positioner.js) ----
-function byggDialog(rubrikText) {
-  const overlay = document.createElement("div");
-  overlay.className = "dialog-overlay";
-  const dialog = document.createElement("div");
-  dialog.className = "dialog-ruta";
-  const rubrik = document.createElement("h3");
-  rubrik.textContent = rubrikText;
-  dialog.appendChild(rubrik);
-  overlay.appendChild(dialog);
-  return { overlay, dialog };
-}
-
-function dlgKnapp(klass, text, onclick) {
-  const b = document.createElement("button");
-  b.className = klass;
-  b.textContent = text;
-  b.onclick = onclick;
-  return b;
-}

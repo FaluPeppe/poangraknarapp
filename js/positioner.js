@@ -7,7 +7,7 @@
 // taggade med den och man väljer om taggen ska bort från dem också.
 
 import { anropaMedToken } from "./auth.js";
-import { visaToast } from "./ui.js";
+import { visaToast, byggDialog, dlgKnapp } from "./ui.js";
 import { SPORT_SVG, IKON_ATTRIBUTION_HTML } from "./sport-ikoner.js";
 
 const STANDARDPOSITIONER = {
@@ -205,27 +205,6 @@ async function laggTillFleraPositioner(namn_lista, on401) {
   } catch (fel) {
     if (fel.message !== "Utloggad") visaToast("Något gick fel - kolla listan.");
   }
-}
-
-// ---- Delade dialog-hjälpare ----
-function byggDialog(rubrikText) {
-  const overlay = document.createElement("div");
-  overlay.className = "dialog-overlay";
-  const dialog = document.createElement("div");
-  dialog.className = "dialog-ruta";
-  const rubrik = document.createElement("h3");
-  rubrik.textContent = rubrikText;
-  dialog.appendChild(rubrik);
-  overlay.appendChild(dialog);
-  return { overlay, dialog };
-}
-
-function dlgKnapp(klass, text, onclick) {
-  const b = document.createElement("button");
-  b.className = klass;
-  b.textContent = text;
-  b.onclick = onclick;
-  return b;
 }
 
 async function laggTillPosition(on401) {

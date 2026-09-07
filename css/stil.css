@@ -99,6 +99,7 @@ body {
   cursor: pointer;
 }
 .login-knapp:disabled, .knapp-primar:disabled { opacity: 0.5; cursor: default; }
+.login-knapp:active, .knapp-primar:active { transform: scale(0.96); }
 .login-fel { color: #c00; font-size: 13px; margin: 0 0 10px 0; min-height: 18px; }
 .login-hjalp { color: #888; font-size: 13px; margin: 0 0 10px 0; }
 .login-tillbaka {
@@ -298,6 +299,7 @@ body {
   cursor: pointer;
   white-space: nowrap;
 }
+.narvaro-knapp:active, .grupp-knapp:active { transform: scale(0.96); }
 
 /* ---- Hantera spelare ---- */
 .spelare-lagg-till {

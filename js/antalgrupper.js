@@ -1,10 +1,11 @@
 // Delad "Antal grupper"-stegare (▼ N ▲). Används på både Poäng-skärmen och
 // Dela in grupper-skärmen - samma kontroll, olika omritning efteråt.
 //
-// Antalet kan aldrig bli färre än 2. Taket (= antal färger i paletten, se
-// Inställningar → Hantera färger) vaktas av servern, som svarar med ett fel
-// som visas som toast. Grupperna byggs alltid FRÅN färgpaletten, i dess
-// ordning (inte alfabetiskt) - se /poang/antal i worker.js.
+// Antalet kan aldrig bli färre än 2. Det finns inget tak - fler grupper än
+// färger i paletten (se Inställningar → Hantera färger) gör att paletten
+// cyklas om och extra grupper får ett löpnummer i namnet ("Orange 2"), se
+// /poang/antal i worker.js. Enda gången servern säger nej är om paletten
+// är helt tom (0 färger) - då visas ett fel som toast.
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast } from "./ui.js";

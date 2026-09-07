@@ -449,8 +449,9 @@ function byggEjTilldelade(ejTilldelade, grupper, spelare, on401) {
   return box;
 }
 
-// Läses av avsluta.js (Fas 4) när en match sparas, för att koppla spelare
-// till rätt grupp i historiken. Bygger {grupp_namn: [spelar_id, ...]} från
+// Läses av poang.js:s "Avsluta match"-bottenblad när en match sparas, för
+// att koppla spelare till rätt grupp i historiken. Bygger
+// {grupp_namn: [spelar_id, ...]} från
 // den lokala (osparade) gruppindelningen - returnerar bara grupper som
 // faktiskt har någon tilldelad, för en kompaktare payload.
 export function hamtaGruppindelningForSparning() {

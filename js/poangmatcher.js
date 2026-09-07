@@ -3,9 +3,9 @@
 // grupp, och vilka spelare som räknas till varje grupp - eller ta bort en
 // match helt. Speglar Shiny-appens "Hantera Poängmatcher".
 //
-// Skiljer sig från "Tidigare matcher" på Avsluta-skärmen (avsluta.js), som
-// bara VISAR historiken, och från Statistik (statistik.js) som räknar över
-// den. All redigering av redan sparade matcher bor HÄR.
+// Skiljer sig från Statistik (statistik.js), som räknar över historiken
+// istället för att redigera den. All redigering av redan sparade matcher
+// bor HÄR.
 //
 // Serverdelen: GET /omgangar, GET /omgang?id=, POST /omgang/andra,
 // POST /omgang/ta-bort (se worker.js).

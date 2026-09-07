@@ -234,6 +234,7 @@ body {
   font-weight: 700;
   cursor: pointer;
 }
+.knapp-avsluta-genvag:disabled { opacity: 0.5; cursor: default; }
 .knapp-nollstall-poang {
   padding: 10px;
   border-radius: 10px;

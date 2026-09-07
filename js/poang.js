@@ -5,11 +5,11 @@
 // Avsluta match.
 
 import { anropaMedToken } from "./auth.js";
-import { visaToast, textFargForBg } from "./ui.js";
+import { visaToast, textFargForBg, formateraDatumTid } from "./ui.js";
 import { nav } from "./nav.js";
 import { spelaLjud, vibrera } from "./ljud.js";
 import { byggAntalGrupperStegare } from "./antalgrupper.js";
-import { hamtaGruppindelning, byggFlyttaKnapp } from "./grupper.js";
+import { hamtaGruppindelning, byggFlyttaKnapp, hamtaGruppindelningForSparning } from "./grupper.js";
 
 // ---- Tidtagarur-tillstånd (modulnivå - överlever navigering mellan
 // flikar, precis som Intervaller-timerns tillstånd) ----
@@ -96,7 +96,7 @@ function rendera(grupper, spelare, on401) {
   container.appendChild(byggTidtagare(on401));
   container.appendChild(byggGruppinstallning(grupper.length, on401));
   container.appendChild(byggLagRad(grupper, spelare, on401));
-  container.appendChild(byggAvslutningsrad(on401));
+  container.appendChild(byggAvslutningsrad(grupper, on401));
 }
 
 // Kortrutnätet - en egen funktion så den kan byggas om FÖR SIG (uppdaterade
@@ -170,23 +170,26 @@ function uppdateraLagRad(grupper, spelare, on401) {
   if (gammal) gammal.replaceWith(byggLagRad(grupper, spelare, on401));
 }
 
-// ---- Bottenblad: vilka spelare tillhör den här gruppen just nu ----
-// Använder SAMMA lokala gruppindelning som Dela in grupper (grupper.js) -
-// en flytt här syns direkt där också, och tvärtom. Sparas aldrig till
-// servern (se grupper.js för resonemanget).
-function visaSpelareBottenblad(grupp, alla_grupper, spelare, on401) {
+// ---- Delad bottenblad-öppnare ----
+// Ett bottenblad glider upp underifrån och lämnar Poäng-vyn synlig/nedtonad
+// bakom - används istället för en fullskärmsdialog eller en navigering bort
+// till en annan skärm, så det känns som att man är kvar här. Stängs genom
+// tryck på den mörka bakgrunden ELLER ✕-knappen. Anroparen fyller i
+// rubrik/kantfärg och bygger själva innehållet i den returnerade `innehall`
+// -behållaren.
+function oppnaBottenblad({ rubrik, kantfarg }) {
   const overlay = document.createElement("div");
   overlay.className = "bottenblad-overlay";
 
   const blad = document.createElement("div");
   blad.className = "bottenblad";
-  blad.style.borderTop = `5px solid ${grupp.grupp_farg}`;
+  if (kantfarg) blad.style.borderTop = `5px solid ${kantfarg}`;
   overlay.appendChild(blad);
 
   const header = document.createElement("div");
   header.className = "bottenblad-header";
   const titel = document.createElement("h3");
-  titel.textContent = grupp.grupp_namn;
+  titel.textContent = rubrik;
   header.appendChild(titel);
   const stangKnapp = document.createElement("button");
   stangKnapp.className = "bottenblad-stang";
@@ -203,10 +206,21 @@ function visaSpelareBottenblad(grupp, alla_grupper, spelare, on401) {
     overlay.classList.remove("synlig");
     setTimeout(() => overlay.remove(), 200);
   }
-  // Klick på den mörka bakgrunden (inte på själva bladet) -> stäng. Plus en
-  // vanlig ✕-knapp för den som inte provar/känner till det förstnämnda.
   overlay.addEventListener("click", (e) => { if (e.target === overlay) stang(); });
   stangKnapp.onclick = stang;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("synlig"));
+
+  return { innehall, stang };
+}
+
+// ---- Bottenblad: vilka spelare tillhör den här gruppen just nu ----
+// Använder SAMMA lokala gruppindelning som Dela in grupper (grupper.js) -
+// en flytt här syns direkt där också, och tvärtom. Sparas aldrig till
+// servern (se grupper.js för resonemanget).
+function visaSpelareBottenblad(grupp, alla_grupper, spelare, on401) {
+  const { innehall, stang } = oppnaBottenblad({ rubrik: grupp.grupp_namn, kantfarg: grupp.grupp_farg });
 
   function ritaInnehall() {
     innehall.innerHTML = "";
@@ -250,9 +264,71 @@ function visaSpelareBottenblad(grupp, alla_grupper, spelare, on401) {
     });
   }
   ritaInnehall();
+}
 
-  document.body.appendChild(overlay);
-  requestAnimationFrame(() => overlay.classList.add("synlig"));
+// ---- Bottenblad: avsluta matchen och spara den ----
+// Ersätter den gamla navigeringen till en egen "Avsluta"-skärm under
+// Inställningar (kändes malplacerad från Poäng, och tvingade fram en titt
+// på historiken bara för att spara) - historiken finns ändå kvar under
+// Inställningar → Hantera poängmatcher för den som vill bläddra i den.
+function visaAvslutaBottenblad(grupper, on401) {
+  const { innehall, stang } = oppnaBottenblad({ rubrik: "Avsluta match" });
+  innehall.classList.add("avsluta-form");
+
+  const label = document.createElement("label");
+  label.textContent = "Namn på matchen";
+  label.htmlFor = "omgang-namn-input";
+  innehall.appendChild(label);
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.id = "omgang-namn-input";
+  input.placeholder = "T.ex. Tisdagsträning U13";
+  // Förifyll med datum + tid - kan spara direkt eller döpa om innan.
+  // Markeras automatiskt vid fokus (samma globala hjälp som alla textfält
+  // i appen har, se main.js), så det är lätt att skriva över.
+  input.value = formateraDatumTid();
+  innehall.appendChild(input);
+
+  const sammanfattning = document.createElement("div");
+  sammanfattning.className = "grupp-sammanfattning";
+  grupper.forEach(g => {
+    const chip = document.createElement("span");
+    chip.className = "grupp-chip";
+    chip.style.background = g.grupp_farg;
+    chip.style.color = textFargForBg(g.grupp_farg);
+    chip.textContent = `${g.grupp_namn}: ${g.poang}`;
+    sammanfattning.appendChild(chip);
+  });
+  innehall.appendChild(sammanfattning);
+
+  const sparaKnapp = document.createElement("button");
+  sparaKnapp.className = "knapp-primar";
+  sparaKnapp.textContent = "✓ Spara";
+  sparaKnapp.onclick = async () => {
+    const omgang_namn = input.value.trim();
+    if (!omgang_namn) {
+      visaToast("Ange ett namn på matchen.");
+      return;
+    }
+    sparaKnapp.disabled = true;
+    try {
+      const res = await anropaMedToken("/avsluta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ omgang_namn, spelare_per_grupp: hamtaGruppindelningForSparning() }),
+      }, on401);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+      stang();
+      visaToast("Matchen sparad!");
+      await laddaPoang(on401); // hämtar om - poängen är redan nollställd på servern
+    } catch (fel) {
+      sparaKnapp.disabled = false;
+      if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara matchen.");
+    }
+  };
+  innehall.appendChild(sparaKnapp);
 }
 
 // Grupp-relaterade kontroller ovanför poängkorten: gå till Dela in grupper,
@@ -278,14 +354,15 @@ function byggGruppinstallning(antalGrupper, on401) {
 // nollställa poängen (utan att spara). Nollställ är medvetet grå och lågmäld
 // - den ska inte konkurrera med "Avsluta och spara" och inte förväxlas med
 // en av västfärgerna.
-function byggAvslutningsrad(on401) {
+function byggAvslutningsrad(grupper, on401) {
   const rad = document.createElement("div");
   rad.className = "poang-avslutning";
 
   const avslutaKnapp = document.createElement("button");
   avslutaKnapp.className = "knapp-avsluta-genvag";
   avslutaKnapp.textContent = "✓ Avsluta Poängmatch och spara";
-  avslutaKnapp.onclick = () => nav.gaTillAvsluta();
+  avslutaKnapp.disabled = grupper.length === 0;
+  avslutaKnapp.onclick = () => visaAvslutaBottenblad(grupper, on401);
   rad.appendChild(avslutaKnapp);
 
   const nollstallKnapp = document.createElement("button");

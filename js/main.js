@@ -4,9 +4,11 @@
 //   1. Fyra huvudflikar (snabbåtkomst under en pågående träning): Närvaro,
 //      Poäng, Intervaller, Inställningar.
 //   2. "Inställningar" är i sig en hubb med "Hantera"-knappar (sällan
-//      använda saker: spelare, lag, positioner, färger, tränare, avsluta
-//      match) - en "← Tillbaka"-knapp leder tillbaka till hubben, inte till
-//      någon av de tre andra huvudflikarna.
+//      använda saker: spelare, lag, positioner, färger, tränare) - en
+//      "← Tillbaka"-knapp leder tillbaka till hubben, inte till någon av
+//      de tre andra huvudflikarna.
+//   "Avsluta match" nås numera via ett bottenblad direkt på Poäng-skärmen
+//   (poang.js), inte som en egen Hantera-skärm här.
 //   Utöver flikarna finns underskärmen "Dela in grupper" - ingen egen flik,
 //   nås via en knapp på Närvaro- eller Poäng-skärmen, med "← Tillbaka" dit
 //   man kom ifrån.
@@ -16,7 +18,6 @@ import { initPoang } from "./poang.js";
 import { initGrupper } from "./grupper.js";
 import { initSpelare } from "./spelare.js";
 import { initNarvaro } from "./narvaro.js";
-import { initAvsluta } from "./avsluta.js";
 // medlemmar.js importeras nu av lag.js istället (Anslutna ledare bor där).
 import { initLag } from "./lag.js";
 import { initPositioner } from "./positioner.js";
@@ -64,7 +65,6 @@ const huvudflikar = {
 // ---- Hantera-skärmarna (nås via Inställningar-hubben, inte egna flikar) ----
 const hanteraSkarmar = {
   spelare: { container: "spelare-container", knapp: "hantera-spelare-knapp", init: () => initSpelare(visaLoginVy) },
-  avsluta: { container: "avsluta-container", knapp: "hantera-avsluta-knapp", init: () => initAvsluta(visaLoginVy) },
   lag: { container: "lag-installningar-container", knapp: "hantera-lag-knapp", init: () => initLag(visaLoginVy) },
   positioner: { container: "positioner-container", knapp: "hantera-positioner-knapp", init: () => initPositioner(visaLoginVy) },
   kategorier: { container: "kategorier-container", knapp: "hantera-kategorier-knapp", init: () => initKategorier(visaLoginVy) },
@@ -135,13 +135,9 @@ document.getElementById("grupper-tillbaka-knapp").addEventListener("click", gaTi
 // Koppla in nav-bryggan - se nav.js för varför detta görs indirekt.
 nav.gaTillGrupper = (ursprung) => visaGrupperSkarm(ursprung);
 nav.gaTillbakaFranGrupper = gaTillbakaFranGrupper;
-nav.gaTillAvsluta = () => visaHanteraSkarm("avsluta");
 
 Object.entries(hanteraSkarmar).forEach(([namn, s]) => {
-  // OBS: "avsluta" har medvetet ingen egen knapp i hubben längre - nås bara
-  // via genvägen på Poäng-skärmen (nav.gaTillAvsluta) - därav null-kollen.
-  const knappEl = document.getElementById(s.knapp);
-  if (knappEl) knappEl.addEventListener("click", () => visaHanteraSkarm(namn));
+  document.getElementById(s.knapp).addEventListener("click", () => visaHanteraSkarm(namn));
 });
 
 async function startaAppen() {

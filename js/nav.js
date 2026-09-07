@@ -6,5 +6,4 @@
 export const nav = {
   gaTillGrupper: (ursprung) => {}, // ursprung: "narvaro" | "poang" - styr vart "← Tillbaka" leder
   gaTillbakaFranGrupper: () => {}, // tillbaka dit man kom ifrån (samma som "← Tillbaka")
-  gaTillAvsluta: () => {},
 };

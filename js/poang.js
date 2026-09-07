@@ -304,6 +304,7 @@ function visaAvslutaBottenblad(grupper, on401) {
 
   const sparaKnapp = document.createElement("button");
   sparaKnapp.className = "knapp-primar";
+  sparaKnapp.style.background = "#2e7d32"; // samma grönt som Avsluta-genvägen på Poäng-vyn
   sparaKnapp.textContent = "✓ Spara";
   sparaKnapp.onclick = async () => {
     const omgang_namn = input.value.trim();

@@ -600,7 +600,8 @@ body {
 }
 .slump-rad input { width: 18px; height: 18px; flex-shrink: 0; }
 .slump-rad input:disabled { cursor: default; }
-.slump-installning .knapp-slumpa { margin-top: 10px; }
+.slump-installning .knapp-slumpa { margin-top: 0; }
+.slump-installning .tidtagare-knapprad { margin-top: 10px; }
 
 .grupp-block {
   border-radius: 10px;

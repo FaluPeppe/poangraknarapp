@@ -262,6 +262,9 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
     wrapper.appendChild(rad);
   });
 
+  const knappRad = document.createElement("div");
+  knappRad.className = "tidtagare-knapprad";
+
   const slumpaKnapp = document.createElement("button");
   slumpaKnapp.className = "knapp-slumpa";
   slumpaKnapp.textContent = "🎲 Slumpa om";
@@ -269,7 +272,23 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
     fordelaMedMetod(aktuellMetod(), narvarande_spelare, grupper);
     rendera(spelare, grupper, on401);
   };
-  wrapper.appendChild(slumpaKnapp);
+  knappRad.appendChild(slumpaKnapp);
+
+  // Bara med om det faktiskt finns något att nollställa - annars bara
+  // plottrigt med en knapp som inte gör något meningsfullt.
+  if (gruppindelning.size > 0) {
+    const nollstallKnapp = document.createElement("button");
+    nollstallKnapp.className = "narvaro-knapp";
+    nollstallKnapp.textContent = "↺ Nollställ";
+    nollstallKnapp.title = "Ta bort alla spelare ur sina grupper (utan att avmarkera närvaro)";
+    nollstallKnapp.onclick = () => {
+      gruppindelning.clear();
+      rendera(spelare, grupper, on401);
+    };
+    knappRad.appendChild(nollstallKnapp);
+  }
+
+  wrapper.appendChild(knappRad);
 
   return wrapper;
 }

@@ -63,7 +63,7 @@ function rendera(spelare, positioner, kategorier, on401) {
   container.appendChild(bulkKnapp);
 
   if (bulk_synlig) {
-    container.appendChild(byggBulkFormular(positioner, on401));
+    container.appendChild(byggBulkFormular(positioner, kategorier, on401));
   }
 
   // ---- Inaktiva spelare (om några finns) ----
@@ -203,7 +203,7 @@ function byggLaggTillEn(positioner, kategorier, on401) {
   return wrapper;
 }
 
-function byggBulkFormular(positioner, on401) {
+function byggBulkFormular(positioner, kategorier, on401) {
   const wrapper = document.createElement("div");
   wrapper.className = "avsluta-form";
 
@@ -214,8 +214,19 @@ function byggBulkFormular(positioner, on401) {
 
   const info = document.createElement("p");
   info.className = "grupper-info-liten";
-  info.textContent = "Fyll i namn på de rader du vill använda - tomma rader hoppas bara över. Position är valfri.";
+  info.textContent = "Fyll i namn på de rader du vill använda - tomma rader hoppas bara över. Positioner och kategori är valfria (flera går att kryssa i).";
   wrapper.appendChild(info);
+
+  if (positioner.length > 0 || kategorier.length > 0) {
+    const header = document.createElement("div");
+    header.className = "bulk-header-rad";
+    header.innerHTML = `
+      <span>Namn</span>
+      ${positioner.length > 0 ? "<span>Positioner</span>" : ""}
+      ${kategorier.length > 0 ? "<span>Kategori</span>" : ""}
+    `;
+    wrapper.appendChild(header);
+  }
 
   for (let i = 0; i < bulk_rader; i++) {
     const rad = document.createElement("div");
@@ -224,20 +235,11 @@ function byggBulkFormular(positioner, on401) {
     namnInput.type = "text";
     namnInput.className = "bulk-namn";
     namnInput.placeholder = `Spelare ${i + 1}`;
-    const posSelect = document.createElement("select");
-    posSelect.className = "bulk-position";
-    const ingenOpt = document.createElement("option");
-    ingenOpt.value = "";
-    ingenOpt.textContent = "(ingen)";
-    posSelect.appendChild(ingenOpt);
-    positioner.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p.namn;
-      opt.textContent = p.namn;
-      posSelect.appendChild(opt);
-    });
     rad.appendChild(namnInput);
-    rad.appendChild(posSelect);
+
+    if (positioner.length > 0) rad.appendChild(byggBulkKryssgrupp(positioner, "bulk-position-kryss"));
+    if (kategorier.length > 0) rad.appendChild(byggBulkKryssgrupp(kategorier, "bulk-kategori-kryss"));
+
     wrapper.appendChild(rad);
   }
 
@@ -254,6 +256,26 @@ function byggBulkFormular(positioner, on401) {
   wrapper.appendChild(sparaKnapp);
 
   return wrapper;
+}
+
+// Kryssrutegrid för en bulk-rad - samma idé som byggKryssgrupp, men utan
+// egen rubrik (rubriken sitter i header-raden ovanför hela listan istället,
+// EN gång, inte per rad) och i ett tightare eget format (.bulk-kryssrad).
+function byggBulkKryssgrupp(alternativ, cssKlass) {
+  const grupp = document.createElement("div");
+  grupp.className = "bulk-kryssrad";
+  alternativ.forEach(a => {
+    const etikett = document.createElement("label");
+    etikett.className = "bulk-kryss-etikett";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.value = a.namn;
+    cb.className = cssKlass;
+    etikett.appendChild(cb);
+    etikett.appendChild(document.createTextNode(" " + a.namn));
+    grupp.appendChild(etikett);
+  });
+  return grupp;
 }
 
 async function laggTillSpelare(on401) {
@@ -281,7 +303,11 @@ async function laggTillSpelare(on401) {
 async function sparaBulk(wrapper, on401) {
   const rader = [...wrapper.querySelectorAll(".bulk-spelare-rad")];
   const ifyllda = rader
-    .map(r => ({ namn: r.querySelector(".bulk-namn").value.trim(), positioner: r.querySelector(".bulk-position").value }))
+    .map(r => ({
+      namn: r.querySelector(".bulk-namn").value.trim(),
+      positioner: [...r.querySelectorAll(".bulk-position-kryss:checked")].map(cb => cb.value).join(", "),
+      kategori: [...r.querySelectorAll(".bulk-kategori-kryss:checked")].map(cb => cb.value).join(", "),
+    }))
     .filter(r => r.namn.length > 0);
 
   if (ifyllda.length === 0) {
@@ -295,7 +321,7 @@ async function sparaBulk(wrapper, on401) {
       const res = await anropaMedToken("/spelare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ namn: rad.namn, positioner: rad.positioner }),
+        body: JSON.stringify({ namn: rad.namn, positioner: rad.positioner, kategori: rad.kategori }),
       }, on401);
       if (res.ok) antal_lyckade++;
     } catch (fel) {

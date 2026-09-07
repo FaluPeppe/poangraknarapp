@@ -35,7 +35,10 @@ export function byggAntalGrupperStegare(antal, on401, efterAndring) {
   const uppKnapp = document.createElement("button");
   uppKnapp.className = "farg-ikonknapp";
   uppKnapp.textContent = "▲";
-  uppKnapp.onclick = () => andra(antal + 1, on401, efterAndring);
+  // Om antalet just nu är under minimum (0, t.ex. innan grupperna skapats
+  // första gången) ska ▲ hoppa direkt till minimum (2) - annars fastnar man
+  // på antal + 1 = 1, som andra() tyst avvisar och knappen känns död.
+  uppKnapp.onclick = () => andra(antal < 2 ? 2 : antal + 1, on401, efterAndring);
   wrapper.appendChild(uppKnapp);
 
   return wrapper;

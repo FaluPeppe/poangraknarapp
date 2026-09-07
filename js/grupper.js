@@ -267,7 +267,7 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
 
   const slumpaKnapp = document.createElement("button");
   slumpaKnapp.className = "knapp-slumpa";
-  slumpaKnapp.textContent = "🎲 Slumpa om";
+  slumpaKnapp.textContent = gruppindelning.size > 0 ? "🎲 Slumpa om" : "🎲 Slumpa";
   slumpaKnapp.onclick = () => {
     fordelaMedMetod(aktuellMetod(), narvarande_spelare, grupper);
     rendera(spelare, grupper, on401);

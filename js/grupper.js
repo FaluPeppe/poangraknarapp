@@ -30,6 +30,15 @@ const lokaltNarvarande = new Map();
 // spelar_id -> grupp_namn. Samma modulnivå-princip som ovan.
 const gruppindelning = new Map();
 
+// Läses (och muteras direkt, t.ex. via .set()) av Poäng-skärmens
+// "vilka spelare"-bottenblad (poang.js) - SAMMA Map-referens, inte en
+// kopia, så en flytt där syns direkt här också och tvärtom. Ingen extra
+// synk-logik behövs eftersom det redan är exakt den här modulens egna
+// tillstånd.
+export function hamtaGruppindelning() {
+  return gruppindelning;
+}
+
 // Om slumpningen ska jämna ut på positioner och/eller kategori (utöver ren
 // slump, som alltid gäller). Sparas per lag OCH per inloggad person i Neon
 // via /gruppindelning/installning - precis som tidtagarur-tiden. Laddas EN
@@ -340,7 +349,7 @@ function fordelaMedMetod(metod, narvarande, grupper) {
 // färgpalett - se cykel-logiken i /poang/antal i workern, t.ex.
 // "Orange 2") visas numret som en svag siffra i hörnet, annars skulle två
 // likafärgade cirklar vara omöjliga att skilja åt.
-function byggFlyttaKnapp(malGrupp, etikett, onClick) {
+export function byggFlyttaKnapp(malGrupp, etikett, onClick) {
   const knapp = document.createElement("button");
   knapp.className = "flytta-knapp";
   knapp.style.background = malGrupp.grupp_farg;

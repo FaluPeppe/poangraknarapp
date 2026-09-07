@@ -125,8 +125,10 @@ body {
   padding: 16px 10px;
   text-align: center;
   box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  cursor: pointer;
 }
 .lag-namn { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+.lag-antal { font-size: 12px; opacity: 0.75; margin-bottom: 2px; }
 .lag-poang {
   font-size: 56px;
   font-weight: 800;
@@ -134,6 +136,52 @@ body {
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
+
+/* ---- Bottenblad: vilka spelare tillhör gruppen (poang.js) ---- */
+.bottenblad-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+.bottenblad-overlay.synlig { opacity: 1; }
+.bottenblad {
+  background: #fff;
+  color: #1A1A1A;
+  width: 100%;
+  max-width: 480px;
+  max-height: 75vh;
+  overflow-y: auto;
+  border-radius: 18px 18px 0 0;
+  padding: 4px 16px 20px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+  transform: translateY(100%);
+  transition: transform 0.22s ease-out;
+}
+.bottenblad-overlay.synlig .bottenblad { transform: translateY(0); }
+.bottenblad-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+.bottenblad-header h3 { margin: 0; font-size: 17px; }
+.bottenblad-stang {
+  border: none;
+  background: #f2f2f2;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+}
+.bottenblad-innehall .grupp-block-rad { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+.bottenblad-innehall .grupp-block-rad:last-child { border-bottom: none; }
 .poang-knapp-stor {
   display: block;
   width: 100%;

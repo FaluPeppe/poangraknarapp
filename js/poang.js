@@ -9,6 +9,7 @@ import { visaToast, textFargForBg } from "./ui.js";
 import { nav } from "./nav.js";
 import { spelaLjud, vibrera } from "./ljud.js";
 import { byggAntalGrupperStegare } from "./antalgrupper.js";
+import { hamtaGruppindelning, byggFlyttaKnapp } from "./grupper.js";
 
 // ---- Tidtagarur-tillstånd (modulnivå - överlever navigering mellan
 // flikar, precis som Intervaller-timerns tillstånd) ----
@@ -70,29 +71,42 @@ async function laddaTidtagarInstallning(on401) {
 async function laddaPoang(on401) {
   const container = document.getElementById("lag-container");
   container.innerHTML = '<span style="color:#888;">Laddar...</span>';
-  let res;
+  let poangRes, spelareRes;
   try {
-    res = await anropaMedToken("/poang", {}, on401);
+    [poangRes, spelareRes] = await Promise.all([
+      anropaMedToken("/poang", {}, on401),
+      anropaMedToken("/spelare", {}, on401),
+    ]);
   } catch (fel) {
     return;
   }
-  if (!res.ok) {
+  if (!poangRes.ok || !spelareRes.ok) {
     visaToast("Kunde inte hämta poäng.");
     return;
   }
-  const data = await res.json();
-  rendera(data, on401);
+  const grupper = await poangRes.json();
+  const spelare = await spelareRes.json();
+  rendera(grupper, spelare, on401);
 }
 
-function rendera(grupper, on401) {
+function rendera(grupper, spelare, on401) {
   const container = document.getElementById("lag-container");
   container.innerHTML = "";
 
   container.appendChild(byggTidtagare(on401));
   container.appendChild(byggGruppinstallning(grupper.length, on401));
+  container.appendChild(byggLagRad(grupper, spelare, on401));
+  container.appendChild(byggAvslutningsrad(on401));
+}
 
+// Kortrutnätet - en egen funktion så den kan byggas om FÖR SIG (uppdaterade
+// antal-siffror efter en flytt i bottenbladet) utan att rita om hela
+// skärmen (tidtagaruret får då inte råka nollställas visuellt).
+function byggLagRad(grupper, spelare, on401) {
   const lagRad = document.createElement("div");
   lagRad.className = "lag-container-inre";
+  lagRad.id = "lag-rad";
+
   grupper.forEach(g => {
     const txt = textFargForBg(g.grupp_farg);
     const kort = document.createElement("div");
@@ -103,6 +117,12 @@ function rendera(grupper, on401) {
     const namn = document.createElement("div");
     namn.className = "lag-namn";
     namn.textContent = g.grupp_namn;
+
+    const antal = hamtaGruppindelning();
+    const medlemsantal = spelare.filter(s => antal.get(s.id) === g.grupp_namn).length;
+    const antalEl = document.createElement("div");
+    antalEl.className = "lag-antal";
+    antalEl.textContent = medlemsantal === 1 ? "1 spelare" : `${medlemsantal} spelare`;
 
     const poangEl = document.createElement("div");
     poangEl.className = "lag-poang";
@@ -126,14 +146,113 @@ function rendera(grupper, on401) {
     minusKnapp.onclick = () => poangKlick(g.grupp_namn, -1, on401);
 
     kort.appendChild(namn);
+    kort.appendChild(antalEl);
     kort.appendChild(poangEl);
     kort.appendChild(plusKnapp);
     kort.appendChild(minusKnapp);
+
+    // Tryck NÅGONSTANS på kortet (men inte på +1/−1-knapparna) -> visa
+    // vilka spelare som är i gruppen, i ett bottenblad ovanpå Poäng-vyn
+    // (inte en fullskärmsdialog - ska kännas som att man är kvar här).
+    kort.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      visaSpelareBottenblad(g, grupper, spelare, on401);
+    });
+
     lagRad.appendChild(kort);
   });
-  container.appendChild(lagRad);
 
-  container.appendChild(byggAvslutningsrad(on401));
+  return lagRad;
+}
+
+function uppdateraLagRad(grupper, spelare, on401) {
+  const gammal = document.getElementById("lag-rad");
+  if (gammal) gammal.replaceWith(byggLagRad(grupper, spelare, on401));
+}
+
+// ---- Bottenblad: vilka spelare tillhör den här gruppen just nu ----
+// Använder SAMMA lokala gruppindelning som Dela in grupper (grupper.js) -
+// en flytt här syns direkt där också, och tvärtom. Sparas aldrig till
+// servern (se grupper.js för resonemanget).
+function visaSpelareBottenblad(grupp, alla_grupper, spelare, on401) {
+  const overlay = document.createElement("div");
+  overlay.className = "bottenblad-overlay";
+
+  const blad = document.createElement("div");
+  blad.className = "bottenblad";
+  blad.style.borderTop = `5px solid ${grupp.grupp_farg}`;
+  overlay.appendChild(blad);
+
+  const header = document.createElement("div");
+  header.className = "bottenblad-header";
+  const titel = document.createElement("h3");
+  titel.textContent = grupp.grupp_namn;
+  header.appendChild(titel);
+  const stangKnapp = document.createElement("button");
+  stangKnapp.className = "bottenblad-stang";
+  stangKnapp.textContent = "✕";
+  stangKnapp.setAttribute("aria-label", "Stäng");
+  header.appendChild(stangKnapp);
+  blad.appendChild(header);
+
+  const innehall = document.createElement("div");
+  innehall.className = "bottenblad-innehall";
+  blad.appendChild(innehall);
+
+  function stang() {
+    overlay.classList.remove("synlig");
+    setTimeout(() => overlay.remove(), 200);
+  }
+  // Klick på den mörka bakgrunden (inte på själva bladet) -> stäng. Plus en
+  // vanlig ✕-knapp för den som inte provar/känner till det förstnämnda.
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) stang(); });
+  stangKnapp.onclick = stang;
+
+  function ritaInnehall() {
+    innehall.innerHTML = "";
+    const gruppindelning = hamtaGruppindelning();
+    const medlemmar = spelare.filter(s => gruppindelning.get(s.id) === grupp.grupp_namn);
+
+    if (medlemmar.length === 0) {
+      const tom = document.createElement("p");
+      tom.className = "grupper-info-liten";
+      tom.textContent = "Inga spelare tilldelade den här gruppen än.";
+      innehall.appendChild(tom);
+      const genvag = document.createElement("button");
+      genvag.className = "narvaro-knapp";
+      genvag.textContent = "👥 Dela in i grupper";
+      genvag.onclick = () => { stang(); nav.gaTillGrupper("poang"); };
+      innehall.appendChild(genvag);
+      return;
+    }
+
+    const andra_grupper = alla_grupper.filter(g => g.grupp_namn !== grupp.grupp_namn);
+    medlemmar.forEach(s => {
+      const rad = document.createElement("div");
+      rad.className = "grupp-block-rad";
+      const namn = document.createElement("span");
+      namn.textContent = s.namn;
+      rad.appendChild(namn);
+
+      const knappGrupp = document.createElement("span");
+      knappGrupp.className = "flytta-knapp-grupp";
+      andra_grupper.forEach(mal => {
+        const knapp = byggFlyttaKnapp(mal, "Flytta till", () => {
+          gruppindelning.set(s.id, mal.grupp_namn);
+          uppdateraLagRad(alla_grupper, spelare, on401);
+          ritaInnehall();
+        });
+        knappGrupp.appendChild(knapp);
+      });
+      rad.appendChild(knappGrupp);
+
+      innehall.appendChild(rad);
+    });
+  }
+  ritaInnehall();
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("synlig"));
 }
 
 // Grupp-relaterade kontroller ovanför poängkorten: gå till Dela in grupper,

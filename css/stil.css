@@ -311,19 +311,24 @@ body {
 .spelare-lagg-till input {
   flex: 1;
   min-width: 100px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #ddd;
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.3;
 }
 .spelare-lagg-till button {
-  padding: 8px 14px;
+  padding: 10px 14px;
   border-radius: 8px;
   border: none;
   background: #1A1A1A;
   color: white;
   font-weight: 700;
+  font-size: 15px;
+  line-height: 1.3;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
 }
 .spelare-redigera {
   display: flex;
@@ -359,8 +364,8 @@ body {
   padding: 16px;
   margin-bottom: 20px;
 }
-.avsluta-form label:not(.positioner-kryss-etikett):not(.bulk-kryss-etikett) { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
-.avsluta-form input:not([type="checkbox"]) {
+.avsluta-form label:where(:not(.positioner-kryss-etikett):not(.bulk-kryss-etikett)) { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+.avsluta-form input:where(:not([type="checkbox"])) {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
@@ -436,7 +441,7 @@ body {
 }
 .varv-stegare-knapp:disabled { opacity: 0.4; cursor: default; }
 .avsluta-form .varv-stegare-falt {
-  width: 72px;
+  width: 52px;
   flex: 0 0 auto;
   text-align: center;
   margin: 0;

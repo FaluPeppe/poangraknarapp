@@ -268,7 +268,7 @@ function byggForvalSektion(on401) {
   nyttNamnRad.className = "spelare-lagg-till";
   nyttNamnRad.innerHTML = `
     <input type="text" id="nytt-forval-namn" placeholder="Namn på förval, t.ex. Kort löppass">
-    <button id="spara-forval-knapp">💾 Spara aktuell som förval</button>
+    <button id="spara-forval-knapp">💾 Spara förval</button>
   `;
   wrapper.appendChild(nyttNamnRad);
   nyttNamnRad.querySelector("#spara-forval-knapp").onclick = () => sparaForval(on401);

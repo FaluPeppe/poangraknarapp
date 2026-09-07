@@ -357,8 +357,8 @@ body {
   padding: 16px;
   margin-bottom: 20px;
 }
-.avsluta-form label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
-.avsluta-form input {
+.avsluta-form label:not(.positioner-kryss-etikett) { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+.avsluta-form input:not([type="checkbox"]) {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
@@ -749,11 +749,12 @@ body {
 .positioner-kryssrad {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 6px 14px;
+  margin-bottom: 8px;
   font-size: 13px;
 }
-.positioner-kryss-etikett { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.positioner-kryss-etikett { display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
+.positioner-kryss-etikett input { margin: 0; }
 
 .bulk-spelare-rad {
   display: flex;

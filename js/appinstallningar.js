@@ -14,11 +14,8 @@ export function initAppinstallningar() {
   const container = document.getElementById("appinstallningar-container");
   container.innerHTML = "";
 
-  const rubrik = document.createElement("h2");
-  rubrik.className = "grupper-rubrik";
-  rubrik.textContent = "Appinställningar";
-  container.appendChild(rubrik);
-
+  // Egen rubrik borttagen - den delade "hantera-skarm-titel" (main.js)
+  // visar redan "Appinställningar" högst upp på skärmen.
   const info = document.createElement("p");
   info.className = "grupper-info-liten";
   info.textContent = "Personliga inställningar som gäller den här webbläsaren, inte hela laget.";

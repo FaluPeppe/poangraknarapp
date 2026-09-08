@@ -37,7 +37,7 @@
 <body>
 
   <!-- ============ INLOGGNING ============ -->
-  <div id="login-vy">
+  <div id="login-vy" class="dold">
     <div class="login-kort">
       <div id="login-steg-epost">
         <h2>Logga in</h2>
@@ -133,6 +133,7 @@
       </div>
     </div>
     <button class="tillbaka-knapp dold" id="installningar-tillbaka-knapp">← Tillbaka till Inställningar</button>
+    <h2 class="hantera-skarm-titel dold" id="hantera-skarm-titel"></h2>
 
     <!-- Poäng-skärmen (js/poang.js). -->
     <div class="lag-container" id="lag-container">
@@ -201,6 +202,16 @@
       <span style="color:#888;">Laddar...</span>
     </div>
   </div>
+
+  <!-- Visar rätt vy DIREKT (innan js/main.js hunnit köra som modul-script,
+       vilket dröjer till efter HTML-parsningen) - annars hinner inloggnings-
+       skärmen blixtra till för den som redan är inloggad. Läser SAMMA
+       localStorage-nyckel som auth.js's hamtaToken(). main.js gör om
+       samma jobb strax efter (ofarligt, bara att lägga till/ta bort
+       samma klass igen) och sköter den riktiga initieringen. -->
+  <script>
+    document.getElementById(localStorage.getItem("kif_token") ? "app-vy" : "login-vy").classList.remove("dold");
+  </script>
 
   <div class="toast" id="toast"></div>
 

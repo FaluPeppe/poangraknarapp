@@ -567,6 +567,14 @@ body {
   font-weight: 600;
   cursor: pointer;
 }
+/* Visar VILKEN Hantera-skärm man är i (sätts av main.js utifrån samma
+   etikett som knappen i Inställningar-hubben) - kompakt, tar inte mycket
+   plats, men ger den saknade "du är här"-känslan. */
+.hantera-skarm-titel {
+  font-size: 18px;
+  font-weight: 700;
+  margin: -6px 0 12px;
+}
 
 .markera-rad {
   display: flex;
@@ -807,11 +815,11 @@ body {
 .spelar-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   background: white;
   border: 1px solid #ddd;
-  border-radius: 16px;
-  padding: 6px 6px 6px 12px;
+  border-radius: 18px;
+  padding: 6px 8px 6px 12px;
   font-size: 13px;
   font-weight: 600;
 }
@@ -820,10 +828,12 @@ body {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 11px;
-  padding: 2px 4px;
+  font-size: 16px;
+  line-height: 1;
+  padding: 6px;
   border-radius: 50%;
 }
+.chip-ikonknapp:active { background: rgba(0,0,0,0.08); }
 .spelare-redigera-chip {
   display: flex;
   flex-wrap: wrap;

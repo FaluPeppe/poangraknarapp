@@ -30,6 +30,7 @@ import { nav } from "./nav.js";
 import { initHeaderLagval } from "./header.js";
 import { initSkarmvaken } from "./skarmvaken.js";
 import { initRotationslas } from "./rotationslas.js";
+import { initZoomlas } from "./zoomlas.js";
 import { initAppinstallningar } from "./appinstallningar.js";
 
 // Markera hela innehållet när man går in i ett textfält - då kan man skriva
@@ -64,14 +65,14 @@ const huvudflikar = {
 
 // ---- Hantera-skärmarna (nås via Inställningar-hubben, inte egna flikar) ----
 const hanteraSkarmar = {
-  spelare: { container: "spelare-container", knapp: "hantera-spelare-knapp", init: () => initSpelare(visaLoginVy) },
-  lag: { container: "lag-installningar-container", knapp: "hantera-lag-knapp", init: () => initLag(visaLoginVy) },
-  positioner: { container: "positioner-container", knapp: "hantera-positioner-knapp", init: () => initPositioner(visaLoginVy) },
-  kategorier: { container: "kategorier-container", knapp: "hantera-kategorier-knapp", init: () => initKategorier(visaLoginVy) },
-  farger: { container: "farger-container", knapp: "hantera-farger-knapp", init: () => initFarger(visaLoginVy) },
-  poangmatcher: { container: "poangmatcher-container", knapp: "hantera-poangmatcher-knapp", init: () => initPoangmatcher(visaLoginVy) },
-  statistik: { container: "statistik-container", knapp: "hantera-statistik-knapp", init: () => initStatistik(visaLoginVy) },
-  appinstallningar: { container: "appinstallningar-container", knapp: "hantera-appinstallningar-knapp", init: () => initAppinstallningar() },
+  spelare: { container: "spelare-container", knapp: "hantera-spelare-knapp", titel: "Hantera spelare", init: () => initSpelare(visaLoginVy) },
+  lag: { container: "lag-installningar-container", knapp: "hantera-lag-knapp", titel: "Hantera lag", init: () => initLag(visaLoginVy) },
+  positioner: { container: "positioner-container", knapp: "hantera-positioner-knapp", titel: "Hantera positioner", init: () => initPositioner(visaLoginVy) },
+  kategorier: { container: "kategorier-container", knapp: "hantera-kategorier-knapp", titel: "Hantera kategorier", init: () => initKategorier(visaLoginVy) },
+  farger: { container: "farger-container", knapp: "hantera-farger-knapp", titel: "Hantera färger", init: () => initFarger(visaLoginVy) },
+  poangmatcher: { container: "poangmatcher-container", knapp: "hantera-poangmatcher-knapp", titel: "Hantera poängmatcher", init: () => initPoangmatcher(visaLoginVy) },
+  statistik: { container: "statistik-container", knapp: "hantera-statistik-knapp", titel: "Statistik", init: () => initStatistik(visaLoginVy) },
+  appinstallningar: { container: "appinstallningar-container", knapp: "hantera-appinstallningar-knapp", titel: "Appinställningar", init: () => initAppinstallningar() },
 };
 
 const alla_containers = [
@@ -85,6 +86,7 @@ function doljAllt() {
   alla_containers.forEach(id => document.getElementById(id).classList.add("dold"));
   document.getElementById("installningar-tillbaka-knapp").classList.add("dold");
   document.getElementById("grupper-tillbaka-knapp").classList.add("dold");
+  document.getElementById("hantera-skarm-titel").classList.add("dold");
   Object.values(huvudflikar).forEach(s => document.getElementById(s.nav).classList.remove("aktiv"));
   document.getElementById("nav-installningar-knapp").classList.remove("aktiv");
 }
@@ -106,6 +108,9 @@ function visaHanteraSkarm(namn) {
   doljAllt();
   document.getElementById(hanteraSkarmar[namn].container).classList.remove("dold");
   document.getElementById("installningar-tillbaka-knapp").classList.remove("dold");
+  const titelEl = document.getElementById("hantera-skarm-titel");
+  titelEl.textContent = hanteraSkarmar[namn].titel;
+  titelEl.classList.remove("dold");
   document.getElementById("nav-installningar-knapp").classList.add("aktiv"); // fortfarande "inom" Inställningar
   hanteraSkarmar[namn].init();
 }
@@ -148,6 +153,8 @@ async function startaAppen() {
   initRotationslas();
   visaHuvudflik("narvaro"); // startskärm - Peter vill se närvaro först
 }
+
+initZoomlas(); // personlig, gäller redan på inloggningsskärmen - inte bara i appen
 
 initLogin({
   visaLoginVy,

@@ -1,11 +1,15 @@
 // Intervaller-skärmen. Tre delar:
 //   1. En körande nedräkningsmotor (löp/vila-block, flera varv).
-//   2. Ett formulär för att bygga/spara DEN AKTUELLA blocklistan - sparas
-//      per LAG och per INLOGGAD PERSON som "senast använda" (/intervall).
+//   2. Ett formulär för att bygga DEN AKTUELLA blocklistan - sparas
+//      AUTOMATISKT vid varje ändring, per LAG och per INLOGGAD PERSON,
+//      som "senast använda" (/intervall) - samma princip som ljud/
+//      vibration/skärmvaken och slumpvalen i Dela in grupper. Ingen egen
+//      "Spara"-knapp, precis som de.
 //   3. NAMNGIVNA, SPARADE FÖRVAL (/intervall/forval) - flera olika
 //      inställningar man kan spara och snabbt växla mellan, visas som
 //      knappar längst ner. Skiljer sig från (2): (2) är bara EN, namnlös,
-//      "det jag körde senast"; det här är flera, med egna namn.
+//      "det jag körde senast" (autosparad); det här är flera, med egna
+//      namn (sparas bara när man uttryckligen trycker "Spara förval").
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast } from "./ui.js";
@@ -123,13 +127,16 @@ function rendera(on401) {
     const typVal = document.createElement("select");
     typVal.innerHTML = `<option value="lop">Löpning</option><option value="vila">Vila</option>`;
     typVal.value = b.typ;
-    typVal.onchange = () => { block[i].typ = typVal.value; };
+    typVal.onchange = () => { block[i].typ = typVal.value; sparaInstallning(on401); };
 
     const sekVal = document.createElement("input");
     sekVal.type = "number";
     sekVal.min = "1";
     sekVal.value = b.sekunder;
-    sekVal.onchange = () => { block[i].sekunder = Math.max(1, parseInt(sekVal.value, 10) || 1); };
+    sekVal.onchange = () => {
+      block[i].sekunder = Math.max(1, parseInt(sekVal.value, 10) || 1);
+      sparaInstallning(on401);
+    };
 
     const taBortBlockKnapp = document.createElement("button");
     taBortBlockKnapp.className = "narvaro-knapp";
@@ -138,6 +145,7 @@ function rendera(on401) {
     taBortBlockKnapp.onclick = () => {
       block.splice(i, 1);
       aterstall_timer();
+      sparaInstallning(on401);
       rendera(on401);
     };
 
@@ -153,6 +161,7 @@ function rendera(on401) {
   laggTillBlockKnapp.textContent = "+ Lägg till block";
   laggTillBlockKnapp.onclick = () => {
     block.push({ typ: "lop", sekunder: 15 });
+    sparaInstallning(on401);
     rendera(on401);
   };
   installningar.appendChild(laggTillBlockKnapp);
@@ -171,7 +180,7 @@ function rendera(on401) {
   varvNer.id = "varv-ner";
   varvNer.textContent = "−";
   varvNer.disabled = varv <= 1;
-  varvNer.onclick = () => stegaVarv(varv - 1);
+  varvNer.onclick = () => stegaVarv(varv - 1, on401);
 
   const varvInput = document.createElement("input");
   varvInput.type = "number";
@@ -180,13 +189,13 @@ function rendera(on401) {
   varvInput.className = "varv-stegare-falt";
   varvInput.id = "varv-falt";
   varvInput.value = varv;
-  varvInput.onchange = () => stegaVarv(varvInput.value);
+  varvInput.onchange = () => stegaVarv(varvInput.value, on401);
 
   const varvUpp = document.createElement("button");
   varvUpp.type = "button";
   varvUpp.className = "varv-stegare-knapp";
   varvUpp.textContent = "+";
-  varvUpp.onclick = () => stegaVarv(varv + 1);
+  varvUpp.onclick = () => stegaVarv(varv + 1, on401);
 
   varvRad.appendChild(varvNer);
   varvRad.appendChild(varvInput);
@@ -201,16 +210,10 @@ function rendera(on401) {
   const hoppaCb = document.createElement("input");
   hoppaCb.type = "checkbox";
   hoppaCb.checked = hoppa_sista_vila;
-  hoppaCb.onchange = () => { hoppa_sista_vila = hoppaCb.checked; };
+  hoppaCb.onchange = () => { hoppa_sista_vila = hoppaCb.checked; sparaInstallning(on401); };
   hoppaRad.appendChild(hoppaCb);
   hoppaRad.appendChild(document.createTextNode(" Hoppa över sista vila-intervallet"));
   installningar.appendChild(hoppaRad);
-
-  const sparaKnapp = document.createElement("button");
-  sparaKnapp.className = "knapp-primar";
-  sparaKnapp.textContent = "Spara inställning";
-  sparaKnapp.onclick = () => sparaInstallning(on401);
-  installningar.appendChild(sparaKnapp);
 
   container.appendChild(installningar);
 
@@ -303,13 +306,14 @@ function uppdateraVarvVisning() {
 }
 
 // − / + / manuell inmatning av antal varv. Ingen full omrendering.
-function stegaVarv(nytt) {
+function stegaVarv(nytt, on401) {
   varv = Math.max(1, parseInt(nytt, 10) || 1);
   const falt = document.getElementById("varv-falt");
   if (falt) falt.value = varv;
   const ner = document.getElementById("varv-ner");
   if (ner) ner.disabled = varv <= 1;
   uppdateraVarvVisning();
+  sparaInstallning(on401);
 }
 
 function aterstall_timer() {
@@ -397,6 +401,9 @@ function uppdateraDom() {
   }
 }
 
+// Sparas AUTOMATISKT vid varje ändring i "Ställ in"-formuläret (se
+// anropen ovan) - tyst vid lyckad sparning precis som ljud/vibration/
+// skärmvaken och slumpvalen i Dela in grupper, ingen toast som stör.
 async function sparaInstallning(on401) {
   try {
     const res = await anropaMedToken("/intervall", {
@@ -404,11 +411,9 @@ async function sparaInstallning(on401) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ block, varv, hoppa_sista_vila }),
     }, on401);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
-    visaToast("Inställningen sparad.");
+    if (!res.ok) throw new Error("Servern svarade med fel");
   } catch (fel) {
-    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara.");
+    if (fel.message !== "Utloggad") visaToast("Kunde inte spara inställningen.");
   }
 }
 

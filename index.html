@@ -208,9 +208,34 @@
        skärmen blixtra till för den som redan är inloggad. Läser SAMMA
        localStorage-nyckel som auth.js's hamtaToken(). main.js gör om
        samma jobb strax efter (ofarligt, bara att lägga till/ta bort
-       samma klass igen) och sköter den riktiga initieringen. -->
+       samma klass igen) och sköter den riktiga initieringen.
+
+       Pekar också om <link rel="manifest"> till lagets EGNA manifest
+       (workerns publika GET /manifest/:lagkod, se worker.js) om det finns
+       en token - måste göras HÄR, synkront, innan webbläsaren hinner
+       bestämma sig för att appen är installerbar (Androids "Lägg till på
+       hemskärmen" läser manifestet väldigt tidigt - en asynkron ändring
+       senare, efter en /mig-hämtning, riskerar att komma för sent).
+       lagkod läses direkt ur token-nyttolasten utan att verifiera
+       signaturen - helt ofarligt här, det är bara en URL-byggnadsdetalj,
+       ingen säkerhetskänslig kontroll. js/hemskarmsikon.js sköter iPhones
+       apple-touch-icon (kan göras asynkront - iOS läser den taggen först
+       när man manuellt öppnar Dela-menyn, inget kapplöpningsproblem där). -->
   <script>
-    document.getElementById(localStorage.getItem("kif_token") ? "app-vy" : "login-vy").classList.remove("dold");
+    (function() {
+      var token = localStorage.getItem("kif_token");
+      document.getElementById(token ? "app-vy" : "login-vy").classList.remove("dold");
+      if (!token) return;
+      try {
+        var b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        while (b64.length % 4) b64 += "=";
+        var lagkod = JSON.parse(atob(b64)).lagkod;
+        var lank = document.querySelector('link[rel="manifest"]');
+        if (lagkod && lank) {
+          lank.setAttribute("href", "https://poangraknare-worker.poangraknare-worker.workers.dev/manifest/" + lagkod);
+        }
+      } catch (fel) { /* trasig token - behåll standardmanifestet i head */ }
+    })();
   </script>
 
   <div class="toast" id="toast"></div>

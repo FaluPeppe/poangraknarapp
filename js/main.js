@@ -31,6 +31,7 @@ import { initHeaderLagval } from "./header.js";
 import { initSkarmvaken } from "./skarmvaken.js";
 import { initRotationslas } from "./rotationslas.js";
 import { initZoomlas } from "./zoomlas.js";
+import { initHemskarmsikon } from "./hemskarmsikon.js";
 import { initAppinstallningar } from "./appinstallningar.js";
 
 // Markera hela innehållet när man går in i ett textfält - då kan man skriva
@@ -151,6 +152,7 @@ async function startaAppen() {
   initHeaderLagval(visaLoginVy); // bygger om lagnamn-rubriken till en listruta
   initSkarmvaken();
   initRotationslas();
+  initHemskarmsikon(visaLoginVy);
   visaHuvudflik("narvaro"); // startskärm - Peter vill se närvaro först
 }
 

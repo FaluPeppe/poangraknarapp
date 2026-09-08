@@ -22,12 +22,13 @@ export async function initLag(on401) {
   const container = document.getElementById("lag-installningar-container");
   container.innerHTML = '<span style="color:#888;">Laddar...</span>';
 
-  let migRes, minaLagRes, medlemmarRes;
+  let migRes, minaLagRes, medlemmarRes, logotypRes;
   try {
-    [migRes, minaLagRes, medlemmarRes] = await Promise.all([
+    [migRes, minaLagRes, medlemmarRes, logotypRes] = await Promise.all([
       anropaMedToken("/mig", {}, on401),
       anropaMedToken("/lag/mina", {}, on401),
       anropaMedToken("/medlemmar", {}, on401),
+      anropaMedToken("/lag/logotyp", {}, on401),
     ]);
   } catch (fel) {
     if (fel.message !== "Utloggad") {
@@ -36,17 +37,18 @@ export async function initLag(on401) {
     }
     return;
   }
-  if (!migRes.ok || !minaLagRes.ok || !medlemmarRes.ok) {
+  if (!migRes.ok || !minaLagRes.ok || !medlemmarRes.ok || !logotypRes.ok) {
     visaToast("Kunde inte hämta laginfo.");
     return;
   }
   const mig = await migRes.json();
   const minaLag = await minaLagRes.json();
   const medlemmar = await medlemmarRes.json();
-  rendera(mig, minaLag, medlemmar, on401);
+  const logotyp = await logotypRes.json();
+  rendera(mig, minaLag, medlemmar, logotyp, on401);
 }
 
-function rendera(mig, minaLag, medlemmar, on401) {
+function rendera(mig, minaLag, medlemmar, logotyp, on401) {
   const container = document.getElementById("lag-installningar-container");
   container.innerHTML = "";
   const jag_ar_admin = mig.roll === "admin";
@@ -76,6 +78,9 @@ function rendera(mig, minaLag, medlemmar, on401) {
     namnForm.appendChild(info);
   }
   container.appendChild(namnForm);
+
+  // ---- Hemskärmsikon (egen logga) ----
+  container.appendChild(byggLogotypForm(logotyp, jag_ar_admin, on401));
 
   // ---- Byt lag (om man är med i fler än ett) ----
   if (minaLag.length > 1) {
@@ -157,6 +162,73 @@ function rendera(mig, minaLag, medlemmar, on401) {
 
   // ---- Fler val: lämna laget (bakom en expander så man inte råkar trycka) ----
   container.appendChild(byggFlerVal(mig, medlemmar, on401));
+}
+
+// ---- Hemskärmsikon (egen logga) ----
+// En bildadress (t.ex. hämtad från svenskafotbollsklubbar.se) som används
+// som ikon i stället för standardikonen när laget läggs till på
+// hemskärmen. Fungerar bara i Android Chrome - iPhone/Safari ignorerar
+// tyvärr det som styr ikonen där (samma begränsning som skärmrotation/
+// zoomlås). Byter man logga UPPDATERAS INTE en redan installerad ikon -
+// kräver att man tar bort och lägger till appen på nytt.
+function byggLogotypForm(logotyp, jag_ar_admin, on401) {
+  const form = document.createElement("div");
+  form.className = "avsluta-form";
+
+  const rubrik = document.createElement("h3");
+  rubrik.className = "historik-rubrik";
+  rubrik.textContent = "Hemskärmsikon";
+  form.appendChild(rubrik);
+
+  const info = document.createElement("p");
+  info.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
+  info.textContent = "Egen logga som ikon när man lägger till appen på hemskärmen (t.ex. klubbmärket - kan hämtas från "
+    + "svenskafotbollsklubbar.se eller var du vill). Fungerar bara i Android Chrome, inte iPhone. Tomt = standardikonen. "
+    + "En redan installerad ikon uppdateras inte - lägg till appen på nytt efter att du sparat en ny.";
+  form.appendChild(info);
+
+  const label = document.createElement("label");
+  label.textContent = "Bildadress (https://...)";
+  form.appendChild(label);
+  const input = document.createElement("input");
+  input.type = "url";
+  input.id = "lag-logotyp-input";
+  input.placeholder = "https://exempel.se/klubbmarke.png";
+  input.value = logotyp.logotyp_url || "";
+  input.disabled = !jag_ar_admin;
+  form.appendChild(input);
+
+  if (jag_ar_admin) {
+    const knapp = document.createElement("button");
+    knapp.className = "knapp-primar";
+    knapp.textContent = "Spara";
+    knapp.onclick = () => sparaLogotyp(on401);
+    form.appendChild(knapp);
+  } else {
+    const ejAdminInfo = document.createElement("p");
+    ejAdminInfo.style.cssText = "color:#888;font-size:13px;";
+    ejAdminInfo.textContent = "Bara admins kan ändra lagets logga.";
+    form.appendChild(ejAdminInfo);
+  }
+
+  return form;
+}
+
+async function sparaLogotyp(on401) {
+  const input = document.getElementById("lag-logotyp-input");
+  const logotyp_url = input.value.trim();
+  try {
+    const res = await anropaMedToken("/lag/logotyp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logotyp_url }),
+    }, on401);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    visaToast(logotyp_url ? "Loggan sparad." : "Återställt till standardikonen.");
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara.");
+  }
 }
 
 // ---- Tipsa en vän ----

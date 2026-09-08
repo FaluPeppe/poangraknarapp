@@ -682,6 +682,13 @@ body {
 }
 .slump-rad input { width: 18px; height: 18px; flex-shrink: 0; }
 .slump-rad input:disabled { cursor: default; }
+.slump-rad-under {
+  margin-left: 24px;
+  font-size: 13px;
+  color: #666;
+  padding: 3px 0;
+}
+.slump-rad-under input { width: 16px; height: 16px; }
 .slump-installning .knapp-slumpa { margin-top: 0; }
 .slump-installning .tidtagare-knapprad { margin-top: 10px; }
 

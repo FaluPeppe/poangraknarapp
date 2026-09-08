@@ -40,19 +40,16 @@ export function hamtaGruppindelning() {
 }
 
 // Om slumpningen ska jämna ut på positioner och/eller kategori (utöver ren
-// slump, som alltid gäller). Sparas per lag OCH per inloggad person i Neon
-// via /gruppindelning/installning - precis som tidtagarur-tiden. Laddas EN
+// slump, som alltid gäller) - eller tvärtom, HÅLLA IHOP spelare med samma
+// position/kategori i så få grupper som möjligt (t.ex. alla målvakter i
+// samma grupp). Sparas per lag OCH per inloggad person i Neon via
+// /gruppindelning/installning - precis som tidtagarur-tiden. Laddas EN
 // gång per sidladdning (installningLaddad), sedan lever valet i minnet.
 let slumpaPositioner = false;
 let slumpaKategori = false;
+let hallIhopPositioner = false;
+let hallIhopKategori = false;
 let installningLaddad = false;
-
-function aktuellMetod() {
-  if (slumpaPositioner && slumpaKategori) return "bada";
-  if (slumpaPositioner) return "position";
-  if (slumpaKategori) return "kategori";
-  return "slump";
-}
 
 export async function initGrupper(on401) {
   const container = document.getElementById("grupper-container");
@@ -242,17 +239,23 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
 
   // Faltet kan ha tomts sedan valet sparades - nolla da motsvarande kryss
   // (och spara), sa en gammal ikryssning inte spokar osynligt.
-  if (!har_positioner && slumpaPositioner) { slumpaPositioner = false; sparaInstallning(on401); }
-  if (!har_kategori && slumpaKategori) { slumpaKategori = false; sparaInstallning(on401); }
+  if (!har_positioner && slumpaPositioner) { slumpaPositioner = false; hallIhopPositioner = false; sparaInstallning(on401); }
+  if (!har_kategori && slumpaKategori) { slumpaKategori = false; hallIhopKategori = false; sparaInstallning(on401); }
 
   const rader = [
     { etikett: "Slump (alltid på)", last: true, ikryssad: true },
   ];
   if (har_positioner) {
-    rader.push({ etikett: "Positioner", ikryssad: slumpaPositioner, satt: v => { slumpaPositioner = v; } });
+    rader.push({
+      etikett: "Positioner", ikryssad: slumpaPositioner, satt: v => { slumpaPositioner = v; },
+      hallIhop: { ikryssad: hallIhopPositioner, satt: v => { hallIhopPositioner = v; } },
+    });
   }
   if (har_kategori) {
-    rader.push({ etikett: "Kategori", ikryssad: slumpaKategori, satt: v => { slumpaKategori = v; } });
+    rader.push({
+      etikett: "Kategori", ikryssad: slumpaKategori, satt: v => { slumpaKategori = v; },
+      hallIhop: { ikryssad: hallIhopKategori, satt: v => { hallIhopKategori = v; } },
+    });
   }
 
   rader.forEach(r => {
@@ -261,14 +264,36 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
     const box = document.createElement("input");
     box.type = "checkbox";
     box.checked = r.ikryssad;
+
+    // "Håll ihop istället"-kryssrutan hör till fältet ovanför - inaktiv tills
+    // fältet självt är ikryssat (annars går det inte att skilja "jämna ut på
+    // X" och "håll ihop på X" åt, de utesluter varandra för samma fält).
+    let hallIhopBox = null;
     if (r.last) {
       box.disabled = true; // Slump gäller alltid och går inte att bocka ur.
     } else {
-      box.onchange = () => { r.satt(box.checked); sparaInstallning(on401); };
+      box.onchange = () => {
+        r.satt(box.checked);
+        if (hallIhopBox) hallIhopBox.disabled = !box.checked;
+        sparaInstallning(on401);
+      };
     }
     rad.appendChild(box);
     rad.appendChild(document.createTextNode(" " + r.etikett));
     wrapper.appendChild(rad);
+
+    if (r.hallIhop) {
+      const hallRad = document.createElement("label");
+      hallRad.className = "slump-rad slump-rad-under";
+      hallIhopBox = document.createElement("input");
+      hallIhopBox.type = "checkbox";
+      hallIhopBox.checked = r.hallIhop.ikryssad;
+      hallIhopBox.disabled = !r.ikryssad;
+      hallIhopBox.onchange = () => { r.hallIhop.satt(hallIhopBox.checked); sparaInstallning(on401); };
+      hallRad.appendChild(hallIhopBox);
+      hallRad.appendChild(document.createTextNode(" Håll ihop istället"));
+      wrapper.appendChild(hallRad);
+    }
   });
 
   const knappRad = document.createElement("div");
@@ -278,7 +303,7 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
   slumpaKnapp.className = "knapp-slumpa";
   slumpaKnapp.textContent = gruppindelning.size > 0 ? "🎲 Slumpa om" : "🎲 Slumpa";
   slumpaKnapp.onclick = () => {
-    fordelaMedMetod(aktuellMetod(), narvarande_spelare, grupper);
+    fordelaMedMetod(narvarande_spelare, grupper);
     rendera(spelare, grupper, on401);
   };
   knappRad.appendChild(slumpaKnapp);
@@ -310,6 +335,8 @@ async function laddaInstallning(on401) {
     if (data.installning) {
       slumpaPositioner = data.installning.slumpa_positioner === true;
       slumpaKategori = data.installning.slumpa_kategori === true;
+      hallIhopPositioner = data.installning.hall_ihop_positioner === true;
+      hallIhopKategori = data.installning.hall_ihop_kategori === true;
     }
   } catch (fel) {
     // Tyst - en glömd ikryssning är ingen katastrof, ren slump duger fint.
@@ -321,26 +348,43 @@ async function sparaInstallning(on401) {
     await anropaMedToken("/gruppindelning/installning", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slumpa_positioner: slumpaPositioner, slumpa_kategori: slumpaKategori }),
+      body: JSON.stringify({
+        slumpa_positioner: slumpaPositioner, slumpa_kategori: slumpaKategori,
+        hall_ihop_positioner: hallIhopPositioner, hall_ihop_kategori: hallIhopKategori,
+      }),
     }, on401);
   } catch (fel) {
     // Tyst - samma resonemang som i laddaInstallning.
   }
 }
 
-// Slår ihop position+kategori till EN sammansatt nyckel när "bada" ar
-// valt - ger en enkel, begriplig approximation av "jamn pa bade
+// Slår ihop position+kategori till EN sammansatt nyckel när båda ar valda
+// - ger en enkel, begriplig approximation av "jamn/ihophallen pa bade
 // position OCH kategori samtidigt" med samma hink-metod som anvands for
-// ett enskilt falt.
-function fordelaMedMetod(metod, narvarande, grupper) {
-  if (metod === "slump") {
+// ett enskilt falt. Ar bagge falten valda och de har OLIKA hall-ihop-val
+// (t.ex. hall ihop pa position men jamna ut pa kategori) forenklar vi och
+// haller ihop pa den sammansatta nyckeln - att blanda riktning per falt
+// samtidigt blir annars svart att bade forklara och forsta.
+function fordelaMedMetod(narvarande, grupper) {
+  if (!slumpaPositioner && !slumpaKategori) {
     fordelaSlumpmassigt(narvarande, grupper);
-  } else if (metod === "position") {
-    fordelaEfterFalt(narvarande, grupper, s => forstaVarde(s.positioner));
-  } else if (metod === "kategori") {
-    fordelaEfterFalt(narvarande, grupper, s => forstaVarde(s.kategori));
-  } else if (metod === "bada") {
-    fordelaEfterFalt(narvarande, grupper, s => `${forstaVarde(s.positioner)} | ${forstaVarde(s.kategori)}`);
+    return;
+  }
+
+  let vardeFn;
+  if (slumpaPositioner && slumpaKategori) {
+    vardeFn = s => `${forstaVarde(s.positioner)} | ${forstaVarde(s.kategori)}`;
+  } else if (slumpaPositioner) {
+    vardeFn = s => forstaVarde(s.positioner);
+  } else {
+    vardeFn = s => forstaVarde(s.kategori);
+  }
+
+  const hall_ihop = (slumpaPositioner && hallIhopPositioner) || (slumpaKategori && hallIhopKategori);
+  if (hall_ihop) {
+    fordelaHopHallet(narvarande, grupper, vardeFn);
+  } else {
+    fordelaEfterFalt(narvarande, grupper, vardeFn);
   }
 }
 
@@ -500,4 +544,33 @@ function fordelaEfterFalt(narvarande, grupper, vardeFn) {
       grupp_index++;
     });
   }
+}
+
+// Motsatsen till fordelaEfterFalt() - HÅLLER IHOP spelare med samma värde
+// (t.ex. alla målvakter) i en och samma grupp istället för att sprida ut
+// dem. Största hinken placeras först, alltid i den grupp som just då har
+// FÄRST spelare - håller gruppstorlekarna så jämna som möjligt GIVET att
+// varje hink måste hållas hel. Ojämna gruppstorlekar är ett förväntat
+// resultat av att välja det här (om t.ex. 6 av 12 spelare är målvakter och
+// ska hållas ihop, blir en grupp ofrånkomligt större).
+function fordelaHopHallet(narvarande, grupper, vardeFn) {
+  const hinkar = new Map();
+  narvarande.forEach(s => {
+    const varde = vardeFn(s);
+    if (!hinkar.has(varde)) hinkar.set(varde, []);
+    hinkar.get(varde).push(s);
+  });
+
+  const storlek_per_grupp = grupper.map(() => 0);
+  const sorterade_hinkar = [...hinkar.values()].sort((a, b) => b.length - a.length);
+
+  sorterade_hinkar.forEach(hink => {
+    let minst_index = 0;
+    for (let i = 1; i < storlek_per_grupp.length; i++) {
+      if (storlek_per_grupp[i] < storlek_per_grupp[minst_index]) minst_index = i;
+    }
+    const malGrupp = grupper[minst_index];
+    hink.forEach(s => gruppindelning.set(s.id, malGrupp.grupp_namn));
+    storlek_per_grupp[minst_index] += hink.length;
+  });
 }

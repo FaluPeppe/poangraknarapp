@@ -15,6 +15,10 @@ import { visaToast } from "./ui.js";
 
 let CONTAINER_ID = "medlemmar-container"; // standard - kan override:as av anroparen
 
+function formateraDatum(iso) {
+  return new Date(iso).toLocaleDateString("sv-SE", { day: "numeric", month: "short" });
+}
+
 export async function initMedlemmar(on401, containerId = CONTAINER_ID) {
   CONTAINER_ID = containerId;
   const container = document.getElementById(CONTAINER_ID);
@@ -106,49 +110,58 @@ function rendera(medlemmar, mig, on401) {
   medlemmar.forEach(m => {
     const ar_jag = m.epost.toLowerCase() === min_epost;
     const rad = document.createElement("div");
-    rad.className = "spelar-rad";
+    rad.className = "spelar-rad ledare-rad";
 
-    const info = document.createElement("div");
-    info.className = "spelar-info";
+    // Egen rad för mejladressen - annars klipps långa adresser bort när
+    // knapparna trängs på samma rad (se ledare-knapp-rad längre ner).
+    const epostRad = document.createElement("div");
+    epostRad.className = "ledare-epost-rad";
     const epost = document.createElement("div");
-    epost.className = "spelar-namn";
+    epost.className = "spelar-namn ledare-epost";
     epost.textContent = m.epost;
+    epostRad.appendChild(epost);
     if (ar_jag) {
       const duBadge = document.createElement("span");
       duBadge.className = "badge ledare-du-badge";
       duBadge.textContent = "Du";
-      epost.appendChild(duBadge);
+      epostRad.appendChild(duBadge);
     }
-    info.appendChild(epost);
-    const roll = document.createElement("div");
+    rad.appendChild(epostRad);
+
+    const detaljRad = document.createElement("div");
+    detaljRad.className = "ledare-detalj-rad";
+    const roll = document.createElement("span");
     roll.className = "spelar-positioner";
     roll.textContent = m.roll === "admin" ? "Admin" : "Medlem";
+    detaljRad.appendChild(roll);
     const statusBadge = document.createElement("span");
     if (m.ansluten_datum) {
       statusBadge.className = "badge ledare-status-badge ledare-status-ansluten";
-      statusBadge.textContent = "Ansluten";
+      statusBadge.textContent = `Ansluten ${formateraDatum(m.ansluten_datum)}`;
     } else {
       statusBadge.className = "badge ledare-status-badge ledare-status-inbjuden";
-      statusBadge.textContent = "Inbjuden";
+      statusBadge.textContent = `Inbjuden ${formateraDatum(m.tillagd)}`;
     }
-    roll.appendChild(statusBadge);
-    info.appendChild(roll);
-    rad.appendChild(info);
+    detaljRad.appendChild(statusBadge);
+    rad.appendChild(detaljRad);
 
     // Admins ser knapparna för alla UTOM sig själva - att degradera eller
     // ta bort sig själv härifrån mitt i en session ställer bara till det.
     if (jag_ar_admin && !ar_jag) {
+      const knappRad = document.createElement("div");
+      knappRad.className = "ledare-knapp-rad";
       const rollKnapp = document.createElement("button");
       rollKnapp.className = "narvaro-knapp";
       rollKnapp.textContent = m.roll === "admin" ? "Gör till medlem" : "Gör till admin";
       rollKnapp.onclick = () => andraRoll(m.epost, m.roll === "admin" ? "medlem" : "admin", on401);
-      rad.appendChild(rollKnapp);
+      knappRad.appendChild(rollKnapp);
 
       const taBortKnapp = document.createElement("button");
       taBortKnapp.className = "narvaro-knapp";
       taBortKnapp.textContent = "Ta bort";
       taBortKnapp.onclick = () => bekraftaTaBortLedare(m.epost, m.roll === "admin", on401);
-      rad.appendChild(taBortKnapp);
+      knappRad.appendChild(taBortKnapp);
+      rad.appendChild(knappRad);
     }
 
     lista.appendChild(rad);

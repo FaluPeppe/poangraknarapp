@@ -123,6 +123,15 @@ function rendera(medlemmar, mig, on401) {
     const roll = document.createElement("div");
     roll.className = "spelar-positioner";
     roll.textContent = m.roll === "admin" ? "Admin" : "Medlem";
+    const statusBadge = document.createElement("span");
+    if (m.ansluten_datum) {
+      statusBadge.className = "badge ledare-status-badge ledare-status-ansluten";
+      statusBadge.textContent = "Ansluten";
+    } else {
+      statusBadge.className = "badge ledare-status-badge ledare-status-inbjuden";
+      statusBadge.textContent = "Inbjuden";
+    }
+    roll.appendChild(statusBadge);
     info.appendChild(roll);
     rad.appendChild(info);
 

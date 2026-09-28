@@ -1132,6 +1132,12 @@ body {
   background: #2e7d32;
   vertical-align: middle;
 }
+.ledare-status-badge {
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.ledare-status-ansluten { background: #2e7d32; }
+.ledare-status-inbjuden { background: #8a8a8a; }
 /* ---- Hantera lag: tipsa en vän + lämna laget ---- */
 .lag-textarea {
   width: 100%;

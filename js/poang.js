@@ -5,7 +5,7 @@
 // Avsluta match.
 
 import { anropaMedToken } from "./auth.js";
-import { visaToast, textFargForBg, formateraDatumTid } from "./ui.js";
+import { visaToast, textFargForBg, formateraDatumTid, byggDialog, dlgKnapp } from "./ui.js";
 import { nav } from "./nav.js";
 import { spelaLjud, vibrera } from "./ljud.js";
 import { byggAntalGrupperStegare } from "./antalgrupper.js";
@@ -421,40 +421,27 @@ function byggTidtagare(on401) {
   wrapper.className = "tidtagare";
 
   const visad_tid = timer_har_startats ? timer_sekunder_kvar : (timer_minuter * 60 + timer_sekunder_satt);
-  const display = document.createElement("div");
-  display.className = "tidtagare-display" + (visad_tid <= VARNINGSGRANS_SEKUNDER && visad_tid > 0 ? " tidtagare-varning" : "");
+
+  // Innan klockan någonsin startats är själva stordisplayen en knapp som
+  // öppnar tid-dialogen (✏️-ikonen signalerar det) - en pausad klocka ska
+  // däremot återupptas från där den var, inte gå att ändra i smyg, så då
+  // är den bara en vanlig <div> igen (ingen av delarna nedan).
+  const display = document.createElement(timer_har_startats ? "div" : "button");
+  display.className = "tidtagare-display"
+    + (visad_tid <= VARNINGSGRANS_SEKUNDER && visad_tid > 0 ? " tidtagare-varning" : "")
+    + (timer_har_startats ? "" : " tidtagare-display-redigerbar");
   display.id = "tidtagare-display";
   display.textContent = formateraTid(visad_tid);
-  wrapper.appendChild(display);
-
-  // Min/sek-fälten visas bara INNAN klockan någonsin startats - en pausad
-  // klocka ska återupptas från där den var, inte låta en ändrad inställning
-  // smyga sig in. (Ljud/vibration ställs numera under Inställningar →
-  // Appinställningar.)
   if (!timer_har_startats) {
-    const installningsRad = document.createElement("div");
-    installningsRad.className = "tidtagare-installning";
-    const minInput = document.createElement("input");
-    minInput.type = "number";
-    minInput.min = "0";
-    minInput.id = "tidtagare-min";
-    minInput.value = timer_minuter;
-    const minLabel = document.createElement("span");
-    minLabel.textContent = "min";
-    const sekInput = document.createElement("input");
-    sekInput.type = "number";
-    sekInput.min = "0";
-    sekInput.max = "59";
-    sekInput.id = "tidtagare-sek";
-    sekInput.value = timer_sekunder_satt;
-    const sekLabel = document.createElement("span");
-    sekLabel.textContent = "sek";
-    installningsRad.appendChild(minInput);
-    installningsRad.appendChild(minLabel);
-    installningsRad.appendChild(sekInput);
-    installningsRad.appendChild(sekLabel);
-    wrapper.appendChild(installningsRad);
+    display.type = "button";
+    display.setAttribute("aria-label", "Ändra tiden");
+    const ikon = document.createElement("span");
+    ikon.className = "tidtagare-redigera-ikon";
+    ikon.textContent = "✏️";
+    display.appendChild(ikon);
+    display.onclick = () => oppnaTidtagareDialog(on401);
   }
+  wrapper.appendChild(display);
 
   const knappRad = document.createElement("div");
   knappRad.className = "tidtagare-knapprad";
@@ -480,6 +467,83 @@ function formateraTid(sek) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+// Dialog för att ställa in tidtagarens starttid - öppnas genom att trycka
+// på själva stordisplayen (bara möjligt innan klockan någonsin startats,
+// se byggTidtagare). Steg-knappar (−/+) istället för att skriva siffror i
+// en liten ruta - samma mönster som "Antal varv" i Intervaller
+// (varv-stegare), fälten går fortfarande att skriva i manuellt också.
+function oppnaTidtagareDialog(on401) {
+  let val_min = timer_minuter;
+  let val_sek = timer_sekunder_satt;
+
+  const { overlay, dialog } = byggDialog("Ställ in tiden");
+
+  function byggStegareRad(etikett, varde, steg, max, satt) {
+    const p = document.createElement("p");
+    p.textContent = etikett;
+    dialog.appendChild(p);
+
+    const rad = document.createElement("div");
+    rad.className = "varv-stegare";
+
+    const ner = document.createElement("button");
+    ner.type = "button";
+    ner.className = "varv-stegare-knapp";
+    ner.textContent = "−";
+
+    const falt = document.createElement("input");
+    falt.type = "number";
+    falt.min = "0";
+    if (max !== null) falt.max = String(max);
+    falt.inputMode = "numeric";
+    falt.className = "varv-stegare-falt tid-stegare-falt";
+    falt.value = varde();
+
+    const upp = document.createElement("button");
+    upp.type = "button";
+    upp.className = "varv-stegare-knapp";
+    upp.textContent = "+";
+
+    function uppdatera(nytt) {
+      let v = Math.max(0, parseInt(nytt, 10) || 0);
+      if (max !== null) v = Math.min(max, v);
+      satt(v);
+      falt.value = v;
+      ner.disabled = v <= 0;
+    }
+    ner.disabled = varde() <= 0;
+    ner.onclick = () => uppdatera(varde() - steg);
+    upp.onclick = () => uppdatera(varde() + steg);
+    falt.onchange = () => uppdatera(falt.value);
+
+    rad.append(ner, falt, upp);
+    dialog.appendChild(rad);
+  }
+
+  byggStegareRad("Minuter", () => val_min, 1, null, (v) => { val_min = v; });
+  byggStegareRad("Sekunder", () => val_sek, 15, 59, (v) => { val_sek = v; });
+
+  const knappRad = document.createElement("div");
+  knappRad.className = "dialog-knapprad-huvud";
+  const avbryt = dlgKnapp("dialog-knapp-sekundar", "Avbryt", () => overlay.remove());
+  const spara = dlgKnapp("dialog-knapp-primar", "Spara", () => {
+    if (val_min === 0 && val_sek === 0) {
+      visaToast("Ange en tid längre än 0 sekunder.");
+      return;
+    }
+    timer_minuter = val_min;
+    timer_sekunder_satt = val_sek;
+    timer_sekunder_kvar = val_min * 60 + val_sek;
+    sparaTidtagarInstallning(on401);
+    overlay.remove();
+    laddaPoang(on401);
+  });
+  knappRad.append(avbryt, spara);
+  dialog.appendChild(knappRad);
+
+  document.body.appendChild(overlay);
+}
+
 async function vaxlaTidtagare(on401) {
   if (timer_kor) {
     // PAUSA - stanna klockan, behåll timer_sekunder_kvar orört, så nästa
@@ -492,23 +556,27 @@ async function vaxlaTidtagare(on401) {
   }
 
   if (!timer_har_startats) {
-    // FÖRSTA starten - läs av min/sek-fälten, spara som senast använda.
-    const minInput = document.getElementById("tidtagare-min");
-    const sekInput = document.getElementById("tidtagare-sek");
-    const minuter = Math.max(0, parseInt(minInput.value, 10) || 0);
-    const sekunder = Math.max(0, Math.min(59, parseInt(sekInput.value, 10) || 0));
-    if (minuter === 0 && sekunder === 0) {
+    // FÖRSTA starten - timer_minuter/timer_sekunder_satt är redan satta
+    // (via tid-dialogen, eller standardvärdet/det senast sparade).
+    if (timer_minuter === 0 && timer_sekunder_satt === 0) {
       visaToast("Ange en tid längre än 0 sekunder.");
       return;
     }
-    timer_minuter = minuter;
-    timer_sekunder_satt = sekunder;
-    timer_sekunder_kvar = minuter * 60 + sekunder;
+    timer_sekunder_kvar = timer_minuter * 60 + timer_sekunder_satt;
     timer_har_startats = true;
     sparaTidtagarInstallning(on401); // i bakgrunden - inget att vänta på för att starta klockan
 
-    const installningsRad = document.querySelector(".tidtagare-installning");
-    if (installningsRad) installningsRad.remove();
+    // Stordisplayen slutar vara en klickbar "ändra tid"-knapp när klockan
+    // väl är igång - patcha bort det i DOM:en istället för en hel
+    // omrendering (samma anledning som tick() gör det - se uppdateraDom
+    // i intervaller.js för samma resonemang).
+    const display = document.getElementById("tidtagare-display");
+    if (display) {
+      display.classList.remove("tidtagare-display-redigerbar");
+      display.onclick = null;
+      const ikon = display.querySelector(".tidtagare-redigera-ikon");
+      if (ikon) ikon.remove();
+    }
   }
   // ÅTERUPPTA (eller precis satt igång) - timer_sekunder_kvar är redan
   // rätt värde i båda fallen, rör den inte här.

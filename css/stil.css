@@ -266,22 +266,33 @@ body {
   font-variant-numeric: tabular-nums;
   margin-bottom: 8px;
 }
-.tidtagare-installning {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 10px;
-  font-size: 13px;
-  color: #666;
+/* Stordisplayen som knapp, innan klockan startats - "tryck för att ändra
+   tiden" ska synas utan text (se js/poang.js byggTidtagare/oppnaTidtagareDialog). */
+.tidtagare-display-redigerbar {
+  font-family: inherit;
+  color: inherit;
+  border: none;
+  background: #f2f2f2;
+  border-radius: 16px;
+  padding: 2px 18px;
+  cursor: pointer;
+  position: relative;
 }
-.tidtagare-installning input {
+.tidtagare-redigera-ikon {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  font-size: 15px;
+}
+.tid-stegare-falt {
   width: 60px;
-  padding: 8px;
+  flex: 0 0 auto;
+  padding: 10px 4px;
   border-radius: 8px;
   border: 1px solid #ddd;
   text-align: center;
   font-size: 15px;
+  margin: 0;
 }
 .tidtagare-knapprad {
   display: flex;

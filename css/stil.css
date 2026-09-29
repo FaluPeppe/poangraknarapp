@@ -447,6 +447,23 @@ body {
 }
 .historik-rubrik { font-size: 15px; margin: 0 0 10px 0; }
 .historik-lista { display: flex; flex-direction: column; gap: 10px; }
+.andringslogg-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.andringslogg-lista li { font-size: 14px; color: #444; line-height: 1.4; }
+.andringslogg-datum {
+  display: inline-block;
+  min-width: 46px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #888;
+  margin-right: 4px;
+}
 .historik-kort {
   background: white;
   border-radius: 10px;

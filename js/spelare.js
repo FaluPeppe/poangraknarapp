@@ -12,6 +12,7 @@
 
 import { anropaMedToken } from "./auth.js";
 import { visaToast, byggDialog, dlgKnapp } from "./ui.js";
+import { nav } from "./nav.js";
 
 let redigerar_id = null;
 let bulk_synlig = false;
@@ -42,6 +43,16 @@ export async function initSpelare(on401) {
   const spelare = await spelareRes.json();
   const positioner = await positionerRes.json();
   const kategorier = await kategorierRes.json();
+
+  // Kommer vi tillbaka från Hantera positioner/kategorier (se
+  // hoppaTillTaggskarm nedan) - öppna direkt i redigeringsläge för
+  // spelaren vi var på väg att fylla i, istället för att bara visa listan.
+  if (nav.spelareAttOppna) {
+    const mal_id = nav.spelareAttOppna;
+    nav.spelareAttOppna = null;
+    if (spelare.some(s => s.id === mal_id)) redigerar_id = mal_id;
+  }
+
   rendera(spelare, positioner, kategorier, on401);
 }
 
@@ -178,10 +189,14 @@ function byggRedigeringsformular(s, spelare, positioner, kategorier, on401) {
   wrapper.appendChild(namnInput);
 
   const valdaPositioner = (s.positioner || "").split(",").map(x => x.trim()).filter(Boolean);
-  wrapper.appendChild(byggKryssgrupp("Positioner", positioner, valdaPositioner, "redigera-position-kryss"));
+  wrapper.appendChild(positioner.length > 0
+    ? byggKryssgrupp("Positioner", positioner, valdaPositioner, "redigera-position-kryss")
+    : byggTomHint("positioner", "positioner", on401, s.id));
 
   const valdaKategorier = (s.kategori || "").split(",").map(x => x.trim()).filter(Boolean);
-  wrapper.appendChild(byggKryssgrupp("Kategori", kategorier, valdaKategorier, "redigera-kategori-kryss"));
+  wrapper.appendChild(kategorier.length > 0
+    ? byggKryssgrupp("Kategori", kategorier, valdaKategorier, "redigera-kategori-kryss")
+    : byggTomHint("kategorier", "kategorier", on401, s.id));
 
   const knappar = document.createElement("div");
   knappar.className = "spelare-redigera-knappar";
@@ -203,15 +218,13 @@ function byggRedigeringsformular(s, spelare, positioner, kategorier, on401) {
   return wrapper;
 }
 
-// Kryssrutegrid för positioner/kategorier i redigeringsformuläret - samma
-// stil som kryssrutorna i "Lägg till spelare" (byggLaggTillEn). Tom lista
-// (laget har inga positioner/kategorier definierade än) -> visa inget alls,
-// samma princip som positionerna redan följde: bara de valbara, hanterade
-// taggarna kan sättas, ingen fri text.
+// Kryssrutegrid för positioner/kategorier i redigeringsformuläret och i
+// "Lägg till spelare" - bara de valbara, hanterade taggarna kan sättas,
+// ingen fri text. Anropas bara när listan INTE är tom - är den tom visar
+// anroparen byggTomHint istället (länk till att lägga upp den första).
 function byggKryssgrupp(rubrikText, alternativ, valda, cssKlass) {
   const wrapper = document.createElement("div");
   wrapper.style.width = "100%";
-  if (alternativ.length === 0) return wrapper;
 
   const label = document.createElement("p");
   label.className = "grupper-info-liten";
@@ -237,6 +250,63 @@ function byggKryssgrupp(rubrikText, alternativ, valda, cssKlass) {
   return wrapper;
 }
 
+// Visas istället för byggKryssgrupp när laget inte har lagt upp några
+// positioner/kategorier än - en länk direkt dit istället för att bara
+// tysta bort hela fältet. befintligId = spelarens id om man redigerar en
+// spelare som redan finns (hoppar direkt), annars null (måste sparas
+// FÖRST - se hoppaTillTaggskarm).
+function byggTomHint(skarmNamn, etikett, on401, befintligId) {
+  const wrapper = document.createElement("div");
+  wrapper.style.width = "100%";
+  const p = document.createElement("p");
+  p.className = "grupper-info-liten";
+  p.style.margin = "4px 0 2px";
+  p.textContent = `Inga ${etikett} upplagda än. `;
+  const lank = document.createElement("button");
+  lank.type = "button";
+  lank.className = "text-lank-knapp";
+  lank.textContent = `Lägg till ${etikett}`;
+  lank.onclick = () => hoppaTillTaggskarm(skarmNamn, on401, befintligId);
+  p.appendChild(lank);
+  wrapper.appendChild(p);
+  return wrapper;
+}
+
+// Hoppar till Hantera positioner/kategorier och kommer ihåg att ta oss
+// tillbaka till RÄTT spelare i redigeringsläge efteråt (se initSpelare).
+// Redigerar man en spelare som redan finns (befintligId satt) räcker det
+// att komma ihåg id:t. Är det den ännu osparade "Lägg till spelare"-
+// formuläret måste spelaren sparas FÖRST (annars finns inget att komma
+// tillbaka till) - är namnfältet tomt finns inget att spara, då hoppar vi
+// bara dit utan att komma ihåg någon specifik spelare.
+async function hoppaTillTaggskarm(skarmNamn, on401, befintligId) {
+  if (befintligId) {
+    nav.spelareAttOppna = befintligId;
+    nav.gaTillHanteraSkarm(skarmNamn, "spelare");
+    return;
+  }
+  const namnFalt = document.getElementById("nytt-spelare-namn");
+  const namn = namnFalt ? namnFalt.value.trim() : "";
+  if (!namn) {
+    nav.gaTillHanteraSkarm(skarmNamn, "spelare");
+    return;
+  }
+  try {
+    const res = await anropaMedToken("/spelare", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ namn, positioner: "", kategori: "" }),
+    }, on401);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Kunde inte spara spelaren.");
+    visaToast(`${namn} sparad. Lägg till ${skarmNamn} och kom sedan tillbaka hit.`);
+    nav.spelareAttOppna = data.id;
+    nav.gaTillHanteraSkarm(skarmNamn, "spelare");
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte spara spelaren.");
+  }
+}
+
 function byggLaggTillEn(positioner, kategorier, on401) {
   const wrapper = document.createElement("div");
   wrapper.className = "avsluta-form";
@@ -254,8 +324,12 @@ function byggLaggTillEn(positioner, kategorier, on401) {
   `;
   wrapper.appendChild(raden);
 
-  wrapper.appendChild(byggKryssgrupp("Positioner (valfritt)", positioner, [], "ny-spelare-position-kryss"));
-  wrapper.appendChild(byggKryssgrupp("Kategori (valfritt)", kategorier, [], "ny-spelare-kategori-kryss"));
+  wrapper.appendChild(positioner.length > 0
+    ? byggKryssgrupp("Positioner (valfritt)", positioner, [], "ny-spelare-position-kryss")
+    : byggTomHint("positioner", "positioner", on401, null));
+  wrapper.appendChild(kategorier.length > 0
+    ? byggKryssgrupp("Kategori (valfritt)", kategorier, [], "ny-spelare-kategori-kryss")
+    : byggTomHint("kategorier", "kategorier", on401, null));
 
   wrapper.querySelector("#lagg-till-spelare-knapp").onclick = () => laggTillSpelare(on401);
   return wrapper;

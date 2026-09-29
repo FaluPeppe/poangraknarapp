@@ -105,6 +105,22 @@ function visaInstallningarHubb() {
   document.getElementById("nav-installningar-knapp").classList.add("aktiv");
 }
 
+// Hantera-skärmen "← Tillbaka" ska gå till NÄSTA gång, istället för hubben -
+// satt av nav.gaTillHanteraSkarm (se t.ex. spelare.js -> positioner/
+// kategorier vid tomma listor), konsumeras (nollställs) direkt när den
+// används en gång.
+let aterkomstSkarm = null;
+
+function visaInstallningarTillbaka() {
+  if (aterkomstSkarm && hanteraSkarmar[aterkomstSkarm]) {
+    const mal = aterkomstSkarm;
+    aterkomstSkarm = null;
+    visaHanteraSkarm(mal);
+    return;
+  }
+  visaInstallningarHubb();
+}
+
 function visaHanteraSkarm(namn) {
   doljAllt();
   document.getElementById(hanteraSkarmar[namn].container).classList.remove("dold");
@@ -134,13 +150,17 @@ document.getElementById("nav-narvaro-knapp").addEventListener("click", () => vis
 document.getElementById("nav-poang-knapp").addEventListener("click", () => visaHuvudflik("poang"));
 document.getElementById("nav-intervaller-knapp").addEventListener("click", () => visaHuvudflik("intervaller"));
 document.getElementById("nav-installningar-knapp").addEventListener("click", visaInstallningarHubb);
-document.getElementById("installningar-tillbaka-knapp").addEventListener("click", visaInstallningarHubb);
+document.getElementById("installningar-tillbaka-knapp").addEventListener("click", visaInstallningarTillbaka);
 const gaTillbakaFranGrupper = () => visaHuvudflik(grupperUrsprung);
 document.getElementById("grupper-tillbaka-knapp").addEventListener("click", gaTillbakaFranGrupper);
 
 // Koppla in nav-bryggan - se nav.js för varför detta görs indirekt.
 nav.gaTillGrupper = (ursprung) => visaGrupperSkarm(ursprung);
 nav.gaTillbakaFranGrupper = gaTillbakaFranGrupper;
+nav.gaTillHanteraSkarm = (namn, aterkomst) => {
+  if (aterkomst) aterkomstSkarm = aterkomst;
+  visaHanteraSkarm(namn);
+};
 
 Object.entries(hanteraSkarmar).forEach(([namn, s]) => {
   document.getElementById(s.knapp).addEventListener("click", () => visaHanteraSkarm(namn));

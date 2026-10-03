@@ -31,6 +31,7 @@ import { initHeaderLagval } from "./header.js";
 import { initSkarmvaken } from "./skarmvaken.js";
 import { initRotationslas } from "./rotationslas.js";
 import { initZoomlas } from "./zoomlas.js";
+import { initTextstorlek } from "./textstorlek.js";
 import { initHemskarmsikon } from "./hemskarmsikon.js";
 import { initAppinstallningar } from "./appinstallningar.js";
 import { initOmAppen } from "./omappen.js";
@@ -179,6 +180,7 @@ async function startaAppen() {
 }
 
 initZoomlas(); // personlig, gäller redan på inloggningsskärmen - inte bara i appen
+initTextstorlek(); // likaså (sätts även tidigt i index.html för att undvika ett hopp i textstorlek)
 
 initLogin({
   visaLoginVy,

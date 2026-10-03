@@ -61,7 +61,7 @@ function rendera(omgangar, on401) {
     namn.style.marginBottom = "2px";
     namn.textContent = o.namn;
     const meta = document.createElement("div");
-    meta.style.cssText = "font-size:12px;color:#888;";
+    meta.style.cssText = "font-size:0.75rem;color:#888;";
     meta.textContent = formateraDatumTid(o.datum, o.tid);
     info.appendChild(namn);
     info.appendChild(meta);

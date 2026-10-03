@@ -4,7 +4,14 @@ html {
   overflow-x: clip;
   width: 100%;
   max-width: 100%;
+  /* All text är i rem (relativt detta). Fast 16px - inte webbläsarens
+     standard - så "Normal" ser exakt ut som när allt var i px. De två
+     större lägena sätts av js/textstorlek.js (Appinställningar). De
+     jättestora siffrorna (poäng, timrar) är medvetet kvar i px. */
+  font-size: 16px;
 }
+html.text-stor { font-size: 18.4px; }       /* +15 % */
+html.text-extrastor { font-size: 20.8px; }  /* +30 % */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -27,9 +34,9 @@ body {
   gap: 10px;
   margin-bottom: 16px;
 }
-.app-header h1 { font-size: 20px; margin: 0; }
+.app-header h1 { font-size: 1.25rem; margin: 0; }
 .lagnamn-valjare {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   border: none;
   background: transparent;
@@ -44,7 +51,7 @@ body {
 }
 .app-header-left { display: flex; align-items: center; gap: 10px; }
 .badge {
-  font-size: 11px;
+  font-size: 0.6875rem;
   background: #1A1A1A;
   color: white;
   padding: 3px 8px;
@@ -52,7 +59,7 @@ body {
   font-weight: 600;
 }
 .logga-ut-lank {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: #666;
   text-decoration: underline;
   background: none;
@@ -61,7 +68,7 @@ body {
   padding: 4px;
 }
 .text-lank-knapp {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: #1A1A1A;
   font-weight: 700;
   text-decoration: underline;
@@ -80,19 +87,19 @@ body {
   margin: 40px auto;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-.login-kort h2 { font-size: 17px; margin: 0 0 4px 0; }
-.login-kort p { font-size: 13px; color: #666; margin: 0 0 16px 0; }
-.login-kort label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+.login-kort h2 { font-size: 1.0625rem; margin: 0 0 4px 0; }
+.login-kort p { font-size: 0.8125rem; color: #666; margin: 0 0 16px 0; }
+.login-kort label { font-size: 0.8125rem; font-weight: 600; display: block; margin-bottom: 4px; }
 .login-kort input {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #ddd;
-  font-size: 15px;
+  font-size: 0.9375rem;
   margin-bottom: 14px;
 }
 .login-kort input.kod-falt {
-  font-size: 22px;
+  font-size: 1.375rem;
   letter-spacing: 4px;
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -104,19 +111,19 @@ body {
   border: none;
   background: #1A1A1A;
   color: white;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 700;
   cursor: pointer;
 }
 .login-knapp:disabled, .knapp-primar:disabled { opacity: 0.5; cursor: default; }
 .login-knapp:active, .knapp-primar:active { transform: scale(0.96); }
-.login-fel { color: #c00; font-size: 13px; margin: 0 0 10px 0; min-height: 18px; }
-.login-hjalp { color: #888; font-size: 13px; margin: 0 0 10px 0; }
+.login-fel { color: #c00; font-size: 0.8125rem; margin: 0 0 10px 0; min-height: 18px; }
+.login-hjalp { color: #888; font-size: 0.8125rem; margin: 0 0 10px 0; }
 .login-tillbaka {
   display: block;
   text-align: center;
   margin-top: 12px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: #666;
   background: none;
   border: none;
@@ -137,8 +144,8 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.18);
   cursor: pointer;
 }
-.lag-namn { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
-.lag-antal { font-size: 12px; opacity: 0.75; margin-bottom: 2px; }
+.lag-namn { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+.lag-antal { font-size: 0.75rem; opacity: 0.75; margin-bottom: 2px; }
 .lag-poang {
   font-size: 56px;
   font-weight: 800;
@@ -180,14 +187,14 @@ body {
   justify-content: space-between;
   padding: 10px 0;
 }
-.bottenblad-header h3 { margin: 0; font-size: 17px; }
+.bottenblad-header h3 { margin: 0; font-size: 1.0625rem; }
 .bottenblad-stang {
   border: none;
   background: #f2f2f2;
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  font-size: 14px;
+  font-size: 0.875rem;
   cursor: pointer;
 }
 .bottenblad-innehall .grupp-block-rad { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
@@ -198,7 +205,7 @@ body {
   border: none;
   border-radius: 12px;
   padding: 20px 12px;
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 800;
   cursor: pointer;
   margin-bottom: 8px;
@@ -210,7 +217,7 @@ body {
   border: 1px solid rgba(255,255,255,0.5);
   border-radius: 8px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   background: transparent;
@@ -283,7 +290,7 @@ body {
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 13px;
+  font-size: 13px; /* px som siffrorna den sitter bredvid */
   opacity: 0.75;
 }
 .tid-stegare-falt {
@@ -293,7 +300,7 @@ body {
   border-radius: 8px;
   border: 1px solid #ddd;
   text-align: center;
-  font-size: 15px;
+  font-size: 0.9375rem;
   margin: 0;
 }
 .tidtagare-knapprad {
@@ -315,7 +322,7 @@ body {
   border-radius: 10px;
   border: 1px solid #ddd;
   background: white;
-  font-size: 14px;
+  font-size: 14px; /* medvetet px: växer inte med Textstorlek - fyra flikar får annars inte plats */
   font-weight: 600;
   cursor: pointer;
   color: #555;
@@ -339,7 +346,7 @@ body {
 .grupp-chip {
   padding: 4px 10px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 .spelar-lista {
@@ -359,14 +366,14 @@ body {
 }
 .spelar-rad.franvarande { opacity: 0.55; }
 .spelar-info { flex: 1; min-width: 0; }
-.spelar-namn { font-size: 15px; font-weight: 700; }
-.spelar-positioner { font-size: 12px; color: #888; }
+.spelar-namn { font-size: 0.9375rem; font-weight: 700; }
+.spelar-positioner { font-size: 0.75rem; color: #888; }
 .narvaro-knapp, .grupp-knapp {
   border: 1px solid #ddd;
   background: #f2f2f2;
   border-radius: 8px;
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -386,7 +393,7 @@ body {
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #ddd;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.3;
 }
 .spelare-lagg-till button {
@@ -396,7 +403,7 @@ body {
   background: #1A1A1A;
   color: white;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.3;
   cursor: pointer;
   appearance: none;
@@ -415,7 +422,7 @@ body {
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #ddd;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .spelare-redigera-knappar { display: flex; gap: 6px; }
 .spelare-redigera-knappar button {
@@ -423,7 +430,7 @@ body {
   border-radius: 8px;
   border: 1px solid #ddd;
   background: white;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -436,25 +443,25 @@ body {
   padding: 16px;
   margin-bottom: 20px;
 }
-.avsluta-form label:where(:not(.positioner-kryss-etikett):not(.bulk-kryss-etikett)) { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+.avsluta-form label:where(:not(.positioner-kryss-etikett):not(.bulk-kryss-etikett)) { font-size: 0.8125rem; font-weight: 600; display: block; margin-bottom: 4px; }
 .avsluta-form input:where(:not([type="checkbox"])) {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #ddd;
-  font-size: 15px;
+  font-size: 0.9375rem;
   margin-bottom: 12px;
 }
-.historik-rubrik { font-size: 15px; margin: 0 0 10px 0; }
+.historik-rubrik { font-size: 0.9375rem; margin: 0 0 10px 0; }
 .historik-lista { display: flex; flex-direction: column; gap: 10px; }
-.omappen-text p { font-size: 14px; color: #444; line-height: 1.45; margin: 0 0 10px 0; }
+.omappen-text p { font-size: 0.875rem; color: #444; line-height: 1.45; margin: 0 0 10px 0; }
 .omappen-text p:last-child { margin-bottom: 0; }
 .omappen-typ {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #ddd;
-  font-size: 15px;
+  font-size: 0.9375rem;
   background: white;
   margin-bottom: 12px;
 }
@@ -466,11 +473,11 @@ body {
   flex-direction: column;
   gap: 8px;
 }
-.andringslogg-lista li { font-size: 14px; color: #444; line-height: 1.4; }
+.andringslogg-lista li { font-size: 0.875rem; color: #444; line-height: 1.4; }
 .andringslogg-datum {
   display: inline-block;
   min-width: 46px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #888;
   margin-right: 4px;
@@ -481,7 +488,7 @@ body {
   padding: 10px 12px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
-.historik-kort-rubrik { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+.historik-kort-rubrik { font-weight: 700; font-size: 0.875rem; margin-bottom: 6px; }
 
 /* ---- Intervaller ---- */
 .intervall-klocka {
@@ -493,9 +500,9 @@ body {
 }
 .intervall-klocka.intervall-lop { background: #2e7d32; color: white; }
 .intervall-klocka.intervall-vila { background: #444; color: white; }
-.intervall-etikett { font-size: 16px; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+.intervall-etikett { font-size: 1rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
 .intervall-tid { font-size: 56px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.intervall-varv { font-size: 22px; font-weight: 700; opacity: 0.95; margin-top: 8px; }
+.intervall-varv { font-size: 1.375rem; font-weight: 700; opacity: 0.95; margin-top: 8px; }
 .intervall-sista {
   display: none; /* visas bara via .sista-varvet nedan - INTE via [hidden],
                     som författarstil för .intervall-sista annars kör över */
@@ -503,7 +510,7 @@ body {
   padding: 4px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.28);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 800;
   letter-spacing: 2px;
 }
@@ -534,7 +541,7 @@ body {
   border: 1px solid #ddd;
   border-radius: 10px;
   background: #f2f2f2;
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
@@ -572,7 +579,7 @@ body {
 /* ---- Inställningar-hubb (grupperad lista, som iOS/Android-inställningar) ---- */
 .hantera-sektion { margin-bottom: 20px; }
 .hantera-sektion-rubrik {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -594,7 +601,7 @@ body {
   border: none;
   border-bottom: 1px solid #f0f0f0;
   background: white;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   text-align: left;
   color: #1A1A1A;
@@ -602,9 +609,9 @@ body {
 }
 .hantera-rad:last-child { border-bottom: none; }
 .hantera-rad:active { background: #f5f5f5; }
-.hantera-ikon { font-size: 19px; width: 24px; flex-shrink: 0; text-align: center; }
+.hantera-ikon { font-size: 1.1875rem; width: 24px; flex-shrink: 0; text-align: center; }
 .hantera-rad > span:nth-child(2) { flex: 1; }
-.hantera-pil { color: #ccc; font-size: 20px; font-weight: 400; flex-shrink: 0; }
+.hantera-pil { color: #ccc; font-size: 1.25rem; font-weight: 400; flex-shrink: 0; }
 .tillbaka-knapp {
   display: block;
   width: 100%;
@@ -614,7 +621,7 @@ body {
   border: none;
   background: none;
   color: #555;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -622,7 +629,7 @@ body {
    etikett som knappen i Inställningar-hubben) - kompakt, tar inte mycket
    plats, men ger den saknade "du är här"-känslan. */
 .hantera-skarm-titel {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   margin: -6px 0 12px;
 }
@@ -635,10 +642,10 @@ body {
 .markera-rad button { flex: 1; }
 
 /* ---- Dela in grupper (ny design) ---- */
-.grupper-rubrik { font-size: 20px; margin: 0 0 8px 0; }
-.grupper-info { font-size: 13px; color: #555; margin-bottom: 4px; }
-.grupper-info-liten { font-size: 12px; color: #888; }
-.grupper-raknare { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.grupper-rubrik { font-size: 1.25rem; margin: 0 0 8px 0; }
+.grupper-info { font-size: 0.8125rem; color: #555; margin-bottom: 4px; }
+.grupper-info-liten { font-size: 0.75rem; color: #888; }
+.grupper-raknare { font-size: 0.8125rem; font-weight: 600; margin-bottom: 10px; }
 
 .spelar-pillar {
   display: flex;
@@ -652,7 +659,7 @@ body {
   border: 1px solid #ccc;
   background: white;
   color: #333;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -661,7 +668,7 @@ body {
 .spelar-pillar .spelar-pill {
   padding: 12px 18px;
   border-radius: 22px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: #444;
 }
 /* Ovalda spelare: svag överstrykning + dämpad text, så det syns snabbt
@@ -683,7 +690,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   margin-bottom: 6px;
   cursor: pointer;
 }
@@ -727,7 +734,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   padding: 5px 0;
   cursor: pointer;
 }
@@ -735,7 +742,7 @@ body {
 .slump-rad input:disabled { cursor: default; }
 .slump-rad-under {
   margin-left: 24px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: #666;
   padding: 3px 0;
 }
@@ -754,7 +761,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 4px 0;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .flytta-knapp-grupp { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 .flytta-knapp {
@@ -763,7 +770,7 @@ body {
   height: 34px;
   border-radius: 50%;
   border: none;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -778,7 +785,7 @@ body {
   position: absolute;
   bottom: 0;
   right: 2px;
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   line-height: 1;
   opacity: 0.55;
@@ -800,7 +807,7 @@ body {
   background: #2e7d32;
   color: white;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 0.9375rem;
   cursor: pointer;
   margin: 16px 0 24px 0;
 }
@@ -823,7 +830,7 @@ body {
   border-radius: 6px;
   border: 1px solid #ddd;
   background: white;
-  font-size: 13px;
+  font-size: 0.8125rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -854,11 +861,11 @@ body {
   gap: 8px;
   justify-content: center;
   margin-bottom: 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #444;
 }
 .antal-grupper-varde {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   min-width: 20px;
   text-align: center;
@@ -878,7 +885,7 @@ body {
   border: 1px solid #ddd;
   border-radius: 18px;
   padding: 6px 8px 6px 12px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 .spelar-chip-inaktiv { opacity: 0.5; }
@@ -886,7 +893,7 @@ body {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1;
   padding: 6px;
   border-radius: 50%;
@@ -909,7 +916,7 @@ body {
   flex-wrap: wrap;
   gap: 6px 14px;
   margin-bottom: 8px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .positioner-kryss-etikett { display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
 .positioner-kryss-etikett input { margin: 0; }
@@ -918,7 +925,7 @@ body {
   display: flex;
   gap: 10px;
   padding: 0 2px 4px;
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
   color: #888;
   text-transform: uppercase;
@@ -942,7 +949,7 @@ body {
   align-content: flex-start;
   gap: 2px 10px;
   flex: 1 1 140px;
-  font-size: 12px;
+  font-size: 0.75rem;
   padding-top: 3px;
 }
 .bulk-kryss-etikett { display: flex; align-items: center; gap: 3px; cursor: pointer; white-space: nowrap; }
@@ -964,7 +971,7 @@ body {
   border: none;
   background: white;
   padding: 8px 14px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -973,7 +980,7 @@ body {
   border-left: 1px solid #ccc;
   background: #f2f2f2;
   padding: 8px 10px;
-  font-size: 11px;
+  font-size: 0.6875rem;
   cursor: pointer;
   color: #c0392b;
 }
@@ -990,8 +997,8 @@ body {
 }
 .installning-rad:first-child { padding-top: 8px; }
 .installning-rad:last-child { padding-bottom: 8px; border-bottom: none; }
-.installning-namn { display: block; font-weight: 700; font-size: 14px; color: #1A1A1A; }
-.installning-hjalp { display: block; font-weight: 400; font-size: 12px; color: #888; margin-top: 2px; }
+.installning-namn { display: block; font-weight: 700; font-size: 0.875rem; color: #1A1A1A; }
+.installning-hjalp { display: block; font-weight: 400; font-size: 0.75rem; color: #888; margin-top: 2px; }
 .installning-kontroll {
   display: flex;
   flex-wrap: wrap;
@@ -1003,7 +1010,7 @@ body {
   align-items: center;
   gap: 6px;
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
   white-space: nowrap;
 }
@@ -1037,7 +1044,7 @@ body {
    knappen är vald (mörk bakgrund), i stil med SVG-ikonernas currentColor. */
 .sport-pill-med-ikon.vald .sport-ikon-bild { filter: invert(1); }
 .ikon-attribution {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: #999;
   margin-top: 6px;
 }
@@ -1064,8 +1071,8 @@ body {
   max-height: 85vh;
   overflow-y: auto;
 }
-.dialog-ruta h3 { margin: 0 0 12px 0; font-size: 17px; }
-.dialog-ruta p { font-size: 14px; color: #444; margin: 0 0 10px 0; }
+.dialog-ruta h3 { margin: 0 0 12px 0; font-size: 1.0625rem; }
+.dialog-ruta p { font-size: 0.875rem; color: #444; margin: 0 0 10px 0; }
 .dialog-knapprad-huvud {
   display: flex;
   gap: 8px;
@@ -1075,7 +1082,7 @@ body {
   flex: 1;
   padding: 12px 8px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1093,7 +1100,7 @@ body {
   border: 1px solid #e0a0a0;
   background: white;
   color: #c0392b;
-  font-size: 12px;
+  font-size: 0.75rem;
   cursor: pointer;
 }
 
@@ -1107,7 +1114,7 @@ body {
   color: white;
   padding: 8px 16px;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   opacity: 0;
   transition: opacity 0.2s;
   pointer-events: none;
@@ -1134,7 +1141,7 @@ body {
 .poangmatch-falt-etikett {
   display: block;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 0.8125rem;
   margin-bottom: 4px;
 }
 .poangmatch-falt {
@@ -1142,7 +1149,7 @@ body {
   padding: 9px 11px;
   border-radius: 10px;
   border: 1px solid #ddd;
-  font-size: 15px;
+  font-size: 0.9375rem;
   margin-bottom: 10px;
 }
 .poangmatch-datumtid { display: flex; gap: 10px; }
@@ -1165,13 +1172,13 @@ body {
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #ddd;
-  font-size: 15px;
+  font-size: 0.9375rem;
   text-align: center;
 }
 
 /* ---- Anslutna ledare (inuti Hantera lag) ---- */
 .ledare-underrubrik {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   margin: 14px 0 4px 0;
   text-transform: uppercase;
@@ -1199,7 +1206,7 @@ body {
   gap: 8px;
   flex-wrap: wrap;
 }
-.ledare-senast-aktiv { font-size: 12px; color: #888; }
+.ledare-senast-aktiv { font-size: 0.75rem; color: #888; }
 .ledare-knapp-rad { display: flex; gap: 8px; }
 .ledare-knapp-rad .narvaro-knapp { flex: 1; }
 /* ---- Hantera lag: tipsa en vän + lämna laget ---- */
@@ -1208,7 +1215,7 @@ body {
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #ddd;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-family: inherit;
   margin-bottom: 12px;
   resize: vertical;
@@ -1222,7 +1229,7 @@ body {
   border: 1px solid #e0a0a0;
   background: white;
   color: #c0392b;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -1231,21 +1238,21 @@ body {
   background: #fff6e5;
   border-radius: 8px;
   padding: 8px 10px;
-  font-size: 13px !important;
+  font-size: 0.8125rem !important;
   color: #7a5c00 !important;
 }
 .dialog-varning {
   background: #fdecea;
   border-radius: 8px;
   padding: 10px 12px;
-  font-size: 13px !important;
+  font-size: 0.8125rem !important;
   color: #a01b0b !important;
 }
 .dialog-knapp-fara {
   flex: 1;
   padding: 12px 8px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
   border: none;
@@ -1257,4 +1264,4 @@ body {
 
 /* ---- Appinställningar: lägg till på hemskärmen ---- */
 .installera-kontroll { margin-top: 10px; }
-.installera-info { font-size: 13px; color: #666; margin: 0; line-height: 1.4; }
+.installera-info { font-size: 0.8125rem; color: #666; margin: 0; line-height: 1.4; }

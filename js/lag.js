@@ -73,7 +73,7 @@ function rendera(mig, minaLag, medlemmar, logotyp, on401) {
     namnForm.appendChild(knapp);
   } else {
     const info = document.createElement("p");
-    info.style.cssText = "color:#888;font-size:13px;";
+    info.style.cssText = "color:#888;font-size:0.8125rem;";
     info.textContent = "Bara admins kan ändra lagnamnet.";
     namnForm.appendChild(info);
   }
@@ -123,7 +123,7 @@ function rendera(mig, minaLag, medlemmar, logotyp, on401) {
   skapaRubrik.textContent = "Skapa ytterligare ett lag";
   skapa.appendChild(skapaRubrik);
   const skapaInfo = document.createElement("p");
-  skapaInfo.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
+  skapaInfo.style.cssText = "color:#888;font-size:0.8125rem;margin-top:-6px;";
   skapaInfo.textContent = "Kopplas till samma e-postadress som ditt nuvarande lag.";
   skapa.appendChild(skapaInfo);
   const skapaLabel = document.createElement("label");
@@ -147,7 +147,7 @@ function rendera(mig, minaLag, medlemmar, logotyp, on401) {
   ledareRubrik.textContent = "Anslutna ledare";
   container.appendChild(ledareRubrik);
   const ledareInfo = document.createElement("p");
-  ledareInfo.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
+  ledareInfo.style.cssText = "color:#888;font-size:0.8125rem;margin-top:-6px;";
   ledareInfo.textContent = "Vilka som kan logga in och hantera det här laget. "
     + (jag_ar_admin ? "Bjud in fler med deras e-postadress." : "");
   container.appendChild(ledareInfo);
@@ -181,7 +181,7 @@ function byggLogotypForm(logotyp, jag_ar_admin, on401) {
   form.appendChild(rubrik);
 
   const info = document.createElement("p");
-  info.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
+  info.style.cssText = "color:#888;font-size:0.8125rem;margin-top:-6px;";
   info.textContent = "Egen logga som ikon när man lägger till appen på hemskärmen (t.ex. klubbmärket - kan hämtas från "
     + "svenskafotbollsklubbar.se eller var du vill). Fungerar bara i Android Chrome, inte iPhone. Tomt = standardikonen. "
     + "En redan installerad ikon uppdateras inte - lägg till appen på nytt efter att du sparat en ny.";
@@ -206,7 +206,7 @@ function byggLogotypForm(logotyp, jag_ar_admin, on401) {
     form.appendChild(knapp);
   } else {
     const ejAdminInfo = document.createElement("p");
-    ejAdminInfo.style.cssText = "color:#888;font-size:13px;";
+    ejAdminInfo.style.cssText = "color:#888;font-size:0.8125rem;";
     ejAdminInfo.textContent = "Bara admins kan ändra lagets logga.";
     form.appendChild(ejAdminInfo);
   }
@@ -240,7 +240,7 @@ function byggTipsaVan(on401) {
   rubrik.textContent = "Tipsa en vän om appen";
   form.appendChild(rubrik);
   const info = document.createElement("p");
-  info.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
+  info.style.cssText = "color:#888;font-size:0.8125rem;margin-top:-6px;";
   info.textContent = "Skickar ett mejl med en länk till appen. Ingen koppling till dina lag – "
     + "din e-postadress står som avsändare att svara till.";
   form.appendChild(info);
@@ -311,7 +311,7 @@ function byggFlerVal(mig, medlemmar, on401) {
   wrap.appendChild(rubrik);
 
   const info = document.createElement("p");
-  info.style.cssText = "color:#888;font-size:13px;margin-top:-6px;";
+  info.style.cssText = "color:#888;font-size:0.8125rem;margin-top:-6px;";
   info.textContent = "Tar bort din åtkomst till det här laget. Är du enda administratören "
     + "får du utse en efterträdare först; är du den sista i laget raderas hela laget. "
     + "Du får bekräfta i nästa steg.";

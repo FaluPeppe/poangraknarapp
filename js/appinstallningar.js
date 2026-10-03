@@ -9,6 +9,7 @@ import { byggLjudOchVibrationsval } from "./ljud.js";
 import { byggInstalleraValjare } from "./installera.js";
 import { byggRotationslasValjare } from "./rotationslas.js";
 import { byggZoomlasValjare } from "./zoomlas.js";
+import { byggTextstorlekValjare } from "./textstorlek.js";
 
 export function initAppinstallningar() {
   const container = document.getElementById("appinstallningar-container");
@@ -25,6 +26,7 @@ export function initAppinstallningar() {
   // textfält) annars slår mot radioknapparna här.
   const kort = document.createElement("div");
   kort.className = "appinstallningar-kort";
+  kort.appendChild(byggTextstorlekValjare());
   kort.appendChild(byggSkarmvakenValjare());
   kort.appendChild(byggRotationslasValjare());
   kort.appendChild(byggZoomlasValjare());

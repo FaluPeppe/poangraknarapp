@@ -16,6 +16,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Poäng">
 <script>
+  // Textstorlek (js/textstorlek.js) sätts redan här, innan något ritats -
+  // annars syns texten först i Normal och hoppar sedan upp.
+  try {
+    var ts = localStorage.getItem("kif_textstorlek");
+    if (ts === "stor" || ts === "extrastor") document.documentElement.classList.add("text-" + ts);
+  } catch (e) {}
+
   // Fånga install-prompten så tidigt som möjligt (kan fyra innan modulerna
   // laddat). js/installera.js läser window.__installPrompt.
   window.addEventListener("beforeinstallprompt", (e) => {

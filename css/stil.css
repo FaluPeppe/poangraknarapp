@@ -1199,6 +1199,7 @@ body {
   gap: 8px;
   flex-wrap: wrap;
 }
+.ledare-senast-aktiv { font-size: 12px; color: #888; }
 .ledare-knapp-rad { display: flex; gap: 8px; }
 .ledare-knapp-rad .narvaro-knapp { flex: 1; }
 /* ---- Hantera lag: tipsa en vän + lämna laget ---- */

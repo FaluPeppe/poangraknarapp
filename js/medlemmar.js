@@ -19,6 +19,18 @@ function formateraDatum(iso) {
   return new Date(iso).toLocaleDateString("sv-SE", { day: "numeric", month: "short" });
 }
 
+// senast_aktiv uppdateras högst en gång per dygn (worker.js), så "idag"/
+// datum är rätt precision - ett klockslag skulle bara se exakt ut.
+// Årtal tas med om det inte är i år, så ett gammalt datum inte ser färskt ut.
+function formateraAktiv(iso) {
+  const d = new Date(iso);
+  const nu = new Date();
+  if (d.toDateString() === nu.toDateString()) return "idag";
+  const opts = { day: "numeric", month: "short" };
+  if (d.getFullYear() !== nu.getFullYear()) opts.year = "numeric";
+  return d.toLocaleDateString("sv-SE", opts);
+}
+
 export async function initMedlemmar(on401, containerId = CONTAINER_ID) {
   CONTAINER_ID = containerId;
   const container = document.getElementById(CONTAINER_ID);
@@ -143,6 +155,12 @@ function rendera(medlemmar, mig, on401) {
       statusBadge.textContent = `Inbjuden ${formateraDatum(m.tillagd)}`;
     }
     detaljRad.appendChild(statusBadge);
+    if (m.senast_aktiv) {
+      const aktiv = document.createElement("span");
+      aktiv.className = "ledare-senast-aktiv";
+      aktiv.textContent = `Senast aktiv ${formateraAktiv(m.senast_aktiv)}`;
+      detaljRad.appendChild(aktiv);
+    }
     rad.appendChild(detaljRad);
 
     // Admins ser knapparna för alla UTOM sig själva - att degradera eller

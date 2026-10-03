@@ -9,9 +9,10 @@
 // ny batch ändringar; spara ett helt heltalssteg (v2.0) till en riktigt
 // stor omgörning.
 
-export const VERSION = "1.3";
+export const VERSION = "1.4";
 
 const LOGG = [
+  { datum: "2026-10-03", text: "Hantera lag har ny ordning: anslutna ledare och inbjudan överst, lämna laget längst ner. Tipsa en vän finns nu under Om appen." },
   { datum: "2026-10-03", text: "Större text för den som vill: välj Normal, Stor eller Extra stor under Inställningar → Appinställningar." },
   { datum: "2026-10-03", text: "Hantera lag visar nu när varje ledare senast var aktiv i laget." },
   { datum: "2026-10-03", text: "Ny skärm Om appen under Inställningar – vem som gjort appen, Vad är nytt, och ett formulär för att skicka buggar och önskemål." },

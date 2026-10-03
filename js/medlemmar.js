@@ -73,38 +73,7 @@ function rendera(medlemmar, mig, on401) {
   const jag_ar_admin = mig.roll === "admin";
   const min_epost = (mig.epost || "").toLowerCase();
 
-  // ---- Bjud in (bara admins) ----
-  // "Bjud in" = lägga till e-postadressen i lagets behörighetslista OCH
-  // skicka ett inbjudningsmejl (worker.js -> skicka_inbjudan_mejl). Personen
-  // loggar sedan in helt vanligt med den adressen (e-post + engångskod).
-  if (jag_ar_admin) {
-    const bjudInRubrik = document.createElement("h4");
-    bjudInRubrik.className = "ledare-underrubrik";
-    bjudInRubrik.textContent = "Bjud in en ledare";
-    container.appendChild(bjudInRubrik);
-
-    const bjudInInfo = document.createElement("p");
-    bjudInInfo.className = "grupper-info-liten";
-    bjudInInfo.textContent = "Skriv ledarens e-postadress så skickar vi ett mejl med en "
-      + "inloggningslänk. Hen kommer åt laget så fort hen loggat in med den adressen. "
-      + "Välj Admin om hen också ska kunna bjuda in fler och ändra laginställningar.";
-    container.appendChild(bjudInInfo);
-
-    const laggTill = document.createElement("div");
-    laggTill.className = "spelare-lagg-till";
-    laggTill.innerHTML = `
-      <input type="email" id="ny-medlem-epost" placeholder="E-postadress" autocomplete="off">
-      <select id="ny-medlem-roll">
-        <option value="medlem">Medlem</option>
-        <option value="admin">Admin</option>
-      </select>
-      <button id="lagg-till-medlem-knapp">+ Bjud in</button>
-    `;
-    container.appendChild(laggTill);
-    document.getElementById("lagg-till-medlem-knapp").onclick = () => laggTillMedlem(on401);
-  }
-
-  // ---- Lista: vilka som redan har åtkomst ----
+  // ---- Lista: vilka som redan har åtkomst (först - "Bjud in" kommer under) ----
   const listRubrik = document.createElement("h4");
   listRubrik.className = "ledare-underrubrik";
   listRubrik.textContent = "Har åtkomst nu";
@@ -185,6 +154,37 @@ function rendera(medlemmar, mig, on401) {
     lista.appendChild(rad);
   });
   container.appendChild(lista);
+
+  // ---- Bjud in (bara admins) ----
+  // "Bjud in" = lägga till e-postadressen i lagets behörighetslista OCH
+  // skicka ett inbjudningsmejl (worker.js -> skicka_inbjudan_mejl). Personen
+  // loggar sedan in helt vanligt med den adressen (e-post + engångskod).
+  if (jag_ar_admin) {
+    const bjudInRubrik = document.createElement("h4");
+    bjudInRubrik.className = "ledare-underrubrik";
+    bjudInRubrik.textContent = "Bjud in en ledare";
+    container.appendChild(bjudInRubrik);
+
+    const bjudInInfo = document.createElement("p");
+    bjudInInfo.className = "grupper-info-liten";
+    bjudInInfo.textContent = "Skriv ledarens e-postadress så skickar vi ett mejl med en "
+      + "inloggningslänk. Hen kommer åt laget så fort hen loggat in med den adressen. "
+      + "Välj Admin om hen också ska kunna bjuda in fler och ändra laginställningar.";
+    container.appendChild(bjudInInfo);
+
+    const laggTill = document.createElement("div");
+    laggTill.className = "spelare-lagg-till";
+    laggTill.innerHTML = `
+      <input type="email" id="ny-medlem-epost" placeholder="E-postadress" autocomplete="off">
+      <select id="ny-medlem-roll">
+        <option value="medlem">Medlem</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button id="lagg-till-medlem-knapp">+ Bjud in</button>
+    `;
+    container.appendChild(laggTill);
+    document.getElementById("lagg-till-medlem-knapp").onclick = () => laggTillMedlem(on401);
+  }
 }
 
 async function laggTillMedlem(on401) {

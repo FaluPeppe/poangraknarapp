@@ -12,7 +12,75 @@ export function initOmAppen(on401) {
   container.innerHTML = "";
   container.appendChild(byggPresentation());
   container.appendChild(byggAterkoppling(on401));
+  container.appendChild(byggTipsaVan(on401));
   container.appendChild(byggAndringslogg());
+}
+
+// ---- Tipsa en vän (POST /tipsa) - flyttad hit från Hantera lag ----
+function byggTipsaVan(on401) {
+  const form = document.createElement("div");
+  form.className = "avsluta-form";
+  const rubrik = document.createElement("h3");
+  rubrik.className = "historik-rubrik";
+  rubrik.textContent = "Tipsa en vän om appen";
+  form.appendChild(rubrik);
+  const info = document.createElement("p");
+  info.className = "grupper-info-liten";
+  info.textContent = "Skickar ett mejl med en länk till appen. Ingen koppling till dina lag – "
+    + "din e-postadress står som avsändare att svara till.";
+  form.appendChild(info);
+
+  const epostLabel = document.createElement("label");
+  epostLabel.textContent = "Väns e-postadress";
+  form.appendChild(epostLabel);
+  const epostInput = document.createElement("input");
+  epostInput.type = "email";
+  epostInput.id = "tipsa-epost";
+  epostInput.placeholder = "van@exempel.se";
+  form.appendChild(epostInput);
+
+  const medLabel = document.createElement("label");
+  medLabel.textContent = "Egen hälsning (valfritt)";
+  form.appendChild(medLabel);
+  const medInput = document.createElement("textarea");
+  medInput.id = "tipsa-meddelande";
+  medInput.rows = 2;
+  medInput.maxLength = 500;
+  medInput.className = "lag-textarea";
+  form.appendChild(medInput);
+
+  const knapp = document.createElement("button");
+  knapp.className = "knapp-primar";
+  knapp.textContent = "Skicka tips";
+  knapp.onclick = () => skickaTips(knapp, on401);
+  form.appendChild(knapp);
+  return form;
+}
+
+async function skickaTips(knapp, on401) {
+  const epost = document.getElementById("tipsa-epost").value.trim();
+  const meddelande = document.getElementById("tipsa-meddelande").value.trim();
+  if (!epost) {
+    visaToast("Ange en e-postadress.");
+    return;
+  }
+  knapp.disabled = true;
+  try {
+    const res = await anropaMedToken("/tipsa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ epost, meddelande }),
+    }, on401);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Servern svarade med fel");
+    visaToast(`Tips skickat till ${epost}.`);
+    document.getElementById("tipsa-epost").value = "";
+    document.getElementById("tipsa-meddelande").value = "";
+  } catch (fel) {
+    if (fel.message !== "Utloggad") visaToast(fel.message || "Kunde inte skicka tipset.");
+  } finally {
+    knapp.disabled = false;
+  }
 }
 
 function byggPresentation() {

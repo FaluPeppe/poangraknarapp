@@ -57,9 +57,10 @@ function rendera(mig, minaLag, medlemmar, logotyp, on401) {
   // ---- Lagnamn ----
   const namnForm = document.createElement("div");
   namnForm.className = "avsluta-form";
-  const label = document.createElement("label");
-  label.textContent = "Lagnamn";
-  namnForm.appendChild(label);
+  const namnRubrik = document.createElement("h3");
+  namnRubrik.className = "historik-rubrik";
+  namnRubrik.textContent = "Lagnamn";
+  namnForm.appendChild(namnRubrik);
   const input = document.createElement("input");
   input.type = "text";
   input.id = "lagnamn-input";
@@ -80,20 +81,11 @@ function rendera(mig, minaLag, medlemmar, logotyp, on401) {
   }
   container.appendChild(namnForm);
 
-  // ---- Anslutna ledare - det man oftast gör här, därför högt upp. Listan
-  // + "Bjud in" byggs av medlemmar.js (tidigare en egen "Tränare"-knapp). ----
-  const ledareRubrik = document.createElement("h3");
-  ledareRubrik.className = "historik-rubrik";
-  ledareRubrik.textContent = "Anslutna ledare";
-  container.appendChild(ledareRubrik);
-  const ledareInfo = document.createElement("p");
-  ledareInfo.style.cssText = "color:#888;font-size:0.8125rem;margin-top:-6px;";
-  ledareInfo.textContent = "Vilka som kan logga in och hantera det här laget. "
-    + (jag_ar_admin ? "Bjud in fler med deras e-postadress." : "");
-  container.appendChild(ledareInfo);
+  // ---- Anslutna ledare + Bjud in - det man oftast gör här, därför högt
+  // upp. medlemmar.js fyller platsen med två egna kort. ----
   const ledarePlats = document.createElement("div");
   ledarePlats.id = "lag-ledare-sektion";
-  ledarePlats.innerHTML = '<span style="color:#888;">Laddar...</span>';
+  ledarePlats.innerHTML = '<div class="avsluta-form"><span style="color:#888;">Laddar ledare...</span></div>';
   container.appendChild(ledarePlats);
   initMedlemmar(on401, "lag-ledare-sektion"); // fylls i asynkront, ovanstående skelett finns redan i DOM:en
 
@@ -105,6 +97,9 @@ function rendera(mig, minaLag, medlemmar, logotyp, on401) {
     rubrik.className = "historik-rubrik";
     rubrik.textContent = "Byt lag";
     byt.appendChild(rubrik);
+    const bytLista = document.createElement("div");
+    bytLista.className = "spelar-lista kort-lista";
+    byt.appendChild(bytLista);
 
     minaLag.forEach(l => {
       const rad = document.createElement("div");
@@ -125,7 +120,7 @@ function rendera(mig, minaLag, medlemmar, logotyp, on401) {
         bytKnapp.onclick = () => bytLag(l.lagkod, on401);
         rad.appendChild(bytKnapp);
       }
-      byt.appendChild(rad);
+      bytLista.appendChild(rad);
     });
     container.appendChild(byt);
   }

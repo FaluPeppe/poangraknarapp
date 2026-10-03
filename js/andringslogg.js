@@ -4,14 +4,17 @@
 // användarmärkbart. Inte varje enskild commit - en hel arbetsomgångs
 // ändringar blir EN post/version, inte en per liten justering.
 //
-// Versionsschemat är medvetet enkelt (inget semver kopplat till ett API):
-// v1.0 = den dag changeloggen infördes (2026-09-29). Höj med 0.1 för varje
-// ny batch ändringar; spara ett helt heltalssteg (v2.0) till en riktigt
-// stor omgörning.
+// Versionsschema (från 2026-10-03), X.Y.Z:
+//   Z (1.4 -> 1.4.1)  små justeringar/fixar av något som redan finns
+//   Y (1.4 -> 1.5)    ny funktion eller tydlig förändring - nollställer Z
+//   X (1.x -> 2.0)    bara en riktigt stor omgörning
+// Siffrorna är inte decimaler: efter 1.9 kommer 1.10. v1.0 = den dag
+// changeloggen infördes (2026-09-29).
 
-export const VERSION = "1.4";
+export const VERSION = "1.4.1";
 
 const LOGG = [
+  { datum: "2026-10-03", text: "Hantera lag är luftigare: varje del ligger i ett eget kort, och ledarna visas som en lista i sitt kort." },
   { datum: "2026-10-03", text: "Hantera lag har ny ordning: anslutna ledare och inbjudan överst, lämna laget längst ner. Tipsa en vän finns nu under Om appen." },
   { datum: "2026-10-03", text: "Större text för den som vill: välj Normal, Stor eller Extra stor under Inställningar → Appinställningar." },
   { datum: "2026-10-03", text: "Hantera lag visar nu när varje ledare senast var aktiv i laget." },

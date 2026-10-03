@@ -73,21 +73,26 @@ function rendera(medlemmar, mig, on401) {
   const jag_ar_admin = mig.roll === "admin";
   const min_epost = (mig.epost || "").toLowerCase();
 
-  // ---- Lista: vilka som redan har åtkomst (först - "Bjud in" kommer under) ----
-  const listRubrik = document.createElement("h4");
-  listRubrik.className = "ledare-underrubrik";
-  listRubrik.textContent = "Har åtkomst nu";
-  container.appendChild(listRubrik);
+  // Två egna kort: listan först, "Bjud in" (bara admins) under - så varje
+  // funktion i Hantera lag är ett tydligt avgränsat kort.
+  // ---- Kort 1: Anslutna ledare ----
+  const listKort = document.createElement("div");
+  listKort.className = "avsluta-form";
+  container.appendChild(listKort);
 
-  if (!jag_ar_admin) {
-    const info = document.createElement("p");
-    info.className = "grupper-info-liten";
-    info.textContent = "Bara admins kan bjuda in eller ta bort ledare.";
-    container.appendChild(info);
-  }
+  const listRubrik = document.createElement("h3");
+  listRubrik.className = "historik-rubrik";
+  listRubrik.textContent = "Anslutna ledare";
+  listKort.appendChild(listRubrik);
+
+  const info = document.createElement("p");
+  info.className = "grupper-info-liten kort-info";
+  info.textContent = "Vilka som kan logga in och hantera det här laget."
+    + (jag_ar_admin ? "" : " Bara admins kan bjuda in eller ta bort ledare.");
+  listKort.appendChild(info);
 
   const lista = document.createElement("div");
-  lista.className = "spelar-lista";
+  lista.className = "spelar-lista kort-lista";
   medlemmar.forEach(m => {
     const ar_jag = m.epost.toLowerCase() === min_epost;
     const rad = document.createElement("div");
@@ -153,24 +158,28 @@ function rendera(medlemmar, mig, on401) {
 
     lista.appendChild(rad);
   });
-  container.appendChild(lista);
+  listKort.appendChild(lista);
 
-  // ---- Bjud in (bara admins) ----
+  // ---- Kort 2: Bjud in (bara admins) ----
   // "Bjud in" = lägga till e-postadressen i lagets behörighetslista OCH
   // skicka ett inbjudningsmejl (worker.js -> skicka_inbjudan_mejl). Personen
   // loggar sedan in helt vanligt med den adressen (e-post + engångskod).
   if (jag_ar_admin) {
-    const bjudInRubrik = document.createElement("h4");
-    bjudInRubrik.className = "ledare-underrubrik";
+    const bjudInKort = document.createElement("div");
+    bjudInKort.className = "avsluta-form";
+    container.appendChild(bjudInKort);
+
+    const bjudInRubrik = document.createElement("h3");
+    bjudInRubrik.className = "historik-rubrik";
     bjudInRubrik.textContent = "Bjud in en ledare";
-    container.appendChild(bjudInRubrik);
+    bjudInKort.appendChild(bjudInRubrik);
 
     const bjudInInfo = document.createElement("p");
-    bjudInInfo.className = "grupper-info-liten";
+    bjudInInfo.className = "grupper-info-liten kort-info";
     bjudInInfo.textContent = "Skriv ledarens e-postadress så skickar vi ett mejl med en "
       + "inloggningslänk. Hen kommer åt laget så fort hen loggat in med den adressen. "
       + "Välj Admin om hen också ska kunna bjuda in fler och ändra laginställningar.";
-    container.appendChild(bjudInInfo);
+    bjudInKort.appendChild(bjudInInfo);
 
     const laggTill = document.createElement("div");
     laggTill.className = "spelare-lagg-till";
@@ -182,7 +191,7 @@ function rendera(medlemmar, mig, on401) {
       </select>
       <button id="lagg-till-medlem-knapp">+ Bjud in</button>
     `;
-    container.appendChild(laggTill);
+    bjudInKort.appendChild(laggTill);
     document.getElementById("lagg-till-medlem-knapp").onclick = () => laggTillMedlem(on401);
   }
 }

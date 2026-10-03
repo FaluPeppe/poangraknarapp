@@ -1176,14 +1176,21 @@ body {
   text-align: center;
 }
 
-/* ---- Anslutna ledare (inuti Hantera lag) ---- */
-.ledare-underrubrik {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  margin: 14px 0 4px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #555;
+/* ---- Hantera lag: ett vitt kort per funktion ---- */
+/* Rader INUTI ett kort (ledare, Byt lag) - ljusgrå i stället för egna vita
+   kort med skugga, så de läses som en lista som hör till kortet. */
+.kort-lista .spelar-rad { background: #f4f4f4; box-shadow: none; }
+.kort-info { margin: -6px 0 12px 0; }
+#lag-installningar-container .avsluta-form { margin-bottom: 24px; }
+/* Fält + väljare + knapp på en rad (Bjud in, Lägg till spelare): kortets
+   allmänna fältregel ger annars fältet en marginal under som förskjuter raden. */
+.avsluta-form .spelare-lagg-till input { margin-bottom: 0; }
+.spelare-lagg-till select {
+  padding: 10px 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 0.9375rem;
 }
 .ledare-du-badge { background: #2e7d32; }
 .ledare-status-ansluten { background: #2e7d32; }

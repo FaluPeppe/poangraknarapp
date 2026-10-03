@@ -9,7 +9,6 @@ import { byggLjudOchVibrationsval } from "./ljud.js";
 import { byggInstalleraValjare } from "./installera.js";
 import { byggRotationslasValjare } from "./rotationslas.js";
 import { byggZoomlasValjare } from "./zoomlas.js";
-import { byggAndringslogg } from "./andringslogg.js";
 
 export function initAppinstallningar() {
   const container = document.getElementById("appinstallningar-container");
@@ -32,6 +31,4 @@ export function initAppinstallningar() {
   kort.appendChild(byggLjudOchVibrationsval());
   kort.appendChild(byggInstalleraValjare());
   container.appendChild(kort);
-
-  container.appendChild(byggAndringslogg());
 }

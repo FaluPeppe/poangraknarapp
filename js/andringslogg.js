@@ -9,9 +9,10 @@
 // ny batch ändringar; spara ett helt heltalssteg (v2.0) till en riktigt
 // stor omgörning.
 
-const VERSION = "1.0";
+export const VERSION = "1.1";
 
 const LOGG = [
+  { datum: "2026-10-03", text: "Ny skärm Om appen under Inställningar – vem som gjort appen, Vad är nytt, och ett formulär för att skicka buggar och önskemål." },
   { datum: "2026-09-29", text: "Se om en inbjuden ledare har loggat in eller inte (Inbjuden/Ansluten) i Hantera lag." },
   { datum: "2026-09-29", text: "Snabbare väg till att lägga upp positioner eller kategorier direkt från Hantera spelare, om laget saknar dem än." },
   { datum: "2026-09-29", text: "Lättare att ändra tiden i tidtagaruret på Poäng-skärmen - tryck på siffrorna istället för att skriva i en liten ruta." },

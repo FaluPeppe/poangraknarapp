@@ -447,6 +447,17 @@ body {
 }
 .historik-rubrik { font-size: 15px; margin: 0 0 10px 0; }
 .historik-lista { display: flex; flex-direction: column; gap: 10px; }
+.omappen-text p { font-size: 14px; color: #444; line-height: 1.45; margin: 0 0 10px 0; }
+.omappen-text p:last-child { margin-bottom: 0; }
+.omappen-typ {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  background: white;
+  margin-bottom: 12px;
+}
 .andringslogg-lista {
   list-style: none;
   margin: 0;

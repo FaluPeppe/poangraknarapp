@@ -129,6 +129,7 @@
         <h3 class="hantera-sektion-rubrik">App</h3>
         <div class="hantera-lista">
           <button class="hantera-rad" id="hantera-appinstallningar-knapp"><span class="hantera-ikon">⚙️</span><span>Appinställningar</span><span class="hantera-pil">›</span></button>
+          <button class="hantera-rad" id="hantera-omappen-knapp"><span class="hantera-ikon">ℹ️</span><span>Om appen</span><span class="hantera-pil">›</span></button>
         </div>
       </div>
     </div>
@@ -194,6 +195,12 @@
     <!-- Appinställningar-skärmen (js/appinstallningar.js) - personliga,
          lokalt sparade val: ljud/vibration för timrarna + håll skärmen vaken. -->
     <div id="appinstallningar-container" class="dold">
+      <span style="color:#888;">Laddar...</span>
+    </div>
+
+    <!-- Om appen-skärmen (js/omappen.js) - vem som gjort appen, Vad är nytt,
+         och ett formulär för buggar/önskemål (POST /aterkoppling). -->
+    <div id="omappen-container" class="dold">
       <span style="color:#888;">Laddar...</span>
     </div>
 

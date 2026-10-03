@@ -33,6 +33,7 @@ import { initRotationslas } from "./rotationslas.js";
 import { initZoomlas } from "./zoomlas.js";
 import { initHemskarmsikon } from "./hemskarmsikon.js";
 import { initAppinstallningar } from "./appinstallningar.js";
+import { initOmAppen } from "./omappen.js";
 
 // Markera hela innehållet när man går in i ett textfält - då kan man skriva
 // över ett förifyllt eller gammalt värde direkt. Gäller alla text-/textarea-
@@ -74,6 +75,7 @@ const hanteraSkarmar = {
   poangmatcher: { container: "poangmatcher-container", knapp: "hantera-poangmatcher-knapp", titel: "Hantera poängmatcher", init: () => initPoangmatcher(visaLoginVy) },
   statistik: { container: "statistik-container", knapp: "hantera-statistik-knapp", titel: "Statistik", init: () => initStatistik(visaLoginVy) },
   appinstallningar: { container: "appinstallningar-container", knapp: "hantera-appinstallningar-knapp", titel: "Appinställningar", init: () => initAppinstallningar() },
+  omappen: { container: "omappen-container", knapp: "hantera-omappen-knapp", titel: "Om appen", init: () => initOmAppen(visaLoginVy) },
 };
 
 const alla_containers = [

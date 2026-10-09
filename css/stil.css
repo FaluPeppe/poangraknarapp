@@ -787,6 +787,14 @@ body {
   padding: 0;
   flex-shrink: 0;
 }
+/* "Ta ur gruppen" - neutral grå, med vit ring så den syns även mot en
+   färgad grupp-bakgrund. */
+.ta-ur-grupp-knapp {
+  background: #e4e4e4;
+  color: #555;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+  font-size: 0.875rem;
+}
 /* Svag siffra i hörnet när färgen är en upprepning från en mindre
    palett (t.ex. "Orange" och "Orange 2") - annars omöjliga att skilja åt. */
 .flytta-knapp-siffra {

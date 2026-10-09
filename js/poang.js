@@ -9,7 +9,7 @@ import { visaToast, textFargForBg, formateraDatumTid, byggDialog, dlgKnapp } fro
 import { nav } from "./nav.js";
 import { spelaLjud, vibrera } from "./ljud.js";
 import { byggAntalGrupperStegare } from "./antalgrupper.js";
-import { hamtaGruppindelning, byggFlyttaKnapp, hamtaGruppindelningForSparning } from "./grupper.js";
+import { hamtaGruppindelning, byggFlyttaKnapp, byggTaUrGruppKnapp, hamtaGruppindelningForSparning } from "./grupper.js";
 
 // ---- Tidtagarur-tillstånd (modulnivå - överlever navigering mellan
 // flikar, precis som Intervaller-timerns tillstånd) ----
@@ -258,6 +258,11 @@ function visaSpelareBottenblad(grupp, alla_grupper, spelare, on401) {
         });
         knappGrupp.appendChild(knapp);
       });
+      knappGrupp.appendChild(byggTaUrGruppKnapp(() => {
+        gruppindelning.delete(s.id);
+        uppdateraLagRad(alla_grupper, spelare, on401);
+        ritaInnehall();
+      }));
       rad.appendChild(knappGrupp);
 
       innehall.appendChild(rad);

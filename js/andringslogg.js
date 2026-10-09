@@ -11,9 +11,10 @@
 // Siffrorna är inte decimaler: efter 1.9 kommer 1.10. v1.0 = den dag
 // changeloggen infördes (2026-09-29).
 
-export const VERSION = "1.4.2";
+export const VERSION = "1.5";
 
 const LOGG = [
+  { datum: "2026-10-09", text: "Dela in grupper: välj \"Ta inte med målvakter\" när du slumpar, och ta ur en spelare ur alla grupper med ✕. De hamnar i Utanför grupperna." },
   { datum: "2026-10-04", text: "Större och tydligare spelarnamn i grupperna – både i Dela in grupper och när du trycker på en grupp i Poäng." },
   { datum: "2026-10-03", text: "Hantera lag är luftigare: varje del ligger i ett eget kort, och ledarna visas som en lista i sitt kort." },
   { datum: "2026-10-03", text: "Hantera lag har ny ordning: anslutna ledare och inbjudan överst, lämna laget längst ner. Tipsa en vän finns nu under Om appen." },

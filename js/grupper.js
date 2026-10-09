@@ -8,9 +8,10 @@
 //   - Ett "Förslag" som visar den aktuella (lokala) gruppindelningen, med
 //     en liten cirkelknapp per ANNAN grupp på varje spelarrad - tryck för
 //     att flytta hen dit direkt.
-//   - En "Ej tilldelade"-ruta för lokalt närvarande spelare som ännu inte
-//     har en grupp - gör det snabbt att lägga till t.ex. någon som kom
-//     sent, eller är tillbaka från särskild träning.
+//   - En "Utanför grupperna"-ruta (tidigare "Ej tilldelade") för lokalt
+//     närvarande spelare som inte ligger i någon grupp - de som kom sent,
+//     målvakter ("Ta inte med målvakter") och de man tagit ur med ✕-
+//     cirkeln. Därifrån läggs de snabbt in i en grupp igen.
 //
 // INGET av detta - varken den lokala närvaromarkeringen eller
 // gruppindelningen - sparas till servern. Allt lever bara i minnet här,
@@ -49,7 +50,28 @@ let slumpaPositioner = false;
 let slumpaKategori = false;
 let hallIhopPositioner = false;
 let hallIhopKategori = false;
+// "Ta inte med målvakter" - spelare vars ENDA position är målvakt läggs
+// utanför grupperna vid slumpning (Peters val: den som även har en annan
+// position är en utespelare som ibland står i mål, och ska vara med).
+let utanMalvakter = false;
 let installningLaddad = false;
+
+export function arBaraMalvakt(s) {
+  const positioner = (s.positioner || "").split(",").map(p => p.trim()).filter(Boolean);
+  return positioner.length === 1 && /målvakt/i.test(positioner[0]);
+}
+
+// Grå ✕-cirkel sist på en spelarrad - tar spelaren ur alla grupper, så hen
+// hamnar i "Utanför grupperna". Används även av poang.js gruppfönster.
+export function byggTaUrGruppKnapp(onClick) {
+  const knapp = document.createElement("button");
+  knapp.className = "flytta-knapp ta-ur-grupp-knapp";
+  knapp.title = "Ta ur gruppen";
+  knapp.setAttribute("aria-label", "Ta ur gruppen");
+  knapp.textContent = "✕";
+  knapp.onclick = onClick;
+  return knapp;
+}
 
 export async function initGrupper(on401) {
   const container = document.getElementById("grupper-container");
@@ -194,7 +216,7 @@ function rendera(spelare, grupper, on401) {
     container.appendChild(byggGruppBlock(g, grupper, narvarande_spelare, spelare, on401));
   });
 
-  // ---- Ej tilldelade ----
+  // ---- Utanför grupperna ----
   const ejTilldelade = narvarande_spelare.filter(s => !gruppindelning.has(s.id));
   if (ejTilldelade.length > 0) {
     container.appendChild(byggEjTilldelade(ejTilldelade, grupper, spelare, on401));
@@ -296,6 +318,22 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
     }
   });
 
+  // "Ta inte med målvakter" - visas bara om någon i truppen har målvakt
+  // som enda position (annars meningslöst, samma princip som ovan).
+  const har_malvakter = spelare.some(arBaraMalvakt);
+  if (!har_malvakter && utanMalvakter) { utanMalvakter = false; sparaInstallning(on401); }
+  if (har_malvakter) {
+    const rad = document.createElement("label");
+    rad.className = "slump-rad";
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = utanMalvakter;
+    box.onchange = () => { utanMalvakter = box.checked; sparaInstallning(on401); };
+    rad.appendChild(box);
+    rad.appendChild(document.createTextNode(" Ta inte med målvakter"));
+    wrapper.appendChild(rad);
+  }
+
   const knappRad = document.createElement("div");
   knappRad.className = "tidtagare-knapprad";
 
@@ -303,7 +341,12 @@ function byggSlumpmetodval(narvarande_spelare, grupper, spelare, on401) {
   slumpaKnapp.className = "knapp-slumpa";
   slumpaKnapp.textContent = gruppindelning.size > 0 ? "🎲 Slumpa om" : "🎲 Slumpa";
   slumpaKnapp.onclick = () => {
-    fordelaMedMetod(narvarande_spelare, grupper);
+    let att_fordela = narvarande_spelare;
+    if (utanMalvakter) {
+      att_fordela = narvarande_spelare.filter(s => !arBaraMalvakt(s));
+      narvarande_spelare.filter(arBaraMalvakt).forEach(s => gruppindelning.delete(s.id));
+    }
+    fordelaMedMetod(att_fordela, grupper);
     rendera(spelare, grupper, on401);
   };
   knappRad.appendChild(slumpaKnapp);
@@ -337,6 +380,7 @@ async function laddaInstallning(on401) {
       slumpaKategori = data.installning.slumpa_kategori === true;
       hallIhopPositioner = data.installning.hall_ihop_positioner === true;
       hallIhopKategori = data.installning.hall_ihop_kategori === true;
+      utanMalvakter = data.installning.utan_malvakter === true;
     }
   } catch (fel) {
     // Tyst - en glömd ikryssning är ingen katastrof, ren slump duger fint.
@@ -351,6 +395,7 @@ async function sparaInstallning(on401) {
       body: JSON.stringify({
         slumpa_positioner: slumpaPositioner, slumpa_kategori: slumpaKategori,
         hall_ihop_positioner: hallIhopPositioner, hall_ihop_kategori: hallIhopKategori,
+        utan_malvakter: utanMalvakter,
       }),
     }, on401);
   } catch (fel) {
@@ -447,6 +492,10 @@ function byggGruppBlock(grupp, alla_grupper, narvarande_spelare, spelare, on401)
       });
       knappGrupp.appendChild(flyttaKnapp);
     });
+    knappGrupp.appendChild(byggTaUrGruppKnapp(() => {
+      gruppindelning.delete(s.id);
+      rendera(spelare, alla_grupper, on401);
+    }));
     rad.appendChild(knappGrupp);
 
     block.appendChild(rad);
@@ -461,12 +510,13 @@ function byggEjTilldelade(ejTilldelade, grupper, spelare, on401) {
 
   const rubrik = document.createElement("div");
   rubrik.style.fontWeight = "700";
-  rubrik.textContent = "Ej tilldelade";
+  rubrik.textContent = `Utanför grupperna (${ejTilldelade.length})`;
   box.appendChild(rubrik);
 
   const beskrivning = document.createElement("p");
   beskrivning.className = "grupper-info-liten";
-  beskrivning.textContent = "Bockade som närvarande men inte i något lag än - t.ex. någon som kom sent.";
+  beskrivning.textContent = "Närvarande men inte i någon grupp – t.ex. någon som kom sent, en målvakt "
+    + "eller någon du tagit ur en grupp. Tryck på en färg för att lägga in hen.";
   box.appendChild(beskrivning);
 
   ejTilldelade.forEach(s => {
